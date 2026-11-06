@@ -9,10 +9,10 @@ export function isMobileUserAgent(ua: string): boolean {
 
 /**
  * 是否应对该路径执行移动端拦截。
- * 规则与原 Nuxt `00.mobile-only.global.ts` 一致：除 `/mobile` 外全部强制跳转。
+ * 公开首页支持移动设备，工作台仍使用专属提示页。
  */
 export function shouldForceMobileOnlyPath(pathname: string): boolean {
-  return pathname !== MOBILE_ONLY_PATH
+  return pathname !== "/" && pathname.replace(/\/$/, "") !== MOBILE_ONLY_PATH
 }
 
 /** 桌面端访问 `/mobile` 时应回首页 */

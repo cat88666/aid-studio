@@ -12,7 +12,7 @@ const config = {
         if (!file) return false
         if (/node_modules/i.test(file)) return true
         // 根字号档位保持 px；侧栏与 compact 相关文件自行控制 rem 换算
-        if (/root-font-size\.css$/i.test(file)) return true
+        if (/(root-font-size|creator-home)\.css$/i.test(file)) return true
         if (/home-new-sidebar\.css$/i.test(file)) return true
         if (/create-flow-compact-viewport\.css$/i.test(file)) return true
         if (/compact-viewport-btn-radius\.css$/i.test(file)) return true

@@ -13,8 +13,8 @@ describe('mobileOnlyNavigation', () => {
     expect(isMobileUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0')).toBe(false)
   })
 
-  it('forces every path except /mobile onto the mobile-only page', () => {
-    expect(shouldForceMobileOnlyPath('/')).toBe(true)
+  it('keeps the responsive homepage accessible and redirects desktop workspace routes', () => {
+    expect(shouldForceMobileOnlyPath('/')).toBe(false)
     expect(shouldForceMobileOnlyPath('/case/12')).toBe(true)
     expect(shouldForceMobileOnlyPath('/works')).toBe(true)
     expect(shouldForceMobileOnlyPath(MOBILE_ONLY_PATH)).toBe(false)

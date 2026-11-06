@@ -3,6 +3,7 @@ import { createVideoModalReferenceCore } from './videoModalReferenceCore'
 import { useVideoModalGenerateActions as attachVideoModalGenerateActions } from './useVideoModalGenerateActions'
 import { buildVideoQuoteRequest } from './VideoConfigPanel'
 import type { VideoModalCtx } from './types'
+import { EDIT_ASSET_PROMPT_MAX_CHARS } from '~/utils/htmlPlain'
 
 vi.mock('antd', () => ({ message: { warning: vi.fn() } }))
 
@@ -39,6 +40,7 @@ function createContext() {
     collectReferenceImageUrls: () => [],
     resolveBaseImageRecordId: () => undefined,
     activeVideoRawModel: () => null,
+    activeVideoPromptMaxLength: () => EDIT_ASSET_PROMPT_MAX_CHARS,
     videoConfigShowDuration: () => true,
     videoConfigShowAudio: () => false,
     resolveCurrentGenerateAudio: () => undefined,

@@ -38,7 +38,8 @@ export function HomeNewShell({ children }: { children: ReactNode }) {
   const homeCreateModal = useHomeShellCreateModal()
 
   const isLoggedIn = !!token
-  const isGalleryRoute = pathname === '/' || pathname === ''
+  const isLandingRoute = pathname === '/' || pathname === ''
+  const isGalleryRoute = pathname.replace(/\/$/, '') === '/gallery'
   const isWorksRoute = pathname.startsWith('/works')
   const isAssetsRoute = pathname.startsWith('/assets')
   const isInviteRoute = pathname.startsWith('/invite')
@@ -67,7 +68,7 @@ export function HomeNewShell({ children }: { children: ReactNode }) {
       })
       return
     }
-    navigate('/')
+    navigate('/gallery')
   }
 
   function goWorks() {
@@ -214,9 +215,10 @@ export function HomeNewShell({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <div className="home-layout-root">
+    <div className={isLandingRoute ? "creator-home-shell" : "home-layout-root"}>
       {navigationPending && <PageLoadingOverlay label="页面切换中…" />}
-      <HtmlShellClass classes="home-page-shell app-shell-create layout-home-new" />
+      <HtmlShellClass classes={isLandingRoute ? "creator-public-shell" : "home-page-shell app-shell-create layout-home-new"} />
+      {isLandingRoute ? children : (
       <div className="home-new-page">
         <HomeNewSidebar
           ref={homeNewSidebarRef}
@@ -249,6 +251,7 @@ export function HomeNewShell({ children }: { children: ReactNode }) {
         </div>
       </div>
 
+      )}
       <CreateFirstStepModal
         open={homeCreateModal.showCreateFirstStepModal}
         confirmLoading={homeCreateModal.createConfirmLoading}
