@@ -1,0 +1,19 @@
+/* 全站 Portal 容器：自身不挡点击，仅内部浮层/弹窗可交互 */
+#aid-portal-root {
+  position: relative;
+  z-index: 5000;
+  pointer-events: none;
+}
+
+#aid-portal-root > * {
+  pointer-events: auto;
+}
+
+/*
+ * Drawer 根节点是 position:fixed; inset:0，且关闭后 Portal 仍会留在容器里。
+ * 上面的规则会把它的 pointer-events 改成 auto，透明根节点就会盖住整页。
+ * 根节点保持不接收点击，只有遮罩和面板自己可点。
+ */
+#aid-portal-root > .ant-drawer {
+  pointer-events: none;
+}

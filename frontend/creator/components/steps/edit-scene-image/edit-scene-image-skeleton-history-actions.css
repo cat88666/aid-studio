@@ -1,0 +1,128 @@
+/* Tailwind/PostCSS component styles for edit-scene-image. */
+
+
+.skeleton-history-actions {
+  margin-top: auto;
+  padding-top: calc(8px * var(--create-editor-scale, 1));
+  display: grid;
+  gap: calc(6px * var(--create-editor-scale, 1));
+}
+
+.skeleton-btn {
+  width: 100%;
+  height: calc(28px * var(--create-editor-scale, 1));
+  border-radius: calc(8px * var(--create-editor-scale, 1));
+}
+
+.skeleton-canvas-panel {
+  display: flex;
+  flex-direction: column;
+  padding: calc(14px * var(--create-editor-scale, 1));
+  background: rgba(25, 26, 29, 1);
+}
+
+.skeleton-canvas-toolbar {
+  width: calc(492px * var(--create-editor-scale, 1));
+  max-width: 100%;
+  margin: 0 auto calc(10px * var(--create-editor-scale, 1));
+  padding: calc(6px * var(--create-editor-scale, 1)) calc(8px * var(--create-editor-scale, 1));
+  border-radius: calc(8px * var(--create-editor-scale, 1));
+  border: calc(1px * var(--create-editor-scale, 1)) solid rgba(128, 154, 188, 0.22);
+  background: rgba(17, 22, 33, 0.75);
+  display: flex;
+  gap: calc(4px * var(--create-editor-scale, 1));
+  box-sizing: border-box;
+}
+
+.skeleton-canvas-toolbar .skeleton-chip {
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto;
+  height: calc(26px * var(--create-editor-scale, 1));
+  border-radius: calc(6px * var(--create-editor-scale, 1));
+}
+
+.skeleton-chip {
+  width: calc(78px * var(--create-editor-scale, 1));
+  height: calc(26px * var(--create-editor-scale, 1));
+  border-radius: calc(6px * var(--create-editor-scale, 1));
+}
+
+.skeleton-canvas-main {
+  flex: 1;
+  min-height: 0;
+  border-radius: calc(12px * var(--create-editor-scale, 1));
+  border: calc(1px * var(--create-editor-scale, 1)) solid rgba(128, 154, 188, 0.24);
+}
+
+.skeleton-config-panel {
+  display: flex;
+  flex-direction: column;
+  padding: calc(12px * var(--create-editor-scale, 1));
+  gap: calc(10px * var(--create-editor-scale, 1));
+}
+
+.skeleton-config-tabs {
+  display: flex;
+  gap: calc(6px * var(--create-editor-scale, 1));
+  padding: calc(3px * var(--create-editor-scale, 1));
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: calc(8px * var(--create-editor-scale, 1));
+}
+
+.skeleton-tab {
+  flex: 1;
+  height: calc(32px * var(--create-editor-scale, 1));
+  border-radius: calc(6px * var(--create-editor-scale, 1));
+}
+
+.skeleton-file-row {
+  height: calc(42px * var(--create-editor-scale, 1));
+  border-radius: calc(10px * var(--create-editor-scale, 1));
+}
+
+.skeleton-textarea {
+  height: calc(332px * var(--create-editor-scale, 1));
+  border-radius: calc(10px * var(--create-editor-scale, 1));
+}
+
+.skeleton-select-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: calc(8px * var(--create-editor-scale, 1));
+}
+
+.skeleton-select {
+  height: calc(36px * var(--create-editor-scale, 1));
+  border-radius: calc(8px * var(--create-editor-scale, 1));
+}
+
+.skeleton-primary-btn {
+  margin-top: auto;
+  height: calc(40px * var(--create-editor-scale, 1));
+  border-radius: calc(10px * var(--create-editor-scale, 1));
+}
+
+.skeleton-panel-title,
+.skeleton-history-item,
+.skeleton-btn,
+.skeleton-chip,
+.skeleton-canvas-main,
+.skeleton-tab,
+.skeleton-file-row,
+.skeleton-textarea,
+.skeleton-select,
+.skeleton-primary-btn {
+  background: linear-gradient(90deg, #2b2b2b 20%, #444444 50%, #2b2b2b 80%);
+  background-size: 300% 100%;
+  animation: modal-skeleton-shimmer 1.4s linear infinite;
+}
+
+@keyframes modal-skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}

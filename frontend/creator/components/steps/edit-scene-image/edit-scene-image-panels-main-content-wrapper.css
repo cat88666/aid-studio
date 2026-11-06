@@ -1,0 +1,213 @@
+/* Tailwind/PostCSS component styles for edit-scene-image-panels. */
+/* 原 EditSceneImageModal.vue 伴随 scoped 样式 第 2/3 部分：主要内容区域、左右面板、四宫格/卡片视图 */
+/* 主要内容区域 */
+.main-content-wrapper {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.left-tabs {
+  display: flex;
+  border-bottom: calc(1px * var(--create-editor-scale, 1)) solid var(--gray-200);
+  flex-shrink: 0;
+}
+
+.left-tab {
+  flex: 1;
+  padding: calc(1rem * var(--create-editor-scale, 1));
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-bottom: calc(2px * var(--create-editor-scale, 1)) solid transparent;
+  transition: all 0.2s ease;
+}
+
+.left-tab.active {
+  border-bottom-color: var(--accent-500);
+  color: var(--accent-600);
+  font-weight: 600;
+}
+
+.generate-content {
+  padding: calc(1.5rem * var(--create-editor-scale, 1));
+  display: flex;
+  flex-direction: column;
+  gap: calc(1.5rem * var(--create-editor-scale, 1));
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.scene-file-info {
+  height: calc(28px * var(--create-editor-scale, 1));
+  display: inline-flex;
+  align-items: center;
+  gap: calc(4px * var(--create-editor-scale, 1));
+  padding: 0 calc(8px * var(--create-editor-scale, 1));
+  cursor: pointer;
+  background: rgba(17, 22, 33, 1);
+  width: fit-content;
+  max-width: 100%;
+  align-self: flex-start;
+  border-radius: calc(6px * var(--create-editor-scale, 1));
+  box-sizing: border-box;
+}
+
+.file-icon {
+  font-size: calc(1.5rem * var(--create-editor-scale, 1));
+  color: var(--accent-600);
+}
+
+.scene-file-name {
+  font-weight: 600;
+  color: var(--accent-700);
+}
+
+.reference-images {
+  display: flex;
+  justify-content: space-between;
+}
+
+.reference-image-item {
+  aspect-ratio: 1;
+  border: calc(2px * var(--create-editor-scale, 1)) dashed var(--create-border-dashed);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  background: var(--create-surface-canvas);
+  width: 24%;
+  height: calc(56px * var(--create-editor-scale, 1));
+}
+
+.reference-image-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.add-icon {
+  font-size: calc(2rem * var(--create-editor-scale, 1));
+  color: var(--gray-400);
+}
+
+.remove-ref {
+  position: absolute;
+  top: calc(0.5rem * var(--create-editor-scale, 1));
+  right: calc(0.5rem * var(--create-editor-scale, 1));
+  width: calc(24px * var(--create-editor-scale, 1));
+  height: calc(24px * var(--create-editor-scale, 1));
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.input-section {
+  position: relative;
+}
+
+.prompt-input {
+  width: 100%;
+  height: 48vh;
+}
+
+.char-count {
+  position: absolute;
+  bottom: calc(0.5rem * var(--create-editor-scale, 1));
+  right: calc(0.5rem * var(--create-editor-scale, 1));
+  font-size: calc(0.75rem * var(--create-editor-scale, 1));
+  color: var(--gray-500);
+  background: var(--create-surface-panel);
+  padding: 0 calc(0.5rem * var(--create-editor-scale, 1));
+}
+
+
+.generate-settings-stacked .setting-item--model,
+.dialogue-settings .setting-item:first-child {
+  position: relative;
+  z-index: 10;
+}
+
+.generate-btn {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(10px * var(--create-editor-scale, 1));
+}
+
+/* 右侧面板（4/6宽度） */
+.right-panel {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.right-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(1rem * var(--create-editor-scale, 1)) calc(1.5rem * var(--create-editor-scale, 1));
+  border-bottom: calc(1px * var(--create-editor-scale, 1)) solid var(--gray-200);
+  flex-shrink: 0;
+}
+
+.view-switcher {
+  display: flex;
+  gap: calc(0.5rem * var(--create-editor-scale, 1));
+}
+
+.view-btn {
+  display: flex;
+  align-items: center;
+  gap: calc(0.5rem * var(--create-editor-scale, 1));
+  padding: calc(0.5rem * var(--create-editor-scale, 1)) calc(1rem * var(--create-editor-scale, 1));
+  border: calc(1px * var(--create-editor-scale, 1)) solid var(--gray-200);
+  background: var(--create-surface-panel);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-btn-icon {
+  font-size: calc(1rem * var(--create-editor-scale, 1));
+}
+
+.view-btn.active {
+  border-color: var(--accent-500);
+  background: var(--accent-50);
+  color: var(--accent-600);
+}
+
+.right-actions {
+  display: flex;
+  gap: calc(0.75rem * var(--create-editor-scale, 1));
+}
+
+.right-content {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.navigation-panel {
+  width: calc(120px * var(--create-editor-scale, 1));
+  border-right: calc(1px * var(--create-editor-scale, 1)) solid var(--gray-200);
+  padding: calc(1rem * var(--create-editor-scale, 1));
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: calc(1rem * var(--create-editor-scale, 1));
+}

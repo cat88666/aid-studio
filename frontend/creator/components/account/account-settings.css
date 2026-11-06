@@ -1,0 +1,627 @@
+.account-settings-drawer .ant-drawer-content {
+  background: var(--create-surface-modal, #191a1d) !important;
+}
+
+.account-settings-drawer .ant-drawer-header {
+  min-height: 64px;
+  padding: 0 24px !important;
+  background: rgba(25, 26, 29, 0.98) !important;
+  border-bottom: 1px solid rgba(74, 231, 253, 0.12) !important;
+}
+
+.account-settings-drawer .ant-drawer-title,
+.account-settings-drawer .ant-drawer-close {
+  color: #fff !important;
+}
+
+.account-settings-drawer .ant-drawer-title {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em;
+}
+
+.account-settings-drawer .ant-drawer-close:hover {
+  color: var(--home-cyan, #4ae7fd) !important;
+  background: transparent !important;
+}
+
+.account-settings-drawer .ant-drawer-body {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.account-settings__captcha {
+  position: absolute;
+  z-index: 10;
+  top: 82px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.account-settings__layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  color: var(--home-text, rgba(255, 255, 255, 0.92));
+}
+
+.account-settings__nav {
+  padding: 16px 12px;
+  background: #12141a;
+  border-right: 1px solid rgba(74, 231, 253, 0.08);
+}
+
+.account-settings__nav button {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 6px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--home-muted, #8e97a5);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.account-settings__nav-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+}
+
+.account-settings__nav .anticon {
+  width: 16px;
+  font-size: 15px;
+}
+
+.account-settings__nav button:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.account-settings__nav button.is-active {
+  color: #fff;
+  background: var(--home-grad-tab, var(--home-grad, linear-gradient(90deg, rgba(14, 89, 250, 0.3) 0%, rgba(0, 171, 216, 0.1) 100%)));
+}
+
+.account-settings__nav button.is-active .account-settings__nav-icon {
+  color: var(--home-cyan, #4ae7fd);
+  background: rgba(74, 231, 253, 0.12);
+}
+
+.account-settings__nav button.is-danger:hover,
+.account-settings__nav button.is-danger.is-active {
+  color: #ffb7b8;
+}
+
+.account-settings__nav button.is-danger.is-active {
+  background: rgba(255, 77, 79, 0.12);
+}
+
+.account-settings__nav button.is-danger.is-active .account-settings__nav-icon {
+  color: #ff9b9d;
+  background: rgba(255, 77, 79, 0.16);
+}
+
+.account-settings__content {
+  min-width: 0;
+  overflow: auto;
+  padding: 28px 32px 40px;
+  background:
+    radial-gradient(ellipse 80% 40% at 0% 0%, rgba(74, 231, 253, 0.05), transparent 55%),
+    var(--create-surface-modal, #191a1d);
+}
+
+.account-settings__section-head {
+  margin: 0 0 16px;
+}
+
+.account-settings__section-head h3 {
+  margin: 0 0 6px;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.account-settings__section-head p {
+  margin: 0;
+  color: var(--home-muted, #8e97a5);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.account-settings__form-card,
+.account-settings__contact-card,
+.account-settings__action-card,
+.account-settings__history-list article {
+  border: 1px solid rgba(74, 231, 253, 0.08);
+  border-radius: 8px;
+  background: #202839;
+}
+
+.account-settings__form-card,
+.account-settings__contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.account-settings__form-card {
+  width: 100%;
+  max-width: 40rem;
+  padding: 20px 22px;
+}
+
+.account-settings__danger-card {
+  border-color: rgba(255, 77, 79, 0.22);
+  background: #202839;
+}
+
+.account-settings__notice,
+.account-settings__danger-notice {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.account-settings__notice {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--home-muted, #8e97a5);
+}
+
+.account-settings__danger-notice {
+  border: 1px solid rgba(255, 77, 79, 0.28);
+  background: rgba(255, 77, 79, 0.1);
+  color: #ffb7b8;
+}
+
+.account-settings__field {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+.account-settings__field > span {
+  display: block;
+  margin: 0 0 6px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.account-settings-drawer .auth-dark-field-wrap {
+  height: 40px;
+}
+
+.account-settings-drawer .auth-dark-field-wrap--solid {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.account-settings__code-btn {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--home-cyan, #4ae7fd);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.account-settings__code-btn:hover:not(:disabled) {
+  color: #fff;
+}
+
+.account-settings__code-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.account-settings__channel-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  width: fit-content;
+  max-width: 100%;
+  gap: 4px;
+  margin: 0;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.account-settings__channel-tabs button {
+  height: 28px;
+  min-width: 88px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--home-muted, #8e97a5);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.account-settings__channel-tabs button.is-active {
+  background: var(--home-grad-tab, var(--home-grad, linear-gradient(90deg, rgba(14, 89, 250, 0.35) 0%, rgba(0, 171, 216, 0.16) 100%)));
+  color: var(--home-cyan, #4ae7fd);
+  font-weight: 500;
+}
+
+.account-settings__field-hint {
+  margin: 0;
+  color: var(--home-muted, #8e97a5);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.account-settings__inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.account-settings__inline-actions .ant-btn {
+  height: 40px;
+  min-height: 40px;
+  padding: 0 20px;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.account-settings-drawer button.account-settings__submit.auth-dark-submit {
+  flex: none;
+  align-self: flex-start;
+  width: auto;
+  min-width: 7.5rem;
+  height: 40px;
+  padding: 0 20px;
+  font-size: 14px !important;
+  font-weight: 600;
+}
+
+.account-settings-drawer button.account-settings__submit.account-settings__submit--block.auth-dark-submit,
+.account-settings-drawer .ant-btn.account-settings__danger-submit.account-settings__submit--block {
+  align-self: stretch;
+  width: 100%;
+}
+
+.account-settings-drawer .ant-btn-default {
+  height: 40px;
+  min-height: 40px;
+  padding: 0 20px;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  box-shadow: none !important;
+}
+
+.account-settings-drawer .ant-btn-default:hover:not(:disabled) {
+  border-color: rgba(74, 231, 253, 0.45) !important;
+  color: var(--home-cyan, #4ae7fd) !important;
+}
+
+.account-settings-drawer .ant-btn-default.ant-btn-dangerous:not(.account-settings__danger-submit) {
+  border-color: rgba(255, 77, 79, 0.5) !important;
+  background: rgba(255, 77, 79, 0.12) !important;
+  color: #ffb7b8 !important;
+}
+
+.account-settings-drawer .ant-btn-default.ant-btn-dangerous:not(.account-settings__danger-submit):hover:not(:disabled) {
+  border-color: rgba(255, 77, 79, 0.75) !important;
+  background: rgba(255, 77, 79, 0.2) !important;
+  color: #ffd2d3 !important;
+}
+
+.account-settings-drawer .ant-btn-default:disabled,
+.account-settings-drawer .ant-btn-default.ant-btn-disabled {
+  opacity: 0.7;
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+
+.account-settings-drawer .ant-btn.ant-btn-dangerous.account-settings__danger-submit {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 7.5rem;
+  height: 40px;
+  padding: 0 20px;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: linear-gradient(270deg, #c62828 0%, #ff4d4f 100%) !important;
+  color: #fff !important;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: none !important;
+}
+
+.account-settings-drawer .ant-btn.ant-btn-dangerous.account-settings__danger-submit:hover:not(:disabled) {
+  opacity: 0.92;
+  color: #fff !important;
+}
+
+.account-settings-drawer .ant-btn.ant-btn-dangerous.account-settings__danger-submit:disabled,
+.account-settings-drawer .ant-btn.ant-btn-dangerous.account-settings__danger-submit.ant-btn-disabled {
+  opacity: 1 !important;
+  cursor: not-allowed;
+  background: rgba(198, 40, 40, 0.42) !important;
+  border: 1px solid rgba(255, 155, 157, 0.55) !important;
+  color: #ffd2d3 !important;
+}
+
+.account-settings-drawer .ant-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.account-settings-drawer .ant-checkbox-inner {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  background: #121212 !important;
+}
+
+.account-settings-drawer .ant-checkbox-checked .ant-checkbox-inner {
+  border-color: #00abd8 !important;
+  background: #00abd8 !important;
+}
+
+.account-settings-drawer .ant-checkbox:hover .ant-checkbox-inner,
+.account-settings-drawer .ant-checkbox-wrapper:hover .ant-checkbox-inner {
+  border-color: var(--home-cyan, #4ae7fd) !important;
+}
+
+.account-settings__card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.account-settings__contact-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+}
+
+.account-settings__action-card {
+  padding: 16px 18px;
+}
+
+.account-settings__contact-card.is-disabled {
+  opacity: 0.55;
+}
+
+.account-settings__contact-head,
+.account-settings__action-card,
+.account-settings__history-top,
+.account-settings__history-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.account-settings__contact-head > div,
+.account-settings__action-card > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.account-settings__contact-head strong,
+.account-settings__action-card strong,
+.account-settings__history-top strong {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.account-settings__contact-head span,
+.account-settings__action-card span {
+  color: var(--home-muted, #8e97a5);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.account-settings__status {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--home-muted, #8e97a5) !important;
+  font-size: 12px !important;
+  line-height: 1.4;
+}
+
+.account-settings__status.is-bound {
+  background: rgba(82, 196, 26, 0.14);
+  color: #8ed765 !important;
+}
+
+.account-settings__status.is-failed {
+  background: rgba(255, 77, 79, 0.14);
+  color: #ff9b9d !important;
+}
+
+.account-settings__contact-form {
+  max-width: 32.5rem;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(74, 231, 253, 0.08);
+}
+
+.account-settings__wechat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 330px;
+  justify-content: center;
+}
+
+.account-settings__qr {
+  position: relative;
+  width: 210px;
+  height: 210px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(74, 231, 253, 0.18), 0 16px 40px rgba(0, 0, 0, 0.28);
+}
+
+.account-settings__qr img {
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+  object-fit: contain;
+}
+
+.account-settings__qr button,
+.account-settings__qr > div {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  border: 0;
+  background: rgba(0, 0, 0, 0.68);
+  color: #fff;
+  text-align: center;
+  cursor: pointer;
+}
+
+.account-settings__qr-status {
+  margin: 16px 0 0;
+  color: var(--home-muted, #8e97a5);
+  font-size: 13px;
+}
+
+.account-settings__wechat-bound {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #d7dbdf;
+  font-size: 15px;
+}
+
+.account-settings__success-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #52c41a;
+  box-shadow: 0 0 0 4px rgba(82, 196, 26, 0.12);
+}
+
+.account-settings__history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.account-settings__history-list article {
+  padding: 16px 18px;
+}
+
+.account-settings__history-meta {
+  justify-content: flex-start;
+  margin-top: 9px;
+  color: var(--home-muted, #8e97a5);
+  font-size: 12px;
+}
+
+.account-settings__history-list p {
+  margin: 8px 0 0;
+  color: #aab1bb;
+  font-size: 12px;
+}
+
+.account-settings__pagination {
+  margin-top: 20px;
+  text-align: right;
+}
+
+.account-settings__pagination .ant-pagination-item a,
+.account-settings__pagination .ant-pagination-prev button,
+.account-settings__pagination .ant-pagination-next button {
+  color: var(--home-muted, #8e97a5) !important;
+}
+
+.account-settings__pagination .ant-pagination-item-active {
+  border-color: var(--home-cyan, #4ae7fd) !important;
+  background: rgba(74, 231, 253, 0.08) !important;
+}
+
+.account-settings-drawer .ant-empty-description {
+  color: var(--home-muted, #8e97a5);
+}
+
+.account-settings__loading,
+.account-settings__load-error {
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: var(--home-muted, #8e97a5);
+}
+
+@media (max-width: 720px) {
+  .account-settings__layout {
+    grid-template-columns: 74px minmax(0, 1fr);
+  }
+
+  .account-settings__nav {
+    padding: 14px 8px;
+  }
+
+  .account-settings__nav button {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .account-settings__nav button > span:not(.account-settings__nav-icon) {
+    display: none;
+  }
+
+  .account-settings__content {
+    padding: 20px 16px 36px;
+  }
+
+  .account-settings__action-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

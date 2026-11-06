@@ -1,0 +1,229 @@
+/* Tailwind/PostCSS component styles for edit-scene-image-panels. */
+
+
+.nav-item {
+  width: 100%;
+  aspect-ratio: 1;
+  border: calc(2px * var(--create-editor-scale, 1)) solid var(--gray-200);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.nav-item.active {
+  border-color: var(--accent-500);
+  box-shadow: var(--shadow-warm);
+}
+
+.nav-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nav-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: calc(0.75rem * var(--create-editor-scale, 1));
+  color: var(--gray-500);
+  background: rgba(6, 10, 18, 0.55);
+  border-radius: var(--radius-md);
+}
+
+.main-content-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: calc(1.5rem * var(--create-editor-scale, 1));
+}
+
+.empty-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--gray-500);
+}
+
+.images-container {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2rem * var(--create-editor-scale, 1));
+}
+
+.image-card {
+  border: calc(1px * var(--create-editor-scale, 1)) solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: calc(1.5rem * var(--create-editor-scale, 1));
+  background: var(--create-surface-panel);
+  transition: all 0.2s ease;
+}
+
+.image-card.active {
+  border-color: var(--accent-500);
+  box-shadow: 0 0 0 calc(3px * var(--create-editor-scale, 1)) var(--accent-100);
+}
+
+.image-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: calc(1rem * var(--create-editor-scale, 1));
+}
+
+.image-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.5rem * var(--create-editor-scale, 1));
+  flex: 1;
+  min-width: 0;
+}
+
+.image-title {
+  font-weight: 600;
+  cursor: pointer;
+  padding: calc(0.25rem * var(--create-editor-scale, 1)) calc(0.5rem * var(--create-editor-scale, 1));
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.image-title:hover {
+  background: rgba(6, 10, 18, 0.55);
+}
+
+.image-meta {
+  display: flex;
+  align-items: center;
+  gap: calc(0.75rem * var(--create-editor-scale, 1));
+  font-size: calc(0.75rem * var(--create-editor-scale, 1));
+  color: var(--gray-500);
+}
+
+.image-source {
+  padding: calc(0.125rem * var(--create-editor-scale, 1)) calc(0.5rem * var(--create-editor-scale, 1));
+  background: rgba(6, 10, 18, 0.55);
+  border-radius: var(--radius-sm);
+  color: var(--gray-600);
+}
+
+.image-date {
+  color: var(--gray-500);
+}
+
+.image-card-body {
+  margin-bottom: calc(1rem * var(--create-editor-scale, 1));
+}
+
+.main-image {
+  width: 100%;
+  max-height: calc(400px * var(--create-editor-scale, 1));
+  object-fit: contain;
+  border-radius: var(--radius-md);
+}
+
+/* 四宫格图样式 */
+.four-grid-images {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: calc(0.5rem * var(--create-editor-scale, 1));
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.grid-image-item {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+}
+
+.grid-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.angle-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  color: white;
+  padding: calc(0.5rem * var(--create-editor-scale, 1));
+  font-size: calc(0.75rem * var(--create-editor-scale, 1));
+  text-align: center;
+}
+
+.image-placeholder {
+  aspect-ratio: 16 / 9;
+  border: calc(2px * var(--create-editor-scale, 1)) dashed var(--create-border-dashed);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(1rem * var(--create-editor-scale, 1));
+  color: var(--gray-400);
+}
+
+.image-placeholder .anticon {
+  font-size: calc(3rem * var(--create-editor-scale, 1));
+}
+
+.image-card-footer {
+  display: flex;
+  gap: calc(0.75rem * var(--create-editor-scale, 1));
+  margin-bottom: calc(1rem * var(--create-editor-scale, 1));
+}
+
+.image-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(0.75rem * var(--create-editor-scale, 1));
+  flex-wrap: wrap;
+}
+
+.image-card-actions-right {
+  display: flex;
+  gap: calc(0.5rem * var(--create-editor-scale, 1));
+  flex-wrap: wrap;
+}
+
+.bottom-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(1rem * var(--create-editor-scale, 1)) calc(1.5rem * var(--create-editor-scale, 1));
+  border-top: calc(1px * var(--create-editor-scale, 1)) solid var(--gray-200);
+  background: var(--create-surface-panel);
+  flex-shrink: 0;
+}
+
+.bottom-right-actions {
+  display: flex;
+  gap: calc(0.75rem * var(--create-editor-scale, 1));
+}
+
+.dialogue-content {
+  padding: calc(1.5rem * var(--create-editor-scale, 1));
+  display: flex;
+  flex-direction: column;
+  gap: calc(1.5rem * var(--create-editor-scale, 1));
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.dialogue-section {
+  display: flex;
+  flex-direction: column;
+  gap: calc(1.5rem * var(--create-editor-scale, 1));
+}
