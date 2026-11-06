@@ -4,18 +4,18 @@
 
 ## 生产环境
 
-用户端为 https://43.154.247.11/aid-studio/ 。HTTP 同路径会跳转至 HTTPS。独立运行的 AID 应用只监听 127.0.0.1:18480。管理页面通过 SSH 转发 18489 后访问。两个账号的凭据分别在服务器 /etc/aid-studio/creator-login 和 /etc/aid-studio/admin-login，仅 root 可读。
+三套前端在同一 IP 的 HTTPS 站点。https://43.154.247.11/ 为定制 creator，https://43.154.247.11/web/ 为原版 web，https://43.154.247.11/admin/ 为管理后台。旧 /aid-studio/ 路径跳转到新地址。后端监听 127.0.0.1:18480，管理端另有本地维护入口 18489。管理员和创作者凭据分别位于 /etc/aid-studio/admin-login 与 /etc/aid-studio/creator-login，仅 root 可读。
 
-- 构建用户端时在 frontend/web 下执行 NEXT_PUBLIC_BASE_PATH=/aid-studio npm run generate，部署 dist/public 到 /opt/aid-studio/current/web-prefix。管理端静态目录为 /opt/aid-studio/current/admin，后端为 /opt/aid-studio/current/aid-admin.jar。
+- frontend/creator 根路径静态导出到 current/creator-public，frontend/web 以 /web 为 basePath 导出到 current/web-original（Nginx 回环 18481）。frontend/admin 以 /admin/ 构建到 current/admin-public，请求 /admin/prod-api/；回环管理端使用独立根路径构建 current/admin。
 - 运行服务为 aid-studio、aid-studio-mysql、aid-studio-redis；配置与凭据在 /etc/aid-studio，应用数据在 /var/lib/aid-studio，数据库与缓存数据在 /var/lib/aid-studio-db。独立 JRE 和数据库程序位于 /opt/aid-studio。
-- 当前 HTTPS 站点引用 /etc/aid-studio/public-path.conf。Nginx 主配置引用 /etc/nginx/snippets/aid-studio.conf 和 /etc/aid-studio/http-redirect.conf。日后全量发布网关或重写 HTTPS 配置时须保留这些 include 和现役证书配置。部署前 Nginx 配置副本在 /etc/aid-studio。
+- 三端统一入口配置 deploy/nginx/ai-hk-frontends.conf 对应服务器 /etc/aid-studio/public-path.conf，由 HTTPS 站点引用。三端切换前配置备份 /etc/aid-studio/before-three-ka6wHHfj，之前管理端产物 /opt/aid-studio/releases/three-2q8h9j2Y/previous-admin。Nginx 主配置引用 /etc/nginx/snippets/aid-studio.conf 和 /etc/aid-studio/http-redirect.conf。日后全量发布网关或重写 HTTPS 配置时须保留这些 include 和现役证书配置。部署前 Nginx 配置副本在 /etc/aid-studio。
 - 生产环境使用本地存储。已移除种子数据中指向缺失图片的交流二维码。模型生成及短信、邮件、微信登录待配置。
 
 ## 下次发布
 
 在本机仓库中提交要上线的改动后，执行 `./deploy/ai-hk.sh`。脚本通过 SSH 别名 `ai-hk` 发布当前 Git 提交，构建使用 JDK 17、Maven、Node.js 22.13+ 和 npm。`./deploy/ai-hk.sh --check` 用于本机构建、服务器只读预检和现役公网入口检查。
 
-发布时脚本校验上传包，原子切换后端和两个前端，重启 AID 并检查 API、用户端、管理端和一张风格图。服务器验收失败会恢复原程序并再次启动服务。发布期间 API 会短暂中断，建议避开正在生成的任务。旧程序路径会打印在终端。数据库、上传素材和共享 Nginx 均独立维护；SQL 内容变化时，脚本会在切换前停止，需先安排相应迁移。
+发布时脚本校验上传包，原子切换后端和三个前端，重启 AID 并检查 API、用户端、管理端和一张风格图。服务器验收失败会恢复原程序并再次启动服务。发布期间 API 会短暂中断，建议避开正在生成的任务。旧程序路径会打印在终端。数据库、上传素材和共享 Nginx 均独立维护；SQL 内容变化时，脚本会在切换前停止，需先安排相应迁移。
 
 ## 素材恢复与验收
 
@@ -26,3 +26,5 @@
 发布后使用普通创作者账号走通“我的作品 → 新建电影 → 项目配置 → 剧本创作 → 流程画布”。在新建作品和资产库中核对真实预览，检查响应类型和文件内容。首页及 FAQ 的可选 SEO 元数据未登记时会回退到内置标题。
 
 [部署与验收记录](tasks/todo.md) · [协作与排障经验](tasks/lessons.md)
+
+- AID Studio 的 C 端定制只修改 frontend/creator（公网根路径）。frontend/web（公网 /web/）保留为作者原版，仅在同步作者代码时更新。
