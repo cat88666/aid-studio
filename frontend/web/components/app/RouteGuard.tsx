@@ -1,5 +1,6 @@
 'use client'
 
+import { stripAppBasePath } from '~/utils/appBasePath'
 import { useUserStore } from '@/stores/user'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
@@ -60,7 +61,7 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
     const token = useUserStore.getState().token || localStorage.getItem('token') || ''
     if (!token) {
       requireLogin({
-        redirect: `${window.location.pathname}${window.location.search}${window.location.hash}`
+        redirect: `${stripAppBasePath(window.location.pathname)}${window.location.search}${window.location.hash}`
       })
     }
   }, [pathname, router])

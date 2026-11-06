@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- 本地宣传 SVG 与公开配置直链需保持静态导出行为 */
 
+import { withAppBasePath } from '~/utils/appBasePath'
 import { HtmlShellClass } from '@/components/app/HtmlShellClass'
 import PublicBrandLogo from '@/components/atoms/PublicBrandLogo'
 import { message } from 'antd'
@@ -12,9 +13,9 @@ import styles from './mobile-page.module.css'
 
 const picUrl = assetUrl(picMod)
 const subscribeToLocation = () => () => undefined
-const getBrowserHost = () => window.location.host
+const getBrowserHost = () => window.location.host + withAppBasePath('/').replace(/\/$/, '')
 const getServerHost = () => '当前站点'
-const getBrowserOrigin = () => window.location.origin
+const getBrowserOrigin = () => window.location.origin + withAppBasePath('/')
 const getServerOrigin = () => ''
 
 /** 移动端拦截页：请使用电脑端打开（开源版：PublicBrandLogo + 当前站点地址） */

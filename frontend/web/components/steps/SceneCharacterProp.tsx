@@ -18,6 +18,7 @@
  * defineExpose：无。
  */
 
+import { withAppBasePath } from '~/utils/appBasePath'
 import { useContext, useEffect, useRef } from 'react'
 import { LoadingOutlined } from '@ant-design/icons'
 import { Button } from 'antd'
@@ -458,7 +459,7 @@ export function SceneCharacterProp(rawProps: SceneCharacterPropProps) {
             </div>
             <div className="extracting-placeholder">
               <img
-                src="/media/icon/generating-center.webp"
+                src={withAppBasePath('/media/icon/generating-center.webp')}
                 alt=""
                 className="extracting-placeholder-image"
               />

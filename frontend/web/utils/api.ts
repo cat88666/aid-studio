@@ -1,3 +1,4 @@
+import { withAppBasePath } from '~/utils/appBasePath'
 import type {
 AxiosInstance,
 AxiosRequestConfig,
@@ -61,7 +62,7 @@ export function resolveClientApiUrl(path: string): string {
     return `${API_BASE_DEVELOPMENT.replace(/\/$/, '')}${p}`
   }
   if ((typeof window !== 'undefined')) {
-    const base = `${window.location.protocol}//${window.location.host}/aid`
+    const base = `${window.location.protocol}//${window.location.host}${withAppBasePath('/aid')}`
     return `${base.replace(/\/$/, '')}${p}`
   }
   return `${API_BASE_DEVELOPMENT.replace(/\/$/, '')}${p}`
@@ -74,7 +75,7 @@ export function resolveClientApiUrl(path: string): string {
 function resolveApiBaseURL(): string {
   if ((process.env.NODE_ENV === 'development')) return API_BASE_DEVELOPMENT
   if ((typeof window !== 'undefined')) {
-    return `${window.location.protocol}//${window.location.host}/aid`
+    return `${window.location.protocol}//${window.location.host}${withAppBasePath('/aid')}`
   }
   return API_BASE_DEVELOPMENT
 }

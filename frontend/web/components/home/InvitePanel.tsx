@@ -1,5 +1,6 @@
 'use client'
 
+import { withAppBasePath } from '~/utils/appBasePath'
 import { CopyOutlined } from '@ant-design/icons'
 import { Button,message } from 'antd'
 import { useEffect,useRef,useState } from 'react'
@@ -126,7 +127,7 @@ export default function InvitePanel() {
     const code = String(info?.inviteCode || '').trim()
     if (!code) return
     const origin = typeof window !== 'undefined' ? window.location.origin : ''
-    void copyText(`${origin}/login?invite=${encodeURIComponent(code)}`, '邀请链接已复制')
+    void copyText(`${origin}${withAppBasePath('/login')}?invite=${encodeURIComponent(code)}`, '邀请链接已复制')
   }
 
   useEffect(() => {

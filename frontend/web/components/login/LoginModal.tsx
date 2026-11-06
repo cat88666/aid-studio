@@ -1,5 +1,6 @@
 'use client'
 
+import { withAppBasePath } from '~/utils/appBasePath'
 import { ConfigProvider, message } from 'antd'
 import { useRouter } from 'next/navigation'
 import AidHoverLogo from '@/components/atoms/AidHoverLogo'
@@ -25,7 +26,7 @@ import {
   LOGIN_MODAL_VISUAL_CLASS
 } from '~/utils/loginModalLayout'
 
-const LOGIN_VIDEO_URL = '/media/login/login-video-bg.mp4'
+const LOGIN_VIDEO_URL = withAppBasePath('/media/login/login-video-bg.mp4')
 
 const TITLE_MAP = {
   code: '验证码登录',

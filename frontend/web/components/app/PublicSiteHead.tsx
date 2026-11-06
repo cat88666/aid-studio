@@ -1,5 +1,6 @@
 'use client'
 
+import { withAppBasePath } from '~/utils/appBasePath'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { useAuthPublicConfig } from '~/composables/useAuthPublicConfig'
@@ -35,7 +36,7 @@ export function PublicSiteHead() {
     title: origin ? siteName : undefined,
     description: origin ? siteDescription : undefined,
     keywords: origin ? siteKeywords : undefined,
-    canonicalUrl: origin ? `${origin}${pathname}` : undefined
+    canonicalUrl: origin ? `${origin}${withAppBasePath(pathname)}` : undefined
   }, registered?.route === route ? registered.value : null)
   const icon = origin ? faviconUrl : ''
   const iconType = /\.svg(?:$|\?)/i.test(icon) ? 'image/svg+xml' : undefined

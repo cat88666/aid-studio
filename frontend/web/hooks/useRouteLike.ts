@@ -1,5 +1,6 @@
 'use client'
 
+import { stripAppBasePath } from '~/utils/appBasePath'
 import { usePathname,useRouter,useSearchParams } from 'next/navigation'
 import { createContext, createElement, useContext, useLayoutEffect, useMemo, type ReactNode } from 'react'
 import type { RouteLikeLocation,RouteLikeNavigator } from '~/types/routeLike'
@@ -56,5 +57,5 @@ export function getRouteLikeSnapshot(): RouteLikeLocation {
     const all = params.getAll(key)
     query[key] = all.length > 1 ? all : all[0]
   }
-  return { path: embeddedSnapshotPath ?? window.location.pathname, query }
+  return { path: embeddedSnapshotPath ?? stripAppBasePath(window.location.pathname), query }
 }

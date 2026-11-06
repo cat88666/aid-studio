@@ -8,6 +8,7 @@ const proxyTarget = process.env.NEXT_PROXY_TARGET || 'http://127.0.0.1:8080'
 const staticExport = process.env.NEXT_STATIC_EXPORT === '1'
 
 const nextConfig: NextConfig = {
+  basePath: (process.env.NEXT_PUBLIC_BASE_PATH || '').replace(/\/$/, ''),
   ...(staticExport
     ? {
         /** 对齐原 `nuxt generate`：输出纯静态文件，发布脚本再归档到 dist/public。 */

@@ -1,3 +1,4 @@
+import { stripAppBasePath } from '~/utils/appBasePath'
 import { openLoginModal, closeLoginModal, useLoginModalStore } from '@/stores/loginModal'
 import { isAuthRequiredPath, sanitizeLoginRedirect } from '~/utils/authRequiredPath'
 
@@ -17,7 +18,7 @@ export type RequireLoginOptions = {
 
 function currentLocationHref(): string {
   if (typeof window === 'undefined') return '/'
-  return `${window.location.pathname}${window.location.search}${window.location.hash}`
+  return `${stripAppBasePath(window.location.pathname)}${window.location.search}${window.location.hash}`
 }
 
 /** 清本地登录态；lazy import user store，避免 api ↔ store 环依赖 */
@@ -54,7 +55,7 @@ function resolveRequireLoginRedirect(options?: RequireLoginOptions): string | nu
 export function requireLogin(options?: RequireLoginOptions): void {
   if (typeof window === 'undefined') return
 
-  const pathname = window.location.pathname
+  const pathname = stripAppBasePath(window.location.pathname)
   // 兼容页自己会 openLoginModal + replace('/')，此处介入会打架
   if (pathname === '/login' || pathname.startsWith('/login/')) return
 

@@ -10,3 +10,10 @@ export function withAppBasePath(path: string): string {
   const normalized = base.endsWith('/') ? base.slice(0, -1) : base
   return `${normalized}${p}`
 }
+
+/** Next router expects application-relative paths even when the browser URL includes basePath. */
+export function stripAppBasePath(path: string): string {
+  const base = withAppBasePath('/').slice(0, -1)
+  if (base && (path === base || path.startsWith(base + '/'))) return path.slice(base.length) || '/'
+  return path
+}
