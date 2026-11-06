@@ -1,5 +1,7 @@
 'use client'
 
+import { useAuthText } from '~/hooks/useAuthText'
+
 import { ConfigProvider } from 'antd'
 import { ForgotPasswordDoneStep } from './ForgotPasswordDoneStep'
 import { ForgotPasswordResetStep } from './ForgotPasswordResetStep'
@@ -16,6 +18,7 @@ import {
 } from '~/utils/forgotPasswordLayout'
 
 export function ForgotPasswordPage() {
+  const t = useAuthText()
   const flow = useForgotPasswordFlow()
   const captchaId = FORGOT_PASSWORD_CAPTCHA_EL.slice(1)
 
@@ -29,10 +32,10 @@ export function ForgotPasswordPage() {
       />
 
       <div className={FORGOT_PASSWORD_STACK_CLASS}>
-        <h1 className={FORGOT_PASSWORD_TITLE_CLASS}>找回密码</h1>
+        <h1 className={FORGOT_PASSWORD_TITLE_CLASS}>{t('找回密码')}</h1>
         <ForgotPasswordStepper step={flow.step} />
 
-        <section className={FORGOT_PASSWORD_CARD_CLASS} aria-label="找回密码表单">
+        <section className={FORGOT_PASSWORD_CARD_CLASS} aria-label={t('找回密码表单')}>
           <ConfigProvider theme={LOGIN_MODAL_ANTD_THEME} wave={{ disabled: true }}>
             {flow.step === 1 && (
               <ForgotPasswordVerifyStep

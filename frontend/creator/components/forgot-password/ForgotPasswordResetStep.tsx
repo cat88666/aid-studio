@@ -1,5 +1,7 @@
 'use client'
 
+import { useAuthText } from '~/hooks/useAuthText'
+
 import { Form } from 'antd'
 import { ForgotPasswordField } from './ForgotPasswordField'
 import {
@@ -37,6 +39,7 @@ export function ForgotPasswordResetStep({
   onNext,
   onUnlockAutofill
 }: ForgotPasswordResetStepProps) {
+  const t = useAuthText()
   return (
     <Form
       layout="vertical"
@@ -45,24 +48,24 @@ export function ForgotPasswordResetStep({
       onFinish={onNext}
     >
       <div className={FORGOT_PASSWORD_FIELDS_CLASS}>
-        <Form.Item label={<span className={LABEL_CLASS}>设置新密码</span>} className={ITEM_CLASS}>
+        <Form.Item label={<span className={LABEL_CLASS}>{t('设置新密码')}</span>} className={ITEM_CLASS}>
           <ForgotPasswordField
             type="password"
             value={newPassword}
-            placeholder="输入新密码"
+            placeholder={t('输入新密码')}
             maxLength={passwordMaxLength}
             autoComplete="new-password"
             showPasswordToggle
             onChange={onNewPasswordChange}
             onUnlockAutofill={onUnlockAutofill}
           />
-          <p className={HINT_CLASS}>{AUTH_PASSWORD_RULE_HINT}</p>
+          <p className={HINT_CLASS}>{t(AUTH_PASSWORD_RULE_HINT)}</p>
         </Form.Item>
-        <Form.Item label={<span className={LABEL_CLASS}>确认新密码</span>} className={ITEM_CLASS}>
+        <Form.Item label={<span className={LABEL_CLASS}>{t('确认新密码')}</span>} className={ITEM_CLASS}>
           <ForgotPasswordField
             type="password"
             value={confirmPassword}
-            placeholder="再次输入新密码"
+            placeholder={t('再次输入新密码')}
             maxLength={passwordMaxLength}
             autoComplete="new-password"
             showPasswordToggle
@@ -72,7 +75,7 @@ export function ForgotPasswordResetStep({
         </Form.Item>
       </div>
       <button type="submit" disabled={loading} className={FORGOT_PASSWORD_SUBMIT_CLASS}>
-        下一步
+        {t('下一步')}
       </button>
     </Form>
   )

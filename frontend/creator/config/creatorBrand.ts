@@ -1,6 +1,10 @@
 import { withAppBasePath } from '~/utils/appBasePath'
 
-export const CREATOR_BRAND_NAME = '镜序'
-export const CREATOR_BRAND_DESCRIPTION = '镜序 AI 短剧创作平台，从剧本、角色与分镜到配音和成片。'
-export const CREATOR_BRAND_KEYWORDS = '镜序,AI 短剧,分镜,剧本创作,视频制作'
-export const CREATOR_BRAND_ICON = withAppBasePath('/brand/jingxu.svg')
+export const CREATOR_BRAND_NAME = 'Sakura AGIC'
+export function creatorBrandName(locale: 'en' | 'zh') {
+  return locale === 'zh' ? '樱花 AGIC' : CREATOR_BRAND_NAME
+}
+
+export const CREATOR_BRAND_DESCRIPTION = 'Create short films with AI, from your first script and storyboard to the final cut.'
+export const CREATOR_BRAND_KEYWORDS = 'Sakura AGIC,AI filmmaking,storyboards,short films'
+export const CREATOR_BRAND_ICON = withAppBasePath('/brand/agic.svg')

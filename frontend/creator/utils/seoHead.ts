@@ -1,5 +1,5 @@
 import { request } from '~/utils/api'
-import { CREATOR_BRAND_DESCRIPTION, CREATOR_BRAND_KEYWORDS, CREATOR_BRAND_NAME } from '~/config/creatorBrand'
+import { CREATOR_BRAND_DESCRIPTION, CREATOR_BRAND_KEYWORDS, creatorBrandName } from '~/config/creatorBrand'
 
 export interface PublicSeoMeta {
   title?: string
@@ -10,29 +10,29 @@ export interface PublicSeoMeta {
   robots?: string
 }
 
-const PAGE_TITLES: Record<string, string> = {
-  '/works': '我的作品',
-  '/gallery': '公开作品',
-  '/assets': '资产库',
-  '/billing': '账单明细',
-  '/invite': '邀请管理',
-  '/faq': '常见问题',
-  '/about': '关于我们',
-  '/login': '登录',
-  '/forgot-password': '找回密码',
-  '/case': '作品详情',
-  '/mobile': '移动端提示',
-  '/create': '创作工作台',
-  '/create/studio': '分镜工作台',
-  '/create/global-setting': '项目设置',
-  '/create/story-script': '剧本创作',
-  '/create/series-episode-list': '剧集目录',
-  '/create/series-script-upload': '导入剧本',
-  '/create/scene-character': '场景与角色',
-  '/create/storyboard-script': '分镜脚本',
-  '/create/storyboard-video': '分镜视频',
-  '/create/dubbing': '角色配音',
-  '/create/preview': '成片预览'
+const PAGE_TITLES: Record<string, [string, string]> = {
+  '/works': ['My projects', '我的作品'],
+  '/gallery': ['Gallery', '公开作品'],
+  '/assets': ['Assets', '资产库'],
+  '/billing': ['Billing', '账单明细'],
+  '/invite': ['Invitations', '邀请管理'],
+  '/faq': ['Help', '常见问题'],
+  '/about': ['About', '关于我们'],
+  '/login': ['Sign in', '登录'],
+  '/forgot-password': ['Reset password', '找回密码'],
+  '/case': ['Project details', '作品详情'],
+  '/mobile': ['Mobile access', '移动端提示'],
+  '/create': ['Studio', '创作工作台'],
+  '/create/studio': ['Storyboard studio', '分镜工作台'],
+  '/create/global-setting': ['Project settings', '项目设置'],
+  '/create/story-script': ['Script', '剧本创作'],
+  '/create/series-episode-list': ['Episodes', '剧集目录'],
+  '/create/series-script-upload': ['Import script', '导入剧本'],
+  '/create/scene-character': ['Scenes and characters', '场景与角色'],
+  '/create/storyboard-script': ['Storyboard', '分镜脚本'],
+  '/create/storyboard-video': ['Video shots', '分镜视频'],
+  '/create/dubbing': ['Voiceover', '角色配音'],
+  '/create/preview': ['Preview', '成片预览']
 }
 
 export function normalizeSeoPath(pathname: string): string {
@@ -44,17 +44,18 @@ export function isPrivateSeoPath(pathname: string): boolean {
 }
 
 /** 品牌与头图由定制端维护；页面级内容、索引策略与规范地址沿用登记配置。 */
-export function resolveSiteSeo(pathname: string, registered?: PublicSeoMeta | null) {
+export function resolveSiteSeo(pathname: string, registered?: PublicSeoMeta | null, locale: 'en' | 'zh' = 'en') {
   const route = normalizeSeoPath(pathname)
-  const pageTitle = PAGE_TITLES[route]
+  const name = creatorBrandName(locale)
+  const pageTitle = PAGE_TITLES[route]?.[locale === 'en' ? 0 : 1]
   const isPrivate = isPrivateSeoPath(route)
   const publicMeta = isPrivate ? null : registered
-  const description = route === '/faq' ? '产品使用说明、常见问题与帮助中心'
-    : route === '/about' ? '了解产品、服务与创作平台' : CREATOR_BRAND_DESCRIPTION
+  const description = locale === 'en' ? CREATOR_BRAND_DESCRIPTION : route === '/faq' ? '产品使用说明、常见问题与帮助中心'
+    : route === '/about' ? '了解产品、服务与创作平台' : '樱花 AGIC AI 短剧创作平台，从剧本到成片。'
   return {
-    title: pageTitle ? pageTitle + ' - ' + CREATOR_BRAND_NAME : CREATOR_BRAND_NAME,
-    description: publicMeta?.description?.replace(/视觉·AID|AID Studio/gi, CREATOR_BRAND_NAME) || description,
-    keywords: publicMeta?.keywords?.replace(/视觉·AID|AID Studio/gi, CREATOR_BRAND_NAME) || CREATOR_BRAND_KEYWORDS,
+    title: pageTitle ? pageTitle + ' - ' + name : name,
+    description: (locale === 'zh' && publicMeta?.description?.replace(/视觉·AID|AID Studio|镜序/gi, name)) || description,
+    keywords: (locale === 'zh' && publicMeta?.keywords?.replace(/视觉·AID|AID Studio|镜序/gi, name)) || CREATOR_BRAND_KEYWORDS,
     robots: isPrivate ? 'noindex,nofollow' : publicMeta?.robots || 'index,follow',
     canonicalUrl: publicMeta?.canonicalUrl
   }

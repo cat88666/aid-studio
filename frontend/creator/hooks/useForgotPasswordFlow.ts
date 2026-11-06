@@ -1,5 +1,7 @@
 'use client'
 
+import { useAuthText } from '~/hooks/useAuthText'
+
 import { message } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -25,6 +27,7 @@ export const FORGOT_PASSWORD_CAPTCHA_EL = '#forgot-password-captcha-box'
 const SEND_CODE_SCOPE = 'forgot-password-send-code'
 
 export function useForgotPasswordFlow() {
+  const t = useAuthText()
   const router = useRouter()
   const {
     smsLoginEnabled,
@@ -62,7 +65,7 @@ export function useForgotPasswordFlow() {
         cfg.login?.emailEnabled === true
       ).enabled
       if (!enabled) {
-        message.warning('验证码登录未开启，无法找回密码')
+        message.warning(t('验证码登录未开启，无法找回密码'))
         router.replace('/')
         openLoginModal({ tab: 'password', redirect: null })
       }
@@ -70,33 +73,34 @@ export function useForgotPasswordFlow() {
     return () => {
       cancelled = true
     }
-  }, [loadPublicConfig, router])
+  }, [loadPublicConfig, router, t])
 
   const goVerifyNext = useCallback(() => {
     const target = account.trim()
     const channel = sendCode.activeChannel
     if (!channel) {
-      message.error('验证码登录未开启')
+      message.error(t('验证码登录未开启'))
       return
     }
     if (!target) {
-      message.error(sendCode.codeLoginPresentation.accountPlaceholder)
+      message.error(t(sendCode.codeLoginPresentation.accountPlaceholder))
       return
     }
     if (!isValidCodeLoginTarget(target, channel)) {
-      message.error(channel === 'sms' ? '手机号格式不正确' : '邮箱格式不正确')
+      message.error(t(channel === 'sms' ? '手机号格式不正确' : '邮箱格式不正确'))
       return
     }
     if (!code.trim()) {
-      message.error('请输入验证码')
+      message.error(t('请输入验证码'))
       return
     }
     if (code.trim().length > codeMaxLength) {
-      message.error('验证码格式不正确')
+      message.error(t('验证码格式不正确'))
       return
     }
     setStep(2)
   }, [
+    t,
     account,
     code,
     codeMaxLength,
@@ -108,7 +112,7 @@ export function useForgotPasswordFlow() {
     if (loadingRef.current || sendCode.isCaptchaOpening()) return
     const channel = sendCode.activeChannel
     if (!channel) {
-      message.error('验证码登录未开启')
+      message.error(t('验证码登录未开启'))
       return
     }
     const issue = validateAuthPasswordChange({
@@ -116,7 +120,7 @@ export function useForgotPasswordFlow() {
       confirmPassword
     })
     if (issue) {
-      message.error(authPasswordIssueMessage(issue))
+      message.error(t(authPasswordIssueMessage(issue)))
       return
     }
 
@@ -136,12 +140,12 @@ export function useForgotPasswordFlow() {
       setStep(3)
     } catch (e: unknown) {
       const err = e as { msg?: string; message?: string }
-      message.error(err?.msg ?? err?.message ?? '重置失败')
+      message.error(t(err?.msg ?? err?.message ?? '重置失败'))
     } finally {
       loadingRef.current = false
       setLoading(false)
     }
-  }, [account, code, confirmPassword, newPassword, sendCode])
+  }, [account, code, confirmPassword, newPassword, sendCode, t])
 
   const goLogin = useCallback(() => {
     router.replace('/')

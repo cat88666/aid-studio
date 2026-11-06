@@ -1,5 +1,7 @@
 'use client'
 
+import { useAuthText } from '~/hooks/useAuthText'
+
 import { LoadingOutlined } from '@ant-design/icons'
 import { LoginAgreementHint } from './LoginAgreementHint'
 import { LoginModalField } from './LoginModalField'
@@ -45,6 +47,7 @@ export function LoginCodePanel({
   onSubmit,
   onUnlockAutofill
 }: LoginCodePanelProps) {
+  const t = useAuthText()
   return (
     <form
       className={LOGIN_MODAL_STACK_CLASS}
@@ -57,7 +60,7 @@ export function LoginCodePanel({
         <LoginModalField
           name="login-account"
           value={account}
-          placeholder={accountPlaceholder}
+          placeholder={t(accountPlaceholder)}
           onChange={onAccountChange}
           onUnlockAutofill={onUnlockAutofill}
         />
@@ -66,7 +69,7 @@ export function LoginCodePanel({
           inputMode="numeric"
           maxLength={codeMaxLength}
           value={code}
-          placeholder="请输入验证码"
+          placeholder={t('请输入验证码')}
           onChange={onCodeChange}
           onUnlockAutofill={onUnlockAutofill}
           suffix={
@@ -76,7 +79,7 @@ export function LoginCodePanel({
               className="cursor-pointer text-sm text-[var(--login-modal-muted)] transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
               onClick={onSendCode}
             >
-              {sendCodeCountdown > 0 ? `${sendCodeCountdown}s` : '获取验证码'}
+              {sendCodeCountdown > 0 ? `${sendCodeCountdown}s` : t('获取验证码')}
             </button>
           }
         />
@@ -91,10 +94,10 @@ export function LoginCodePanel({
         {loading ? (
           <span className="inline-flex items-center gap-2" role="status">
             <LoadingOutlined spin />
-            登录中...
+            {t('登录中...')}
           </span>
         ) : (
-          '登录'
+          t('登录')
         )}
       </button>
       <LoginAgreementHint

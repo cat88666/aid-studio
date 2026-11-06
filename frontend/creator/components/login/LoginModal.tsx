@@ -1,9 +1,12 @@
 'use client'
 
+import { useAuthText } from '~/hooks/useAuthText'
+
 import { withAppBasePath } from '~/utils/appBasePath'
 import { ConfigProvider, message } from 'antd'
 import { useRouter } from 'next/navigation'
-import { CREATOR_BRAND_NAME } from '~/config/creatorBrand'
+import { useCreatorLocale } from '~/hooks/useCreatorLocale'
+import { creatorBrandName } from '~/config/creatorBrand'
 import { LoginAltMethods } from './LoginAltMethods'
 import { LoginCodePanel } from './LoginCodePanel'
 import { LoginPasswordPanel } from './LoginPasswordPanel'
@@ -40,6 +43,8 @@ interface LoginModalProps {
 }
 
 export function LoginModal({ visible = true }: LoginModalProps) {
+  const { locale } = useCreatorLocale()
+  const t = useAuthText()
   const router = useRouter()
   const session = useLoginModalSession()
   const fitScale = useLoginModalFitScale()
@@ -56,7 +61,7 @@ export function LoginModal({ visible = true }: LoginModalProps) {
 
   function handleForgotPassword() {
     if (!codeLoginPresentation.enabled) {
-      message.warning('验证码登录未开启，无法找回密码')
+      message.warning(t('验证码登录未开启，无法找回密码'))
       return
     }
     enterForgotPasswordFlow(router)
@@ -81,7 +86,7 @@ export function LoginModal({ visible = true }: LoginModalProps) {
         className={LOGIN_MODAL_FRAME_CLASS}
         role="dialog"
         aria-modal="true"
-        aria-label={TITLE_MAP[tab]}
+        aria-label={t(TITLE_MAP[tab])}
         style={{
           transform: `scale(${fitScale})`,
           transformOrigin: 'top left'
@@ -106,7 +111,7 @@ export function LoginModal({ visible = true }: LoginModalProps) {
           <ConfigProvider theme={LOGIN_MODAL_ANTD_THEME} wave={{ disabled: true }}>
           <button
             type="button"
-            aria-label="关闭"
+            aria-label={t('关闭')}
             className={LOGIN_MODAL_CLOSE_CLASS}
             onClick={() => closeLoginModal()}
           >
@@ -123,8 +128,8 @@ export function LoginModal({ visible = true }: LoginModalProps) {
 
           <div className={LOGIN_MODAL_BODY_CLASS}>
             <div className={LOGIN_MODAL_BRAND_CLASS}>
-              <span className="text-4xl font-bold leading-tight text-white">{CREATOR_BRAND_NAME}</span>
-              <h2 className={LOGIN_MODAL_TITLE_CLASS}>{TITLE_MAP[tab]}</h2>
+              <span className="text-4xl font-bold leading-tight text-white">{creatorBrandName(locale)}</span>
+              <h2 className={LOGIN_MODAL_TITLE_CLASS}>{t(TITLE_MAP[tab])}</h2>
             </div>
             <div className="flex w-full justify-center">
               {tab === 'code' && (

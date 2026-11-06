@@ -1,5 +1,7 @@
 'use client'
 
+import { useAuthText } from '~/hooks/useAuthText'
+
 import { message } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -24,6 +26,7 @@ import { mapLoginDataToUser } from '~/utils/userProfile'
 const LOGIN_SEND_CODE_COUNTDOWN_SCOPE = 'login-send-code'
 const LOGIN_CAPTCHA_EL = '#login-captcha-box'
 export function useLoginModalSession() {
+  const t = useAuthText()
   const router = useRouter()
   const tab = useLoginModalStore((s) => s.tab)
   const inviteCode = useLoginModalStore((s) => s.inviteCode)
@@ -73,14 +76,14 @@ export function useLoginModalSession() {
       const userStore = useUserStore.getState()
       userStore.login(mapLoginDataToUser(data, account.trim()), data.token)
       void useUserStore.getState().fetchProfile()
-      message.success('登录成功', 2)
+      message.success(t('登录成功'), 2)
       const next = redirect && redirect !== '/' ? redirect : ''
       closeLoginModal()
       if (next) {
         setTimeout(() => router.replace(next), 0)
       }
     },
-    [account, redirect, router]
+    [account, redirect, router, t]
   )
   completeLoginRef.current = completeLogin
 
@@ -139,12 +142,12 @@ export function useLoginModalSession() {
       }
     } catch (e: unknown) {
       const err = e as { msg?: string; message?: string }
-      message.error(err?.msg ?? err?.message ?? '登录失败')
+      message.error(t(err?.msg ?? err?.message ?? '登录失败'))
     } finally {
       loadingRef.current = false
       setLoading(false)
     }
-  }, [authSend, completeLogin, handleCodeLogin, handlePasswordLogin, tab])
+  }, [authSend, completeLogin, handleCodeLogin, handlePasswordLogin, tab, t])
 
   useEffect(() => {
     void loadTacScriptFallback()

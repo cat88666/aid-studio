@@ -1,5 +1,7 @@
 'use client'
 
+import { useAuthText } from '~/hooks/useAuthText'
+
 import { message } from 'antd'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePersistedCountdown } from '@/components/login/usePersistedCountdown'
@@ -36,6 +38,7 @@ export function useAuthSendCode({
   account,
   inviteCode = ''
 }: UseAuthSendCodeOptions) {
+  const t = useAuthText()
   const {
     captchaEnabled,
     captchaType,
@@ -97,15 +100,15 @@ export function useAuthSendCode({
     const target = account.trim()
     const channel = activeChannel
     if (!channel) {
-      message.error('验证码登录未开启')
+      message.error(t('验证码登录未开启'))
       return
     }
     if (!target) {
-      message.error(codeLoginPresentation.accountPlaceholder)
+      message.error(t(codeLoginPresentation.accountPlaceholder))
       return
     }
     if (!isValidCodeLoginTarget(target, channel)) {
-      message.error(channel === 'sms' ? '手机号格式不正确' : '邮箱格式不正确')
+      message.error(t(channel === 'sms' ? '手机号格式不正确' : '邮箱格式不正确'))
       return
     }
 
@@ -125,11 +128,11 @@ export function useAuthSendCode({
         return true
       })
       if (!sent) return
-      message.success('验证码已发送')
+      message.success(t('验证码已发送'))
       countdown.start(target, getSendCodeIntervalSeconds(channel))
     } catch (e: unknown) {
       const err = e as { msg?: string; message?: string }
-      message.error(err?.msg ?? err?.message ?? '发送验证码失败')
+      message.error(t(err?.msg ?? err?.message ?? '发送验证码失败'))
     } finally {
       sendCodeLoadingRef.current = false
       setSendCodeLoading(false)
@@ -143,6 +146,7 @@ export function useAuthSendCode({
     inviteCode,
     isCaptchaOpening,
     scene,
+    t,
     withCaptchaToken
   ])
 

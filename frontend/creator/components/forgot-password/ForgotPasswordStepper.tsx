@@ -1,5 +1,7 @@
 'use client'
 
+import { useAuthText } from '~/hooks/useAuthText'
+
 import {
   FORGOT_PASSWORD_ACCENT,
   FORGOT_PASSWORD_STEPPER_CLASS,
@@ -17,8 +19,9 @@ interface ForgotPasswordStepperProps {
 }
 
 export function ForgotPasswordStepper({ step }: ForgotPasswordStepperProps) {
+  const t = useAuthText()
   return (
-    <nav className={FORGOT_PASSWORD_STEPPER_CLASS} aria-label="找回密码进度">
+    <nav className={FORGOT_PASSWORD_STEPPER_CLASS} aria-label={t('找回密码进度')}>
       {STEPS.map((item, index) => {
         const active = step >= item.id
         const color = active ? FORGOT_PASSWORD_ACCENT : '#FFFFFF'
@@ -36,7 +39,7 @@ export function ForgotPasswordStepper({ step }: ForgotPasswordStepperProps) {
               >
                 {item.id}
               </span>
-              <span className="text-base font-medium leading-[22px]">{item.label}</span>
+              <span className="text-base font-medium leading-[22px]">{t(item.label)}</span>
             </div>
             {showLine && (
               <span

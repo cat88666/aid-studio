@@ -1,5 +1,7 @@
 'use client'
 
+import { useAuthText } from '~/hooks/useAuthText'
+
 import { Form } from 'antd'
 import { ForgotPasswordField } from './ForgotPasswordField'
 import {
@@ -41,6 +43,7 @@ export function ForgotPasswordVerifyStep({
   onNext,
   onUnlockAutofill
 }: ForgotPasswordVerifyStepProps) {
+  const t = useAuthText()
   return (
     <Form
       layout="vertical"
@@ -49,18 +52,18 @@ export function ForgotPasswordVerifyStep({
       onFinish={onNext}
     >
       <div className={FORGOT_PASSWORD_FIELDS_CLASS}>
-        <Form.Item label={<span className={LABEL_CLASS}>请输入账号</span>} className={ITEM_CLASS}>
+        <Form.Item label={<span className={LABEL_CLASS}>{t('请输入账号')}</span>} className={ITEM_CLASS}>
           <ForgotPasswordField
             value={account}
-            placeholder={accountPlaceholder || '手机号或邮箱'}
+            placeholder={t(accountPlaceholder || '手机号或邮箱')}
             onChange={onAccountChange}
             onUnlockAutofill={onUnlockAutofill}
           />
         </Form.Item>
-        <Form.Item label={<span className={LABEL_CLASS}>验证码</span>} className={ITEM_CLASS}>
+        <Form.Item label={<span className={LABEL_CLASS}>{t('验证码')}</span>} className={ITEM_CLASS}>
           <ForgotPasswordField
             value={code}
-            placeholder="请输入验证码"
+            placeholder={t('请输入验证码')}
             maxLength={codeMaxLength}
             inputMode="numeric"
             onChange={onCodeChange}
@@ -72,14 +75,14 @@ export function ForgotPasswordVerifyStep({
                 className={FORGOT_PASSWORD_CODE_BTN_CLASS}
                 onClick={onSendCode}
               >
-                {sendCodeCountdown > 0 ? `${sendCodeCountdown}s` : '获取验证码'}
+                {sendCodeCountdown > 0 ? `${sendCodeCountdown}s` : t('获取验证码')}
               </button>
             }
           />
         </Form.Item>
       </div>
       <button type="submit" disabled={loading} className={FORGOT_PASSWORD_SUBMIT_CLASS}>
-        下一步
+        {t('下一步')}
       </button>
     </Form>
   )

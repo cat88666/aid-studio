@@ -1,5 +1,7 @@
 'use client'
 
+import { useAuthText } from '~/hooks/useAuthText'
+
 import { Fragment } from 'react'
 import wechatIconMod from '~/assets/img/login/icon-wechat.svg'
 import passwordIconMod from '~/assets/img/login/icon-mima.svg'
@@ -51,6 +53,7 @@ export function LoginAltMethods({
   showCode = true,
   showPassword = true
 }: LoginAltMethodsProps) {
+  const t = useAuthText()
   const items: { tab: LoginModalTab; icon: string; label: string }[] = []
   if (showWechat && current !== 'wechat') {
     items.push({ tab: 'wechat', icon: wechatIconUrl, label: '微信扫码登录' })
@@ -69,7 +72,7 @@ export function LoginAltMethods({
         {items.map((item, index) => (
           <Fragment key={item.tab}>
             {index > 0 && <span className={LOGIN_MODAL_ALT_DIVIDER_CLASS} aria-hidden="true" />}
-            <AltButton icon={item.icon} label={item.label} onClick={() => onSelect(item.tab)} />
+            <AltButton icon={item.icon} label={t(item.label)} onClick={() => onSelect(item.tab)} />
           </Fragment>
         ))}
       </div>

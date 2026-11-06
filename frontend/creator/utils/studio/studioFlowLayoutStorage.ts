@@ -41,7 +41,7 @@ export async function loadStudioFlowLayout(scopeKey: string): Promise<StudioWork
     }
     return {
       ...createEmptyStudioFlowWorkspace(scopeKey),
-      title: String(parsed.title || CREATOR_BRAND_NAME).replace(/^AID Studio(?= · |$)/, CREATOR_BRAND_NAME),
+      title: String(parsed.title || CREATOR_BRAND_NAME).replace(/^(?:AID Studio|镜序)(?= · |$)/, CREATOR_BRAND_NAME),
       nodes: Array.isArray(parsed.nodes) ? parsed.nodes : [],
       edges: Array.isArray(parsed.edges) ? parsed.edges : [],
       zones: Array.isArray(parsed.zones) && parsed.zones.length

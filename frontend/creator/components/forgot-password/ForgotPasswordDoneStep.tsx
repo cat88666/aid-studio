@@ -1,5 +1,7 @@
 'use client'
 
+import { useAuthText } from '~/hooks/useAuthText'
+
 import { FORGOT_PASSWORD_DONE_CLASS, FORGOT_PASSWORD_SUCCESS } from '~/utils/forgotPasswordLayout'
 
 interface ForgotPasswordDoneStepProps {
@@ -7,6 +9,7 @@ interface ForgotPasswordDoneStepProps {
 }
 
 export function ForgotPasswordDoneStep({ onGoLogin }: ForgotPasswordDoneStepProps) {
+  const t = useAuthText()
   return (
     <div className={FORGOT_PASSWORD_DONE_CLASS}>
       <div
@@ -24,13 +27,13 @@ export function ForgotPasswordDoneStep({ onGoLogin }: ForgotPasswordDoneStepProp
           />
         </svg>
       </div>
-      <p className="m-0 text-lg font-medium leading-[22px] text-white">新密码已设置成功</p>
+      <p className="m-0 text-lg font-medium leading-[22px] text-white">{t('新密码已设置成功')}</p>
       <button
         type="button"
         className="cursor-pointer border-0 bg-transparent text-base font-normal text-white hover:opacity-80"
         onClick={onGoLogin}
       >
-        去登录 &gt;&gt;
+        {t('去登录')}
       </button>
     </div>
   )

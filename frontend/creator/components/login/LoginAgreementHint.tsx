@@ -1,5 +1,7 @@
 'use client'
 
+import { useAuthText } from '~/hooks/useAuthText'
+
 import { LOGIN_MODAL_HINT_CLASS } from '~/utils/loginModalLayout'
 
 interface LoginAgreementHintProps {
@@ -36,13 +38,14 @@ export function LoginAgreementHint({
   termsOfServiceUrl,
   privacyPolicyUrl
 }: LoginAgreementHintProps) {
+  const t = useAuthText()
   return (
     <p className={LOGIN_MODAL_HINT_CLASS}>
-      登录即表示同意
-      <PolicyLink href={termsOfServiceUrl}>《用户协议》</PolicyLink>
-      和
-      <PolicyLink href={privacyPolicyUrl}>《隐私政策》</PolicyLink>
-      {extra}
+      {t('登录即表示同意')}
+      <PolicyLink href={termsOfServiceUrl}>{t('《用户协议》')}</PolicyLink>
+      {t('和')}
+      <PolicyLink href={privacyPolicyUrl}>{t('《隐私政策》')}</PolicyLink>
+      {t(extra)}
     </p>
   )
 }

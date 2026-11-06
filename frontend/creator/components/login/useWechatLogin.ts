@@ -1,6 +1,7 @@
 'use client'
 
 import { message } from 'antd'
+import { useAuthText } from '~/hooks/useAuthText'
 import { useCallback,useEffect,useRef,useState } from 'react'
 import type { LoginData } from '~/types/business-api'
 import { wechatLoginCheck,wechatLoginQrcode } from '~/utils/businessApi'
@@ -48,6 +49,7 @@ export interface UseWechatLoginOptions {
  * 会话号（session）保证刷新/切换后旧轮询回调全部失效。
  */
 export function useWechatLogin(options: UseWechatLoginOptions) {
+  const t = useAuthText()
   const [state, setState] = useState<WechatLoginState>({
     qrUrl: '',
     loading: false,
@@ -222,7 +224,7 @@ export function useWechatLogin(options: UseWechatLoginOptions) {
     } catch (e: any) {
       if (canRunWechatPolling()) {
         markWechatLoginFailed(e?.msg ?? e?.message ?? '获取微信二维码失败')
-        message.error(e?.msg ?? e?.message ?? '获取微信二维码失败')
+        message.error(t(e?.msg ?? e?.message ?? '获取微信二维码失败'))
       }
     } finally {
       patch({ loading: false })
@@ -236,7 +238,8 @@ export function useWechatLogin(options: UseWechatLoginOptions) {
     scheduleWechatQrExpiry,
     markWechatQrExpired,
     markWechatLoginFailed,
-    applyWechatCheckPayload
+    applyWechatCheckPayload,
+    t
   ])
 
   /** 邀请码变更后需重新拉码（地址栏回填 / 手填都算），否则扫码会话仍是旧码 */

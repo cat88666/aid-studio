@@ -1,5 +1,7 @@
 'use client'
 
+import { useAuthText } from '~/hooks/useAuthText'
+
 import { LoadingOutlined } from '@ant-design/icons'
 import { LoginAgreementHint } from './LoginAgreementHint'
 import { LoginModalField } from './LoginModalField'
@@ -39,6 +41,7 @@ export function LoginPasswordPanel({
   onForgotPassword,
   onUnlockAutofill
 }: LoginPasswordPanelProps) {
+  const t = useAuthText()
   return (
     <form
       className={LOGIN_MODAL_STACK_CLASS}
@@ -51,7 +54,7 @@ export function LoginPasswordPanel({
         <LoginModalField
           name="login-account"
           value={account}
-          placeholder="请输入手机号或邮箱"
+          placeholder={t('请输入手机号或邮箱')}
           onChange={onAccountChange}
           onUnlockAutofill={onUnlockAutofill}
         />
@@ -59,7 +62,7 @@ export function LoginPasswordPanel({
           type="password"
           name="login-password"
           value={password}
-          placeholder="请输入密码"
+          placeholder={t('请输入密码')}
           onChange={onPasswordChange}
           onUnlockAutofill={onUnlockAutofill}
         />
@@ -68,13 +71,13 @@ export function LoginPasswordPanel({
         {showRegister && (
           <>
             <button type="button" className="cursor-pointer hover:opacity-80" onClick={onRegister}>
-              免费注册
+              {t('免费注册')}
             </button>
             <span className="px-[0.2em]">｜</span>
           </>
         )}
         <button type="button" className="cursor-pointer hover:opacity-80" onClick={onForgotPassword}>
-          忘记密码？
+          {t('忘记密码？')}
         </button>
       </div>
       <button
@@ -86,10 +89,10 @@ export function LoginPasswordPanel({
         {loading ? (
           <span className="inline-flex items-center gap-2" role="status">
             <LoadingOutlined spin />
-            登录中...
+            {t('登录中...')}
           </span>
         ) : (
-          '登录'
+          t('登录')
         )}
       </button>
       <LoginAgreementHint termsOfServiceUrl={termsOfServiceUrl} privacyPolicyUrl={privacyPolicyUrl} />

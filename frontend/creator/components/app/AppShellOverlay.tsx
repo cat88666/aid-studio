@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { ViewportCompactScaleToggle } from '@/components/common/ViewportCompactScaleToggle'
-import { CREATOR_BRAND_NAME } from '~/config/creatorBrand'
+import { useCreatorLocale } from '~/hooks/useCreatorLocale'
+import { creatorBrandName } from '~/config/creatorBrand'
 import { useEnterCreateFlowOverlay } from '~/composables/useEnterCreateFlowOverlay'
 import { endCreateFlowNavTransition, isCreateFlowNavPath } from '~/utils/createFlowNavSerialize'
 
@@ -80,6 +81,8 @@ function useRouteReadySignal(onReady: () => void) {
 }
 
 export function AppShellOverlay() {
+  const { locale } = useCreatorLocale()
+  const loadingLabel = locale === 'en' ? 'Loading…' : '页面加载中…'
 
   const pathname = usePathname()
   const { enterCreateFlowOverlayPending, endEnterCreateFlowOverlay } = useEnterCreateFlowOverlay()
@@ -282,16 +285,16 @@ export function AppShellOverlay() {
           className="global-page-loading"
           role="status"
           aria-live="polite"
-          aria-label="页面加载中"
+          aria-label={loadingLabel}
         >
           <div className="global-page-loading__inner">
-            <div className="global-page-loading__logo">{CREATOR_BRAND_NAME}</div>
+            <div className="global-page-loading__logo">{creatorBrandName(locale)}</div>
             <div className="global-page-loading__dots">
               <span></span>
               <span></span>
               <span></span>
             </div>
-            <p>页面加载中...</p>
+            <p>{loadingLabel}</p>
           </div>
         </div>
       )}
@@ -300,11 +303,11 @@ export function AppShellOverlay() {
 
 
       {routeOverlayVisible && (
-        <div className="route-overlay" role="status" aria-live="polite" aria-label="页面切换中">
+        <div className="route-overlay" role="status" aria-live="polite" aria-label={loadingLabel}>
           <div className="route-overlay__inner">
             <div className="route-overlay__glow" />
-            <div className="route-overlay__brand">{CREATOR_BRAND_NAME}</div>
-            <div className="route-overlay__hint">正在进入创作流程…</div>
+            <div className="route-overlay__brand">{creatorBrandName(locale)}</div>
+            <div className="route-overlay__hint">{locale === 'en' ? 'Opening the studio…' : '正在进入创作流程…'}</div>
             <div className="route-overlay__bar" aria-hidden="true">
               <i />
             </div>
