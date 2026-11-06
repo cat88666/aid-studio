@@ -12,7 +12,8 @@ import {
   accountLogoutAll,
   accountPasswordChange,
   accountRebind,
-  accountSecurity
+  accountSecurity,
+  userBalance
 } from './auth'
 
 describe('account security API wrappers', () => {
@@ -66,4 +67,27 @@ describe('account security API wrappers', () => {
       '/api/user/account/login-history'
     ])
   })
+})
+
+it('only shares in-flight balances within the same session', async () => {
+  const resolvers: Array<(response: { data: { balance: number } }) => void> = []
+  requestMock.post.mockImplementation(() => new Promise(resolve => resolvers.push(resolve)))
+  let token = 'first'
+  vi.stubGlobal('window', {})
+  vi.stubGlobal('localStorage', { getItem: () => token })
+  try {
+    const first = userBalance()
+    expect(userBalance()).toBe(first)
+    token = 'second'
+    const second = userBalance()
+    expect(second).not.toBe(first)
+    resolvers[0]({ data: { balance: 11 } })
+    await expect(first).resolves.toEqual({ balance: 11 })
+    expect(userBalance()).toBe(second)
+    resolvers[1]({ data: { balance: 22 } })
+    await expect(second).resolves.toEqual({ balance: 22 })
+    expect(resolvers).toHaveLength(2)
+  } finally {
+    vi.unstubAllGlobals()
+  }
 })

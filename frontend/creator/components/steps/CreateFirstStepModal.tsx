@@ -1,8 +1,7 @@
 'use client'
 
-import { CloseOutlined,LoadingOutlined } from '@ant-design/icons'
+import { LoadingOutlined } from '@ant-design/icons'
 import { Modal } from 'antd'
-import ModalTitleWatermark from '~/components/ModalTitleWatermark'
 import CreateFirstStepFormBody from '~/components/steps/CreateFirstStepFormBody'
 import type { GlobalSettingData } from '~/types'
 import './create-first-step-modal.css'
@@ -77,26 +76,17 @@ export function CreateFirstStepModal({
     <Modal
       open={open}
       footer={null}
-      closable={false}
+      centered
+      title={modalTitleText}
+      closable={!confirmLoading}
+      keyboard={!confirmLoading}
       destroyOnHidden
-      width={1100}
-      wrapClassName="create-flow-modal create-first-step-wrap"
+      width={960}
+      wrapClassName="creator-project-dialog"
       className="create-first-step-modal"
-      onCancel={() => onOpenChange(false)}
+      onCancel={() => !confirmLoading && onOpenChange(false)}
     >
       <div className="modal-shell">
-        <button
-          className={`close-btn${confirmLoading ? ' is-disabled' : ''}`}
-          type="button"
-          onClick={() => !confirmLoading && onOpenChange(false)}
-        >
-          <CloseOutlined />
-        </button>
-
-        <div className="modal-title">
-          <ModalTitleWatermark title={modalTitleText} watermark="NEW" />
-        </div>
-
         <CreateFirstStepFormBody
           open={open}
           flowEditMode={flowEditMode}
@@ -124,10 +114,11 @@ export function CreateFirstStepModal({
         <div className="modal-actions">
           <button
             type="button"
-            className={`btn btn-secondary${confirmLoading ? ' is-disabled' : ''}`}
+            className="btn btn-secondary"
+            disabled={confirmLoading}
             onClick={() => !confirmLoading && onOpenChange(false)}
           >
-            <div className="text-gradient">取消</div>
+            取消
           </button>
           <button
             type="button"

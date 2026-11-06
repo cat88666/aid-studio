@@ -7,6 +7,9 @@ import { useAuthPublicConfig } from '~/composables/useAuthPublicConfig'
 import { userFaqDetail, userFaqList } from '~/utils/businessApi'
 import type { UserFaqDetail, UserFaqListItem } from '~/types/business-api'
 import { sanitizeDisplayHtml } from '~/utils/safeDisplayHtml'
+import { faqLabels } from './faqLabels'
+import { useCreatorLocale } from '~/hooks/useCreatorLocale'
+import { homeCopy } from '~/config/home-locales'
 import './FaqPanel.css'
 
 const MAX_FAQ_LIST_PAGES = 100
@@ -30,6 +33,9 @@ function computeCategories(items: UserFaqListItem[]) {
 }
 
 export default function FaqPanel() {
+  const { locale } = useCreatorLocale()
+  const copy = homeCopy[locale]
+  const [search, , loadingText, emptyText, failedText] = faqLabels[locale]
   const { exchangeImageUrl, loadPublicConfig } = useAuthPublicConfig()
 
   const [keyword, setKeyword] = useState('')
@@ -179,11 +185,10 @@ export default function FaqPanel() {
   }, [])
 
   return (
-    <div className="home-new-sub-page help-center-page">
-      <div className="page-content help-center-page__inner">
+    <div className="help-center-page">
+      <div className="help-center-page__inner">
         <header className="help-center-page__header">
-          <h1 className="help-center-page__title">常见问题</h1>
-          <p className="help-center-page__subtitle">查找使用说明与解答，快速上手创作流程</p>
+          <h1 className="help-center-page__title">{copy.helpCenter}</h1>
         </header>
 
         <div className="help-center-page__main">
@@ -194,7 +199,8 @@ export default function FaqPanel() {
               onChange={(e) => setKeyword(e.target.value)}
               type="search"
               className="help-center-page__search-input"
-              placeholder="搜索资产…"
+              aria-label={search}
+              placeholder={search}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault()
@@ -207,13 +213,13 @@ export default function FaqPanel() {
           <div className="help-center-page__body">
             <nav className="help-center-page__categories" aria-label="问题分类">
               {loading && !allItems.length ? (
-                <div className="help-center-page__side-state">加载中…</div>
+                <div className="help-center-page__side-state">{loadingText}</div>
               ) : loadError ? (
                 <div className="help-center-page__side-state help-center-page__side-state--error">
-                  加载失败，请稍后重试
+                  {failedText}
                 </div>
               ) : !categories.length ? (
-                <div className="help-center-page__side-state">暂无分类</div>
+                <div className="help-center-page__side-state">{emptyText}</div>
               ) : null}
 
               {categories.map((cat) => (
@@ -231,17 +237,17 @@ export default function FaqPanel() {
 
             <section className="help-center-page__answers" aria-label="问题解答">
               {loading && !allItems.length ? (
-                <div className="help-center-page__answers-state">加载中…</div>
+                <div className="help-center-page__answers-state">{loadingText}</div>
               ) : loadError ? (
                 <div className="help-center-page__answers-state help-center-page__answers-state--error">
-                  加载失败，请稍后重试
+                  {failedText}
                 </div>
               ) : !activeCategory ? (
-                <div className="help-center-page__answers-state">请从左侧选择分类</div>
+                <div className="help-center-page__answers-state">{emptyText}</div>
               ) : !categoryItems.length ? (
-                <div className="help-center-page__answers-state">暂无相关问题</div>
+                <div className="help-center-page__answers-state">{emptyText}</div>
               ) : detailsLoading && !hasLoadedDetails ? (
-                <div className="help-center-page__answers-state">加载详情中…</div>
+                <div className="help-center-page__answers-state">{loadingText}</div>
               ) : (
                 <div className="help-center-page__qa-list">
                   {categoryItems.map((item, index) => (
@@ -260,16 +266,12 @@ export default function FaqPanel() {
             </section>
           </div>
 
-          <footer className="help-center-page__footer">
+          {exchangeImageUrl && <footer className="help-center-page__footer">
             <div className="help-center-page__qrcode-wrap">
-              {exchangeImageUrl ? (
-                <img src={exchangeImageUrl} alt="客服二维码" className="help-center-page__qrcode" />
-              ) : (
-                <div className="help-center-page__qrcode help-center-page__qrcode--placeholder" />
-              )}
+              <img src={exchangeImageUrl} alt="客服二维码" className="help-center-page__qrcode" />
             </div>
             <p className="help-center-page__qrcode-label">扫码加客服</p>
-          </footer>
+          </footer>}
         </div>
       </div>
     </div>

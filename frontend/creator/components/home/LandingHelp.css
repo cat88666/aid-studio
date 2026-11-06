@@ -1,0 +1,12 @@
+.landing-help { margin-block: 1.25rem; color: #17171b; }
+.landing-help > label { display: block; margin-bottom: .4rem; font-size: .9rem; font-weight: 600; }
+.landing-help > input { box-sizing: border-box; width: min(100%, 32rem); padding: .65rem .9rem; border: 1px solid #c9c9ce; border-radius: .5rem; background: white; color: inherit; font: inherit; }
+.landing-help-categories { display: flex; flex-wrap: wrap; gap: .4rem; margin: 1rem 0; }
+.landing-help-categories button { border: 1px solid #d7d7dc; border-radius: 2rem; padding: .4rem .85rem; background: white; color: inherit; font: inherit; cursor: pointer; }
+.landing-help-categories button[aria-pressed="true"] { background: #202024; color: white; border-color: #202024; }
+.landing-help details { border-bottom: 1px solid #dedee1; padding-block: .75rem; }
+.landing-help summary { cursor: pointer; font-weight: 600; }
+.landing-help p { margin-block: .6rem; }
+.landing-help-retry { background: transparent; border: 0; padding: .3rem; color: inherit; font: inherit; text-decoration: underline; cursor: pointer; }
+.landing-help-answer { margin-block: .75rem; overflow: auto; overflow-wrap: anywhere; }
+.landing-help-answer :is(img, video, audio) { max-width: 100%; }

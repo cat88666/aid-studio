@@ -1,10 +1,10 @@
 /* Tailwind/PostCSS component styles for BillingPanel. */
 /* BillingPanel 伴随样式：由原 components/home/BillingPanel.vue \3c style scoped> 平移，:deep()/:global() 已展开，颜色逐字保留 */
 .billing-page {
-  --billing-accent: #4ae7fd;
-  --billing-muted: #8e97a5;
-  --billing-surface: rgba(22, 28, 40, 0.92);
-  --billing-border: rgba(255, 255, 255, 0.08);
+  --billing-accent: #593c76;
+  --billing-muted: #6a6570;
+  --billing-surface: white;
+  --billing-border: #e4e1e6;
   width: 100%;
   flex: 1 0 auto;
   min-width: 0;
@@ -25,7 +25,7 @@
   margin: 0;
   font-size:20px;
   font-weight: 700;
-  color: #fff;
+  color: #242126;
 }
 
 .billing-page__subtitle {
@@ -64,7 +64,7 @@
   padding: 0 38px 0 14px !important;
   border: 1px solid var(--billing-border) !important;
   border-radius: 10px !important;
-  background: linear-gradient(135deg, rgba(20, 29, 43, 0.96), rgba(13, 18, 28, 0.96)) !important;
+  background: white !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
   transition:
     border-color 0.2s ease,
@@ -74,7 +74,7 @@
 
 .billing-page__provider-select .ant-select-selection-item {
   min-width: 0;
-  color: #e6edf3 !important;
+  color: #29262e !important;
   font-size: 14px;
   font-weight: 500;
   line-height: 40px !important;
@@ -83,7 +83,7 @@
 .billing-page__provider-select .ant-select-arrow {
   inset-inline-end: 14px;
   margin-top: -6px;
-  color: #8e97a5 !important;
+  color: #6a6570 !important;
   transition:
     color 0.2s ease,
     transform 0.2s ease;
@@ -92,8 +92,8 @@
 .billing-page__provider-select:hover .ant-select-selector,
 .billing-page__provider-select.ant-select-focused .ant-select-selector,
 .billing-page__provider-select.ant-select-open .ant-select-selector {
-  border-color: rgba(74, 231, 253, 0.5) !important;
-  background: linear-gradient(135deg, rgba(21, 34, 49, 0.98), rgba(13, 21, 32, 0.98)) !important;
+  border-color: #9c88ae !important;
+  background: white !important;
   box-shadow:
     0 0 0 3px rgba(74, 231, 253, 0.07),
     inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
@@ -101,7 +101,7 @@
 
 .billing-page__provider-select:hover .ant-select-arrow,
 .billing-page__provider-select.ant-select-open .ant-select-arrow {
-  color: #4ae7fd !important;
+  color: #593c76 !important;
 }
 
 .billing-page__provider-select.ant-select-open .ant-select-arrow {
@@ -120,7 +120,7 @@
   border-radius: 8px;
   border: 1px solid var(--billing-border);
   background: transparent;
-  color: #c9d1d9;
+  color: #56515a;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -128,9 +128,9 @@
 
 .billing-page__tab.is-active,
 .billing-page__tab:hover {
-  border-color: rgba(74, 231, 253, 0.45);
+  border-color: #b9acc7;
   color: var(--billing-accent);
-  background: rgba(74, 231, 253, 0.08);
+  background: #f2edf5;
 }
 
 .billing-page__search {
@@ -155,7 +155,7 @@
   border: none;
   outline: none;
   background: transparent;
-  color: #fff;
+  color: #242126;
   font-size: 14px;
 }
 
@@ -166,7 +166,7 @@
 }
 
 .billing-page__state--error {
-  color: #fca5a5;
+  color: #a13e38;
 }
 
 .billing-page__cards {
@@ -217,7 +217,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(74, 231, 253, 0.12);
+  background: #f3eff6;
   color: var(--billing-accent);
   font-weight: 700;
   font-size: 18px;

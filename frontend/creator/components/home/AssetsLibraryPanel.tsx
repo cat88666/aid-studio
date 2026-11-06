@@ -54,7 +54,6 @@ import emotionSelSvg from '~/assets/img/icon/emotion-sel.svg'
 // 表情
 import emojiNorSvg from '~/assets/img/icon/emoj-nor.svg'
 import emojiSelSvg from '~/assets/img/icon/emoj-sel.svg'
-import WorksLibraryAddCard from '~/components/home/WorksLibraryAddCard'
 import ModalTitleWatermark from '~/components/ModalTitleWatermark'
 import { ShimmerImage } from '~/components/common/ShimmerImage'
 import { InfiniteScrollLoadFooter } from '~/components/common/InfiniteScrollLoadFooter'
@@ -591,6 +590,7 @@ export function AssetsLibraryPanel() {
       <div className="page-content assets-library-figma__inner">
         <header className="works-lib-header">
           <h1 className="works-lib-header__title">资产库</h1>
+          <button type="button" className="assets-lib-upload" onClick={openCreateModal}>新增资产</button>
         </header>
         <section className="works-lib-toolbar assets-lib-toolbar" aria-label="分类与搜索">
           <div className="works-lib-type-tabs" role="tablist">
@@ -641,13 +641,6 @@ export function AssetsLibraryPanel() {
           className="works-lib-grid"
           onScroll={onAssetListScroll}
         >
-          {myAssets.length > 0 ? (
-            <WorksLibraryAddCard
-              label="新增资产"
-              hint="创建用户自定义参考资产"
-              onClick={openCreateModal}
-            />
-          ) : null}
           {myAssets.map((asset, index) => (
             <article
               key={asset.id}
@@ -741,9 +734,6 @@ export function AssetsLibraryPanel() {
                 alt=""
               />
               <h3 className="works-lib-empty__title">暂无资产</h3>
-              <button type="button" className="works-lib-empty__btn" onClick={openCreateModal}>
-                <div className="text-gradient">新增资产</div>
-              </button>
             </div>
           ) : null}
 

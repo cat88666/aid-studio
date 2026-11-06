@@ -1,15 +1,18 @@
-/* FaqPanel 伴随样式：由原 components/home/FaqPanel.vue <style scoped> 平移，:deep() 已展开，颜色逐字保留 */
 .help-center-page {
-  --help-accent: #4ae7fd;
-  --help-muted: #8e97a5;
-  --help-bg-main: #121212;
-  --help-category-active: #202839;
-  --help-category-default: #161c28;
-  --help-panel: #202839;
-  --help-border: rgba(74, 231, 253, 0.08);
-  --help-search-bg: #0a121e;
-  --help-search-border: #073f56;
-  width: 100%;
+  --help-accent: #53389a;
+  --help-muted: #666;
+  --help-bg-main: #fff;
+  --help-category-active: #f5f3fa;
+  --help-category-default: #fff;
+  --help-panel: #f5f3fa;
+  --help-border: #dfdfe4;
+  --help-search-bg: #fafafa;
+  --help-search-border: #d9d9df;
+  width: min(100%, 1220px);
+  margin: 0 auto;
+  padding: 44px clamp(20px, 4.4vw, 56px) 72px;
+  color: #171717;
+  background: #fff;
   flex: 1 0 auto;
   min-width: 0;
   box-sizing: border-box;
@@ -32,11 +35,11 @@
 
 .help-center-page__title {
   margin: 0;
-  font-size: 18px;
+  font-size: clamp(32px, 4vw, 44px);
   font-weight: 600;
-  color: #fff;
-  line-height: 24px;
-  letter-spacing: 0.02em;
+  color: #171717;
+  line-height: 1.14;
+  letter-spacing: -.045em;
 }
 
 .help-center-page__subtitle {
@@ -50,9 +53,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 36px;
+  height: 44px;
   padding: 0 12px;
-  border-radius: 4px;
+  border-radius: 9px;
   background: var(--help-search-bg);
   border: 1px solid var(--help-search-border);
   flex-shrink: 0;
@@ -69,7 +72,7 @@
   border: none;
   outline: none;
   background: transparent;
-  color: #fff;
+  color: #171717;
   font-size: 14px;
   line-height: 20px;
 }
@@ -84,8 +87,8 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 12px 12px 20px;
-  border-radius: 4px;
+  padding: 12px 0 20px;
+  border-radius: 9px;
   background: var(--help-bg-main);
   box-sizing: border-box;
 }
@@ -94,7 +97,7 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 358px minmax(0, 1fr);
+  grid-template-columns: minmax(160px, 24%) minmax(0, 1fr);
   gap: 12px;
   align-items: start;
 }
@@ -114,9 +117,9 @@
   height: 56px;
   padding: 0 16px 0 24px;
   border: 1px solid var(--help-border);
-  border-radius: 4px;
+  border-radius: 9px;
   background: var(--help-category-default);
-  color: #fff;
+  color: #171717;
   font-size: 16px;
   font-weight: 500;
   line-height: 22px;
@@ -144,7 +147,7 @@
 .help-center-page__category-arrow {
   flex-shrink: 0;
   font-size: 12px;
-  color: #fff;
+  color: #171717;
 }
 
 .help-center-page__side-state {
@@ -155,15 +158,15 @@
 }
 
 .help-center-page__side-state--error {
-  color: #fca5a5;
+  color: #a12626;
 }
 
 .help-center-page__answers {
-  min-height: 598px;
+  min-height: 340px;
   min-width: 0;
   padding: 24px;
-  border-radius: 4px;
-  background: var(--help-panel);
+  border-radius: 9px;
+  background: #fff;
   border: 1px solid var(--help-border);
   box-sizing: border-box;
 }
@@ -172,7 +175,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 320px;
+  min-height: 180px;
   color: var(--help-muted);
   font-size: 14px;
 }
@@ -196,12 +199,12 @@
   font-size: 16px;
   font-weight: 500;
   line-height: 22px;
-  color: #fff;
+  color: #171717;
 }
 
 .help-center-page__qa-answer {
   margin: 12px 0 0;
-  padding-left: 23px;
+  overflow-wrap: anywhere;
   color: var(--help-muted);
   font-size: 14px;
   line-height: 20px;
@@ -236,12 +239,8 @@
   display: block;
   width: 120px;
   height: 120px;
-  border-radius: 4px;
+  border-radius: 9px;
   object-fit: contain;
-}
-
-.help-center-page__qrcode--placeholder {
-  background: #d9d9d9;
 }
 
 .help-center-page__qrcode-label {
@@ -262,3 +261,5 @@
     min-height: 320px;
   }
 }
+
+.help-center-page__qa-answer img { max-width: 100%; height: auto; }

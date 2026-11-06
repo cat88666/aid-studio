@@ -11,7 +11,6 @@ import { LoginAltMethods } from './LoginAltMethods'
 import { LoginCodePanel } from './LoginCodePanel'
 import { LoginPasswordPanel } from './LoginPasswordPanel'
 import { LoginWechatPanel } from './LoginWechatPanel'
-import { useLoginModalFitScale } from '@/hooks/useLoginModalFitScale'
 import { useLoginModalSession } from '@/hooks/useLoginModalSession'
 import { closeLoginModal, enterForgotPasswordFlow } from '@/stores/loginModal'
 import { LOGIN_MODAL_ANTD_THEME } from '~/utils/loginModalAntdTheme'
@@ -19,8 +18,6 @@ import {
   LOGIN_MODAL_BODY_CLASS,
   LOGIN_MODAL_BRAND_CLASS,
   LOGIN_MODAL_CLOSE_CLASS,
-  LOGIN_MODAL_DESIGN_HEIGHT,
-  LOGIN_MODAL_DESIGN_WIDTH,
   LOGIN_MODAL_FIT_SHELL_CLASS,
   LOGIN_MODAL_FORM_CLASS,
   LOGIN_MODAL_FRAME_CLASS,
@@ -47,7 +44,6 @@ export function LoginModal({ visible = true }: LoginModalProps) {
   const t = useAuthText()
   const router = useRouter()
   const session = useLoginModalSession()
-  const fitScale = useLoginModalFitScale()
   const {
     tab,
     selectTab,
@@ -76,10 +72,6 @@ export function LoginModal({ visible = true }: LoginModalProps) {
     >
       <div
         className={LOGIN_MODAL_FIT_SHELL_CLASS}
-        style={{
-          width: LOGIN_MODAL_DESIGN_WIDTH * fitScale,
-          height: LOGIN_MODAL_DESIGN_HEIGHT * fitScale
-        }}
         onClick={(e) => e.stopPropagation()}
       >
       <div
@@ -87,24 +79,22 @@ export function LoginModal({ visible = true }: LoginModalProps) {
         role="dialog"
         aria-modal="true"
         aria-label={t(TITLE_MAP[tab])}
-        style={{
-          transform: `scale(${fitScale})`,
-          transformOrigin: 'top left'
-        }}
         onClick={(e) => e.stopPropagation()}
       >
         <section className={LOGIN_MODAL_VISUAL_CLASS} aria-hidden="true">
           <video
             className="h-full w-full object-cover"
-            src={LOGIN_VIDEO_URL}
+            poster={withAppBasePath('/creator-home/hero.webp')}
             autoPlay
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
             disablePictureInPicture
             controlsList="nodownload noplaybackrate nofullscreen noremoteplayback"
-          />
+          >
+            <source src={LOGIN_VIDEO_URL} media="(min-width: 1024px) and (prefers-reduced-motion: no-preference)" type="video/mp4" />
+          </video>
         </section>
 
         <section className={LOGIN_MODAL_FORM_CLASS}>
@@ -126,8 +116,8 @@ export function LoginModal({ visible = true }: LoginModalProps) {
             aria-hidden="true"
           />
 
-          <div className={LOGIN_MODAL_BODY_CLASS}>
-            <div className={LOGIN_MODAL_BRAND_CLASS}>
+          <div className={'login-form-body ' + LOGIN_MODAL_BODY_CLASS}>
+            <div className={'login-form-brand ' + LOGIN_MODAL_BRAND_CLASS}>
               <span className="text-4xl font-bold leading-tight text-white">{creatorBrandName(locale)}</span>
               <h2 className={LOGIN_MODAL_TITLE_CLASS}>{t(TITLE_MAP[tab])}</h2>
             </div>

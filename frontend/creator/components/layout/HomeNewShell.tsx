@@ -17,6 +17,7 @@ import { useHomeSidebarExtraNav } from '~/composables/useHomeSidebarExtraNav'
 import { useUserStore } from '~/stores/user'
 import { logoutToPublicHome, requireLogin } from '~/utils/authLoginNavigation'
 import { openAccountSettings } from '~/stores/accountSettings'
+import CreatorPublicHeader from './CreatorPublicHeader'
 import './HomeNewShell.css'
 
 /**
@@ -41,6 +42,9 @@ export function HomeNewShell({ children }: { children: ReactNode }) {
   const isLoggedIn = !!token
   const isLandingRoute = Boolean(languageFromPath(pathname))
   const isGalleryRoute = pathname.replace(/\/$/, '') === '/gallery'
+  const isPublicInfo = isGalleryRoute || pathname.replace(/\/$/, '') === '/faq'
+  const dashboardRoutes = ['/assets', '/billing', '/membership', '/referral', '/invite', '/works', '/guide']
+  const publicShell = isLandingRoute || isPublicInfo || dashboardRoutes.includes(pathname.replace(/\/$/, ''))
   const isWorksRoute = pathname.startsWith('/works')
   const isAssetsRoute = pathname.startsWith('/assets')
   const isInviteRoute = pathname.startsWith('/invite')
@@ -53,6 +57,7 @@ export function HomeNewShell({ children }: { children: ReactNode }) {
   const userMenuDropdownRef = useRef<FloatingPanelHandle | null>(null)
 
   function getUserMenuTriggerEl(): HTMLElement | null {
+    if (publicShell) return document.querySelector<HTMLElement>('.dashboard-nav .creator-nav-account')
     const exposed = homeNewSidebarRef.current?.userMenuTriggerRef
     if (!exposed) return null
     return exposed instanceof HTMLElement ? exposed : null
@@ -165,8 +170,9 @@ export function HomeNewShell({ children }: { children: ReactNode }) {
     if (!trigger) return
     const rect = trigger.getBoundingClientRect()
     setUserMenuCardStyle({
-      left: `${rect.right + 10}px`,
-      top: `${rect.bottom}px`
+      left: `${publicShell ? Math.max(8, rect.right - 235) : rect.right + 10}px`,
+      top: `${rect.bottom + (publicShell ? 5 : 0)}px`,
+      ...(publicShell ? { transform: 'none' } : {})
     })
   }
 
@@ -216,10 +222,15 @@ export function HomeNewShell({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <div className={isLandingRoute ? "creator-home-shell" : "home-layout-root"}>
+    <div className={publicShell ? "creator-home-shell" : "home-layout-root"}>
       {navigationPending && <PageLoadingOverlay label="页面切换中…" />}
-      <HtmlShellClass classes={isLandingRoute ? "creator-public-shell" : "home-page-shell app-shell-create layout-home-new"} />
-      {isLandingRoute ? children : (
+      <HtmlShellClass classes={publicShell ? "creator-public-shell" : "home-page-shell app-shell-create layout-home-new"} />
+      {publicShell ? (
+        <div className="creator-public-info">
+          <div className="creator-landing creator-public-masthead"><CreatorPublicHeader onAccount={toggleUserMenu} /></div>
+          {children}
+        </div>
+      ) : (
       <div className="home-new-page">
         <HomeNewSidebar
           ref={homeNewSidebarRef}
@@ -258,6 +269,7 @@ export function HomeNewShell({ children }: { children: ReactNode }) {
         confirmLoading={homeCreateModal.createConfirmLoading}
         title={homeCreateModal.creationTitleDraft}
         projectType={homeCreateModal.creationProjectTypeDraft}
+        projectTypeLocked={Boolean(homeCreateModal.scriptFileDraft)}
         syncProjectTypeFromParent={homeCreateModal.syncProjectTypeFromParent}
         aspectRatio={homeCreateModal.creationGlobalSettingDraft.aspectRatio}
         scriptType={homeCreateModal.creationGlobalSettingDraft.scriptType}

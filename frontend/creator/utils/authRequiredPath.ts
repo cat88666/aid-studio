@@ -1,5 +1,5 @@
 /** 与原 auth.global 对齐：未登录不可直达的路径前缀 */
-export const AUTH_REQUIRED_PREFIXES = ['/works', '/assets', '/create', '/invite'] as const
+export const AUTH_REQUIRED_PREFIXES = ['/works', '/assets', '/create', '/invite', '/referral'] as const
 
 export function isAuthRequiredPath(path: string): boolean {
   const normalized = (path.split('?')[0].split('#')[0] || '/').replace(/\/$/, '') || '/'

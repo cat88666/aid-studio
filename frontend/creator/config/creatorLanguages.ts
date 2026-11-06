@@ -1,6 +1,6 @@
 export const creatorLanguages = [
   { code: 'zh-hant', label: '繁體中文', path: '/zh-hant/', tag: 'zh-Hant' },
-  { code: 'en', label: 'English', path: '/', tag: 'en' },
+  { code: 'en', label: 'English', path: '/en/', tag: 'en' },
   { code: 'pt', label: 'Português', path: '/pt/', tag: 'pt' },
   { code: 'ko', label: '한국어', path: '/ko/', tag: 'ko' },
   { code: 'es', label: 'Español', path: '/es/', tag: 'es' },
@@ -20,6 +20,7 @@ export const creatorLanguages = [
 export type CreatorLocale = typeof creatorLanguages[number]['code']
 
 export function languageFromPath(path: string) {
+  if (!path.replace(/\/+$/, '')) return creatorLanguage('ja')
   return creatorLanguages.find(language => language.path === (path.replace(/\/+$/, '') + '/'))
 }
 

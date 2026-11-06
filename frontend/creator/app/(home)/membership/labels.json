@@ -1,0 +1,146 @@
+{
+  "zh": [
+    "会员中心",
+    "积分套餐",
+    "单次购买",
+    "暂未开放支付",
+    "暂无上架套餐",
+    "充值中心",
+    "有效期至"
+  ],
+  "en": [
+    "Membership",
+    "Credit packs",
+    "One-time purchase",
+    "Payments unavailable",
+    "No packs currently available",
+    "Top up credits",
+    "Valid until"
+  ],
+  "ja": [
+    "会員センター",
+    "クレジットパック",
+    "買い切り",
+    "現在お支払いできません",
+    "販売中のパックはありません",
+    "チャージ",
+    "有効期限"
+  ],
+  "zh-hant": [
+    "會員中心",
+    "點數方案",
+    "單次購買",
+    "暫未開放付款",
+    "暫無上架方案",
+    "儲值中心",
+    "有效期限"
+  ],
+  "ko": [
+    "멤버십",
+    "크레딧 팩",
+    "일회성 구매",
+    "현재 결제 불가",
+    "판매 중인 팩이 없습니다",
+    "크레딧 충전",
+    "만료일"
+  ],
+  "pt": [
+    "Assinatura",
+    "Pacotes de créditos",
+    "Compra única",
+    "Pagamentos indisponíveis",
+    "Nenhum pacote disponível",
+    "Adicionar créditos",
+    "Válido até"
+  ],
+  "es": [
+    "Membresía",
+    "Paquetes de créditos",
+    "Pago único",
+    "Pagos no disponibles",
+    "No hay paquetes disponibles",
+    "Recargar créditos",
+    "Válido hasta"
+  ],
+  "id": [
+    "Keanggotaan",
+    "Paket kredit",
+    "Pembelian satu kali",
+    "Pembayaran tidak tersedia",
+    "Belum ada paket",
+    "Isi ulang kredit",
+    "Berlaku hingga"
+  ],
+  "ru": [
+    "Подписка",
+    "Пакеты кредитов",
+    "Разовая покупка",
+    "Оплата недоступна",
+    "Нет доступных пакетов",
+    "Пополнить баланс",
+    "Действует до"
+  ],
+  "fr": [
+    "Abonnement",
+    "Packs de crédits",
+    "Achat unique",
+    "Paiement indisponible",
+    "Aucun pack disponible",
+    "Recharger",
+    "Valable jusqu’au"
+  ],
+  "it": [
+    "Abbonamento",
+    "Pacchetti di crediti",
+    "Acquisto singolo",
+    "Pagamento non disponibile",
+    "Nessun pacchetto disponibile",
+    "Ricarica crediti",
+    "Valido fino al"
+  ],
+  "nl": [
+    "Lidmaatschap",
+    "Creditbundels",
+    "Eenmalige aankoop",
+    "Betalen niet beschikbaar",
+    "Geen bundels beschikbaar",
+    "Credits opwaarderen",
+    "Geldig tot"
+  ],
+  "ar": [
+    "العضوية",
+    "باقات الرصيد",
+    "شراء لمرة واحدة",
+    "الدفع غير متاح",
+    "لا توجد باقات متاحة",
+    "شحن الرصيد",
+    "صالح حتى"
+  ],
+  "tr": [
+    "Üyelik",
+    "Kredi paketleri",
+    "Tek seferlik satın alma",
+    "Ödemeler kullanılamıyor",
+    "Mevcut paket yok",
+    "Kredi yükle",
+    "Geçerlilik tarihi"
+  ],
+  "de": [
+    "Mitgliedschaft",
+    "Credit-Pakete",
+    "Einmaliger Kauf",
+    "Zahlung nicht verfügbar",
+    "Keine Pakete verfügbar",
+    "Credits aufladen",
+    "Gültig bis"
+  ],
+  "uk": [
+    "Підписка",
+    "Пакети кредитів",
+    "Разова покупка",
+    "Оплата недоступна",
+    "Немає доступних пакетів",
+    "Поповнити баланс",
+    "Дійсно до"
+  ]
+}

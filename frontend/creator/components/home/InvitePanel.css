@@ -1,3 +1,39 @@
 @import './InvitePanel-base.css';
 @import './InvitePanel-invite-page-stat.css';
 @import './InvitePanel-responsive-max-width-960.css';
+
+.invite-page.home-new-sub-page {
+  --invite-cyan: #533770;
+  --invite-muted: #68646d;
+  --invite-card-bg: white;
+  --invite-row-bg: white;
+  color: #222025;
+  background: #fff;
+}
+.invite-page .invite-page__inner {
+  max-width: 960px;
+  margin-inline: auto;
+  padding: clamp(24px, 4vw, 48px) clamp(16px, 3vw, 32px);
+}
+.invite-page .invite-page__title {
+  background: none;
+  color: #232126;
+  -webkit-text-fill-color: currentColor;
+  letter-spacing: -.04em;
+}
+.invite-page :is(.invite-page__card, .invite-page__records) {
+  border: 1px solid #e3e1e5;
+  border-radius: 12px;
+  background: white;
+}
+.invite-page .invite-page__records { padding: clamp(14px, 3vw, 24px); }
+.invite-page :is(.invite-page__card-label, .invite-page__records-title, .invite-page__stat, .invite-page__stat-label, .invite-page__stat-num, .invite-page__td) { color: #29262d; }
+.invite-page .invite-page__code-box { background: #f7f6f8; border-color: #e2dee5; }
+.invite-page .invite-page__link-btn { border: 0; background: #252228; }
+.invite-page .invite-page__link-btn:hover:not(:disabled) { background: #43394c; }
+.invite-page .invite-page__link-btn-text { background: none; color: white; }
+.invite-page .invite-page__stats { border-top: 1px solid #ebe9ed; padding-top: 18px; }
+.invite-page .invite-page__thead { background: #f7f6f8; border-color: #e5e2e8; }
+.invite-page .invite-page__tr.is-alt { background: #f9f8fa; }
+.invite-page .invite-page__index { color: #625c68; background: #eeeaf1; }
+.invite-page .invite-page__card--error { color: #a13d3a; }

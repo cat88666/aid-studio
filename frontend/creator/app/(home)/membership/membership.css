@@ -1,0 +1,22 @@
+.creator-membership { width: min(100%, 1440px); padding: 40px clamp(18px, 3vw, 32px) 64px; margin: 0 auto; box-sizing: border-box; color: #17171a; }
+.creator-membership__banner { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px 30px; border-radius: 13px; background: #1a191c; color: #fff; box-shadow: 0 10px 25px #17151d25; }
+.creator-membership__banner h1 { margin: 0; color: white; font-size: clamp(24px, 3vw, 32px); letter-spacing: -.03em; }
+.creator-membership__banner p { margin: 6px 0 0; color: #ddd; font-size: 14px; }
+.creator-membership__balance { display: grid; gap: 5px; text-align: end; }
+.creator-membership__balance strong { font-size: 26px; color: #efd08d; }
+.creator-membership__balance span { font-size: 13px; color: #ddd; }
+.creator-membership__heading { display: flex; gap: 16px; align-items: center; justify-content: space-between; margin: 36px 0 20px; }
+.creator-membership__heading h2 { font-size: 24px; margin: 0; color: #181818; }
+.creator-membership__heading a { font-size: 14px; color: #593598; text-decoration: none; }
+.creator-membership__plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(195px, 100%), 1fr)); gap: 12px; }
+.creator-membership__plans article { padding: 22px 18px; border: 1px solid #e2e0e5; border-radius: 16px; background: white; }
+.creator-membership__plans h3 { margin: 0 0 20px; font-size: 17px; color: #17171a; }
+.creator-membership__plans p { margin: 8px 0 0; color: #69686d; font-size: 14px; }
+.creator-membership__plans .creator-membership__credits { color: #50308a; font-size: 26px; font-weight: 700; }
+.creator-membership__credits small { font-size: 12px; font-weight: 500; }
+.creator-membership__plans del { display: block; color: #76747a; font-size: 13px; margin-top: 16px; }
+.creator-membership__plans .creator-membership__price { color: #17171a; font-size: 23px; font-weight: 700; }
+.creator-membership button { border: 0; border-radius: 8px; padding: 10px 18px; color: #fff; background: #1a191c; cursor: pointer; }
+.creator-membership button:disabled { background: #eeedf0; color: #737177; cursor: default; }
+.creator-membership footer { padding-top: 24px; }
+@media (max-width: 560px) { .creator-membership { padding-top: 20px; } .creator-membership__banner { padding: 18px; } .creator-membership__plans { grid-template-columns: repeat(2,minmax(0,1fr)); } .creator-membership__plans article { padding: 16px 12px; overflow-wrap: anywhere; } }

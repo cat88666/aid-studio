@@ -5,7 +5,6 @@ import { CopyOutlined } from '@ant-design/icons'
 import { Button,message } from 'antd'
 import { useEffect,useRef,useState } from 'react'
 import groupAvtorUrl from '~/assets/img/home/Group-avtor.svg'
-import inviteHeroPicUrl from '~/assets/img/home/pic_yq.svg'
 import type { InviteInfoVO,InvitedUserVO } from '~/types/business-api'
 import { assetUrl } from '~/utils/assetUrl'
 import { userInviteInfo,userInviteUsers } from '~/utils/businessApi'
@@ -62,7 +61,7 @@ export default function InvitePanel() {
 
   const rebateRatioText = (() => {
     const n = Number(info?.rebateRatio)
-    return Number.isFinite(n) ? String(n) : '10'
+    return info?.rebateRatio != null && Number.isFinite(n) ? String(n) : null
   })()
 
   const monthInvitedCount = (() => {
@@ -143,13 +142,12 @@ export default function InvitePanel() {
   return (
     <div className="home-new-sub-page invite-page">
       <div className="page-content invite-page__inner">
-        {/* 顶部：左侧标题+邀请码卡，右侧插画（与设计稿同结构） */}
         <section className="invite-page__top">
           <div className="invite-page__top-main">
             <header className="invite-page__header">
-              <h1 className="invite-page__title">邀请有礼</h1>
+              <h1 className="invite-page__title">邀请好友</h1>
               <p className="invite-page__subtitle">
-                邀请好友注册，分享专属邀请码，用户充值后您将获得{rebateRatioText}%的积分
+                {rebateRatioText === null ? '分享专属邀请码，查看好友注册与积分奖励记录。' : `分享专属邀请码，好友充值后可获得 ${rebateRatioText}% 的积分返利。`}
               </p>
             </header>
 
@@ -202,15 +200,6 @@ export default function InvitePanel() {
             ) : null}
           </div>
 
-          <div className="invite-page__pic-wrap" aria-hidden="true">
-            <img
-              className="invite-page__pic"
-              src={assetUrl(inviteHeroPicUrl)}
-              alt=""
-              width={310}
-              height={268}
-            />
-          </div>
         </section>
 
         {info?.enabled && (

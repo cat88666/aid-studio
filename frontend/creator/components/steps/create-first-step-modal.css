@@ -1,137 +1,119 @@
-/*
- * CreateFirstStepModal 伴随样式：由原 components/steps/CreateFirstStepModal.vue <style scoped> 平移。
- * scoped 等价处理：原 :global() 规则原样保留；组件内规则加 .create-first-step-wrap（弹窗 wrap）前缀，
- * :deep() 展开为普通后代选择器。
- */
-
-.create-first-step-wrap .ant-modal-content {
-  background: transparent !important;
-  box-shadow: none !important;
-  padding: 0 !important;
+/* This dialog is also mounted from the public landing page, outside app-shell-create. */
+.creator-project-dialog {
+  --home-text: #242228;
+  --home-muted: #66616b;
+  --home-accent: #563876;
+  --home-cyan: #563876;
+  --dialog-line: #e5e2e8;
 }
-
-.create-first-step-wrap .ant-modal-container {
-  padding: 0 !important;
+.creator-project-dialog .ant-modal.create-first-step-modal {
+  max-width: calc(100vw - 24px);
+  padding-bottom: 0;
 }
-
-.create-first-step-wrap .ant-modal-body {
+.creator-project-dialog .create-first-step-modal :is(.ant-modal-container, .ant-modal-content) {
   padding: 0 !important;
-}
-
-.create-first-step-wrap .modal-shell {
-  position: relative;
-  width: 1100px;
-  height: 698px;
-  max-height: calc(100dvh - 80px);
-  background: #191a1d;
-  border-radius: 8px;
-  color: #fff;
   overflow: hidden;
+  border: 1px solid var(--dialog-line);
+  border-radius: 16px;
+  background: white !important;
+  color: var(--home-text);
+  box-shadow: 0 20px 80px #20192733;
+}
+.creator-project-dialog .create-first-step-modal .ant-modal-header {
+  padding: 18px 54px 16px 24px;
+  margin: 0;
+  background: white;
+  border-bottom: 1px solid var(--dialog-line);
+}
+.creator-project-dialog .ant-modal-title { color: var(--home-text); font-size: 20px; font-weight: 650; }
+.creator-project-dialog .ant-modal-close { color: #59535e; }
+.creator-project-dialog .modal-shell {
   display: flex;
   flex-direction: column;
+  max-height: calc(100dvh - 100px);
 }
-
-.create-first-step-wrap .close-btn {
-  position: absolute;
-  top: 22px;
-  right: 24px;
-  border: none;
-  background: transparent;
-  color: #fff;
-  cursor: pointer;
-  z-index: 2;
-  font-size: 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
+.creator-project-dialog .create-first-step-form.modal-body {
+  padding: 20px 24px;
+  grid-template-columns: minmax(230px, .8fr) minmax(0, 1.5fr);
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
-
-.create-first-step-wrap .close-btn.is-disabled {
-  opacity: 0.45;
-  pointer-events: none;
-  cursor: not-allowed;
+.creator-project-dialog .create-first-step-form :is(.left-panel, .right-panel) {
+  border: 1px solid var(--dialog-line);
+  background: white;
+  border-radius: 10px;
+  min-width: 0;
 }
-
-.create-first-step-wrap .modal-title {
+.creator-project-dialog .modal-body .head_box { background: #f8f7f9; border-color: var(--dialog-line); }
+.creator-project-dialog .modal-body .name-input-wrap .name-input {
+  border-color: #d6d2d9;
+  background: white;
+}
+.creator-project-dialog .modal-body .field-group :is(.chip, .ratio-item) {
+  border-color: #dcd9df;
+  background: white;
+}
+.creator-project-dialog .modal-body .field-group :is(.chip, .ratio-item):is(.active, :hover) {
+  background: #f0ebf5;
+  border-color: #997eae;
+}
+.creator-project-dialog .ratio-item img { filter: grayscale(1) brightness(.55); }
+.creator-project-dialog .modal-body .content-config-lock-hint {
+  background: #fff8e7;
+  color: #75551a;
+  border-color: #eedeb8;
+}
+.creator-project-dialog .modal-body .right-panel .styles-grid {
+  grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
+}
+.creator-project-dialog .modal-body .style-card.add-style {
+  background: #f7f6f9;
+  border-color: #c7bfce;
+}
+.creator-project-dialog .modal-body .style-card.active { border-color: #775895; }
+.creator-project-dialog .modal-body .style-card.active .style-active-ring {
+  animation: none;
+  box-shadow: inset 0 0 0 2px #775895;
+}
+.creator-project-dialog .modal-body .current-style-badge { background: #4b355f; box-shadow: none; }
+.creator-project-dialog .global-setting .style-more-button:hover { color: #372941; }
+.creator-project-dialog .modal-actions {
+  flex: none;
   display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 24px;
+  border-top: 1px solid var(--dialog-line);
+  background: white;
+}
+.creator-project-dialog .modal-actions .btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 16px 16px 0;
-  height: 54px;
-  box-sizing: border-box;
-  line-height: 54px;
-  flex-shrink: 0;
-}
-
-.create-first-step-wrap .modal-body {
-  flex: 1 1 auto;
-  min-height: 0;
-  padding: 16px 21px 0;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-.create-first-step-wrap .modal-body .create-first-step-form {
-  height: 100%;
-  min-height: 0;
-}
-
-.create-first-step-wrap .modal-body .left-panel,
-.create-first-step-wrap .modal-body .right-panel {
-  height: 100%;
-  border-color: rgba(74, 231, 253, 0.3);
-  background: #111621;
+  min-height: 38px;
+  padding: 0 18px;
+  border: 1px solid var(--dialog-line);
   border-radius: 8px;
-}
-
-.create-first-step-wrap .modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 24px;
-  flex-shrink: 0;
-  background: #191a1d;
-}
-
-.create-first-step-wrap .btn {
-  height: 40px;
-  border-radius: 10px;
-  padding: 0 24px;
-  border: 1px solid rgba(74, 231, 253, 0.3);
+  box-shadow: none;
   cursor: pointer;
-  font-size: 16px;
-  line-height: 22px;
+  font-size: 14px;
 }
-
-.create-first-step-wrap .btn-secondary {
-  background: #121212;
-  color: #fff;
-}
-
-.create-first-step-wrap .btn-secondary.is-disabled {
-  opacity: 0.45;
-  pointer-events: none;
-  cursor: not-allowed;
-}
-
-.create-first-step-wrap .btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: linear-gradient(270deg, #0e59fa 0%, #00abd8 100%);
-  color: #fff;
-  border: none;
-}
-
-.create-first-step-wrap .btn-primary:disabled {
-  opacity: 0.85;
-  cursor: not-allowed;
-}
-
-.create-first-step-wrap .btn-loading-icon {
-  font-size: 16px;
+.creator-project-dialog .modal-actions .btn-secondary { color: #39343d; background: white; }
+.creator-project-dialog .modal-actions .btn-primary { background: #222025; color: white; }
+.creator-project-dialog .modal-actions .btn:disabled { opacity: .55; cursor: wait; }
+.creator-project-dialog :is(button, input):focus-visible { outline: 2px solid #775895; outline-offset: 2px; }
+@media (max-width: 680px) {
+  .creator-project-dialog .create-first-step-form.modal-body {
+    display: block;
+    padding: 14px;
+  }
+  .creator-project-dialog .modal-body :is(.left-panel, .right-panel, .content_box, .right-panel .global-setting) {
+    height: auto;
+    overflow: visible;
+    flex: none;
+  }
+  .creator-project-dialog .modal-body .right-panel { margin-top: 12px; }
+  .creator-project-dialog .modal-actions { padding: 10px 14px; }
 }

@@ -16,12 +16,7 @@ export function readCreatorPreference(): CreatorLocale {
   if (unsavedPreference) return unsavedPreference
   const preference = creatorLanguages.find(language => language.code === saved)
   if (preference) return preference.code
-  for (const tag of navigator.languages || [navigator.language]) {
-    if (/^zh-(hant|tw|hk|mo)\b/i.test(tag)) return 'zh-hant'
-    const match = creatorLanguages.find(language => language.code === tag.toLowerCase().split('-')[0])
-    if (match) return match.code
-  }
-  return 'en'
+  return 'ja'
 }
 
 export function rememberCreatorLocale(locale: CreatorLocale) {
@@ -47,9 +42,9 @@ function subscribe(callback: () => void) {
   }
 }
 
-const initialLocale = (): CreatorLocale => 'en'
+const initialLocale = (): CreatorLocale => 'ja'
 export function useCreatorLocale() {
   const pathname = usePathname() || '/'
   const preference = useSyncExternalStore(subscribe, readCreatorPreference, initialLocale)
-  return { locale: languageFromPath(pathname)?.code || preference, setLocale }
+  return { locale: pathname === '/' ? preference : languageFromPath(pathname)?.code || preference, setLocale }
 }

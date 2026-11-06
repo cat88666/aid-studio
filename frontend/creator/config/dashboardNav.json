@@ -1,0 +1,130 @@
+{
+  "zh": [
+    "首页",
+    "项目",
+    "资产库",
+    "会员",
+    "积分",
+    "邀请好友"
+  ],
+  "zh-hant": [
+    "首頁",
+    "專案",
+    "資產庫",
+    "會員",
+    "點數",
+    "邀請好友"
+  ],
+  "ja": [
+    "ホーム",
+    "プロジェクト",
+    "素材ライブラリ",
+    "メンバーシップ",
+    "クレジット",
+    "友達を招待"
+  ],
+  "en": [
+    "Home",
+    "Projects",
+    "Assets",
+    "Membership",
+    "Credits",
+    "Invite friends"
+  ],
+  "de": [
+    "Start",
+    "Projekte",
+    "Mediathek",
+    "Mitgliedschaft",
+    "Credits",
+    "Freunde einladen"
+  ],
+  "fr": [
+    "Accueil",
+    "Projets",
+    "Ressources",
+    "Abonnement",
+    "Crédits",
+    "Inviter"
+  ],
+  "es": [
+    "Inicio",
+    "Proyectos",
+    "Recursos",
+    "Membresía",
+    "Créditos",
+    "Invitar"
+  ],
+  "it": [
+    "Home",
+    "Progetti",
+    "Risorse",
+    "Abbonamento",
+    "Crediti",
+    "Invita"
+  ],
+  "pt": [
+    "Início",
+    "Projetos",
+    "Recursos",
+    "Assinatura",
+    "Créditos",
+    "Convidar"
+  ],
+  "ko": [
+    "홈",
+    "프로젝트",
+    "에셋",
+    "멤버십",
+    "크레딧",
+    "친구 초대"
+  ],
+  "ar": [
+    "الرئيسية",
+    "المشاريع",
+    "المكتبة",
+    "العضوية",
+    "الرصيد",
+    "دعوة الأصدقاء"
+  ],
+  "id": [
+    "Beranda",
+    "Proyek",
+    "Aset",
+    "Keanggotaan",
+    "Kredit",
+    "Undang teman"
+  ],
+  "ru": [
+    "Главная",
+    "Проекты",
+    "Ресурсы",
+    "Подписка",
+    "Кредиты",
+    "Пригласить"
+  ],
+  "nl": [
+    "Home",
+    "Projecten",
+    "Bibliotheek",
+    "Lidmaatschap",
+    "Credits",
+    "Uitnodigen"
+  ],
+  "tr": [
+    "Ana sayfa",
+    "Projeler",
+    "Varlıklar",
+    "Üyelik",
+    "Krediler",
+    "Davet et"
+  ],
+  "uk": [
+    "Головна",
+    "Проєкти",
+    "Ресурси",
+    "Підписка",
+    "Кредити",
+    "Запросити"
+  ]
+}

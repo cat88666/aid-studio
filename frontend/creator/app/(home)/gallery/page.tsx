@@ -1,13 +1,16 @@
 'use client'
 
-import { CREATOR_BRAND_NAME } from '~/config/creatorBrand'
+import Link from 'next/link'
+import { homeCopy } from '~/config/home-locales'
+import { useCreatorLocale } from '~/hooks/useCreatorLocale'
+import publicCopy from '~/components/home/landingGalleryCopy.json'
+import { landingSamples } from '~/utils/landingSamples'
+import filterLabels from './filterLabels.json'
+import './gallery.css'
 import { SearchOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import groupAvatarRaw from '~/assets/img/home/Group-avtor.svg'
 import emptyImageIconRaw from '~/assets/img/icon/empty_icon.svg'
-import iconStartRaw from '~/assets/img/icon/icon_start.svg'
-import starWhiteRaw from '~/assets/img/icon/star_white.svg'
 import { useHomeShellCreateModal } from '~/composables/useHomeShellCreateModal'
 import { useUserStore } from '~/stores/user'
 import type { UserProjectType } from '~/types/business-api'
@@ -17,10 +20,7 @@ import { requireLogin } from '~/utils/authLoginNavigation'
 import { publicProjectVideoList } from '~/utils/businessApi'
 import { normalizePublicCaseCard, type PublicCaseCardItem } from '~/utils/publicCasePlaza'
 
-const starWhiteUrl = assetUrl(starWhiteRaw)
-const groupAvatarUrl = assetUrl(groupAvatarRaw)
 const emptyImageIconUrl = assetUrl(emptyImageIconRaw)
-const iconStartUrl = assetUrl(iconStartRaw)
 
 const filterTabs = [
   { label: '全部', value: 'all' },
@@ -30,9 +30,13 @@ const filterTabs = [
 
 type GalleryFilter = (typeof filterTabs)[number]['value']
 
-/** 公开版首页：平台介绍、创作入口与无需登录的案例广场。 */
-export default function HomeNewIndexPage() {
+/** Public gallery with project search and playable case details. */
+export default function GalleryPage() {
   const router = useRouter()
+  const { locale } = useCreatorLocale()
+  const t = homeCopy[locale]
+  const status = publicCopy[locale]
+  const labels = filterLabels[locale]
   const token = useUserStore((state) => state.token)
   const createModal = useHomeShellCreateModal()
   const [searchQuery, setSearchQuery] = useState('')
@@ -91,114 +95,74 @@ export default function HomeNewIndexPage() {
   }
 
   return (
-    <div className="home-new-index">
-      <div className="page-content">
-        <section className="home-new-hero" aria-labelledby="aid-open-home-title">
-          <div className="home-new-hero-media">
-            <div className="home-new-hero-stage">
-              <div className="home-new-hero-ambient" aria-hidden="true" />
-              <div className="home-new-hero-fade" aria-hidden="true" />
-              <div className="home-new-open-intro">
-                <p className="home-new-open-intro__eyebrow">{CREATOR_BRAND_NAME} · AI 内容创作平台</p>
-                <h1 id="aid-open-home-title">从剧本到成片，完成一体化 AI 创作</h1>
-                <p>支持 AI 漫剧、AI 电影与 AI 漫画的项目化创作、资产管理和生成流程。</p>
-              </div>
-            </div>
-          </div>
-        </section>
+    <div className="sample-library" lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+      <header className="sample-library__intro">
+        <h1>{t.examples}</h1>
+        <p>{t.sampleLead}</p>
+        <div className="sample-library__actions">
+          <button type="button" onClick={startCreating}>{t.create}</button>
+          <button type="button" onClick={() => router.push('/faq')}>{t.helpCenter}</button>
+        </div>
+      </header>
 
-        <div className="home-new-actions">
-          <button type="button" className="btn-primary" onClick={startCreating}>
-            <img src={starWhiteUrl} alt="" />
-            <span>我要创作</span>
-          </button>
-          <button type="button" className="btn-secondary" onClick={() => router.push('/faq')}>
-            <span className="text-gradient">使用教程</span>
-          </button>
+      <section aria-label={t.samples} className="sample-library__grid sample-library__films">
+        {landingSamples.map((sample, index) => (
+          <Link key={sample.id} href={`/case?sample=${sample.id}`} className="sample-library__card">
+            <div className="sample-library__cover">
+              <img src={withAppBasePath(sample.poster)} alt="" loading={index === 0 ? 'eager' : 'lazy'} />
+            </div>
+            <div className="sample-library__caption">
+              <h2>{t.films[index][0]}</h2>
+              <p>{t.films[index][1]}</p>
+            </div>
+          </Link>
+        ))}
+      </section>
+
+      <section aria-labelledby="public-gallery-title">
+        <h2 id="public-gallery-title">{t.gallery}</h2>
+        <div className="sample-library__tools">
+          <div className="sample-library__tabs" role="tablist" aria-label={t.gallery}>
+            {filterTabs.map((tab, index) => (
+              <button key={tab.value} type="button" role="tab" aria-selected={activeTab === tab.value}
+                onClick={() => setActiveTab(tab.value)}>{labels[index]}</button>
+            ))}
+          </div>
+          <label className="sample-library__search">
+            <SearchOutlined />
+            <input value={searchQuery} onChange={event => setSearchQuery(event.target.value)}
+              type="search" placeholder={labels[3]} aria-label={labels[3]} />
+          </label>
         </div>
 
-        <section className="gallery-section" aria-labelledby="gallery-section-title">
-          <header className="section-header">
-            <h2 id="gallery-section-title" className="section-title">案例广场</h2>
-            <div className="section-toolbar">
-              <div className="filter-tabs" role="tablist" aria-label="案例分类">
-                {filterTabs.map((tab) => (
-                  <button
-                    key={tab.value}
-                    type="button"
-                    role="tab"
-                    aria-selected={activeTab === tab.value}
-                    className={`filter-tab${activeTab === tab.value ? ' active' : ''}`}
-                    onClick={() => setActiveTab(tab.value)}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-              <label className="search-box">
-                <SearchOutlined className="search-icon" />
-                <input
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  type="search"
-                  placeholder="搜索作品..."
-                  className="search-input"
-                  aria-label="搜索作品"
-                />
-              </label>
-            </div>
-          </header>
-
-          {loading && works.length === 0 ? (
-            <div className="gallery-feedback" role="status">案例加载中...</div>
-          ) : errorMessage ? (
-            <div className="gallery-feedback gallery-feedback--error" role="alert">{errorMessage}</div>
-          ) : works.length === 0 ? (
-            <div className="gallery-feedback">暂无符合条件的公开案例</div>
-          ) : (
-            <div className={`works-grid${loading ? ' is-refreshing' : ''}`} aria-busy={loading}>
-              {works.map((work) => (
-                <a
-                  key={work.id}
-                  className="work-card work-card--gallery"
-                  data-gallery-work-id={work.id}
-                  href={withAppBasePath(`/case?id=${work.id}`)}
-                  onClick={(event) => {
-                    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-                    event.preventDefault()
-                    openCaseDetail(work.id)
-                  }}
-                >
-                  <div className="work-cover" style={{ aspectRatio: work.aspectRatio }}>
-                    <img
-                      src={work.coverUrl || emptyImageIconUrl}
-                      alt={work.title}
-                      className={`work-img${work.coverUrl ? '' : ' work-img--empty'}`}
-                      loading="lazy"
-                    />
-                    <span className="work-play-badge" aria-hidden="true">
-                      <img src={iconStartUrl} alt="" width={24} height={24} />
-                    </span>
-                  </div>
-                  <div className="work-body">
-                    <h3 className="work-title">{work.title}</h3>
-                    <div className="work-footer">
-                      <div className="work-author">
-                        <img src={groupAvatarUrl} alt="" className="work-author-avatar" width={16} height={16} />
-                        <span className="work-author-name">{work.authorName}</span>
-                      </div>
-                      <div className="work-stats">
-                        {work.episodeCount > 0 ? <span className="work-views">{work.episodeCount}集</span> : null}
-                        <span className="work-tag">{work.categoryLabel}</span>
-                      </div>
-                    </div>
-                  </div>
-                </a>
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
+        {loading && !works.length ? (
+          <p role="status">{status.loading}</p>
+        ) : errorMessage ? (
+          <p role="alert">{status.failure}</p>
+        ) : !works.length ? (
+          <p role="status">{status.empty}</p>
+        ) : (
+          <div className="sample-library__grid" aria-busy={loading}>
+            {works.map((work, index) => (
+              <a key={work.id} className="sample-library__card" data-gallery-work-id={work.id}
+                href={withAppBasePath(`/case?id=${work.id}`)}
+                onClick={event => {
+                  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+                  event.preventDefault()
+                  openCaseDetail(work.id)
+                }}>
+                <div className="sample-library__cover">
+                  <img src={work.coverUrl || emptyImageIconUrl} alt="" loading={index === 0 ? 'eager' : 'lazy'} />
+                </div>
+                <div className="sample-library__caption">
+                  <h2>{work.title}</h2>
+                  <p>{[work.category === 'series' ? labels[2] : labels[1], work.authorName, work.episodeCount > 0 && `${status.episode} · ${work.episodeCount}`].filter(Boolean).join(' · ')}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   )
 }

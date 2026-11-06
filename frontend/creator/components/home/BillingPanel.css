@@ -1,2 +1,29 @@
 @import './BillingPanel-base.css';
 @import './BillingPanel-billing-page-model-name.css';
+
+.credit-workspace {
+  --ink: #252227;
+  --line: #e4e1e6;
+  --muted: #6b6570;
+  padding: clamp(22px, 3vw, 40px) clamp(16px, 3vw, 32px);
+  max-width: 1080px;
+  margin-inline: auto;
+  color: var(--ink);
+  background: white;
+}
+.credit-workspace .billing-page__inner { padding: 0; }
+.credit-account { margin-bottom: 24px; }
+.credit-account > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 14px; }
+.credit-account h1 { color: var(--ink); font-size: 28px; margin: 0; }
+.credit-account h2 { color: var(--ink); font-size: 18px; margin: 0 0 8px; }
+.credit-account button { cursor: pointer; border: 1px solid var(--line); background: white; border-radius: 7px; padding: 6px 10px; color: var(--ink); }
+.credit-account button:disabled { opacity: .5; cursor: default; }
+.credit-account > header button, .billing-page .billing-page__tab.is-active { color: white; background: #252228; border-color: #252228; }
+.credit-orders { margin-top: 16px; padding: 18px; border: 1px solid var(--line); border-radius: 10px; }
+.credit-orders p, .credit-orders small { color: var(--muted); }
+.credit-orders ul { margin: 0; padding: 0; list-style: none; }
+.credit-orders li { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.credit-orders small { display: block; overflow-wrap: anywhere; }
+.credit-pagination { display: flex; gap: 8px; justify-content: flex-end; align-items: center; margin-top: 8px; }
+.credit-workspace .billing-page { background: white; }
+.credit-workspace .billing-page__provider-select { background: white; color: var(--ink); }

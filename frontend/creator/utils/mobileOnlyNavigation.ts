@@ -10,10 +10,11 @@ export function isMobileUserAgent(ua: string): boolean {
 
 /**
  * 是否应对该路径执行移动端拦截。
- * 公开首页支持移动设备，工作台仍使用专属提示页。
+ * 公开页面支持移动设备，工作台仍使用专属提示页。
  */
 export function shouldForceMobileOnlyPath(pathname: string): boolean {
-  return !languageFromPath(pathname) && pathname.replace(/\/$/, "") !== MOBILE_ONLY_PATH
+  const path = pathname.replace(/\/+$/, '')
+  return !languageFromPath(pathname) && ![MOBILE_ONLY_PATH, '/gallery', '/case', '/faq', '/login', '/guide', '/assets', '/billing', '/membership', '/referral', '/invite'].includes(path)
 }
 
 /** 桌面端访问 `/mobile` 时应回首页 */

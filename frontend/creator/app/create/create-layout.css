@@ -5,3 +5,52 @@ html.layout-create-flow body {
   height: 100%;
   overflow: hidden;
 }
+
+/* Keep media editors on their native preview surface and separate the workflow controls. */
+.layout-create-flow .create-page { background: #faf9fb; }
+.layout-create-flow .create-page::before { background: none; }
+.layout-create-flow .create-page .create-main__flow-stack { padding-inline-end: 0; }
+.layout-create-flow .create-page .toolbar {
+  min-width: 0;
+  padding: 8px clamp(12px, 2vw, 28px);
+  gap: 12px;
+  background: white;
+  border-bottom: 1px solid #e5e3e8;
+  color: #252329;
+}
+.layout-create-flow .create-page .toolbar .toolbar-left .title-input { color: #252329 !important; }
+.layout-create-flow .toolbar .back-btn {
+  background: #f4f3f5;
+  border: 1px solid #e6e3e8;
+  color: #38323c;
+}
+.layout-create-flow .toolbar .back-btn img { filter: brightness(.25); }
+.layout-create-flow .toolbar .toolbar-right .toolbar-btn-draft {
+  color: #363139 !important;
+  background: white !important;
+  border-color: #dbd8de !important;
+}
+.layout-create-flow .toolbar .toolbar-btn-draft .text-gradient {
+  background: none;
+  color: #363139;
+  -webkit-text-fill-color: currentColor;
+}
+.layout-create-flow .create-page .create-workflow {
+  background: #fff;
+  border-bottom: 1px solid #e5e3e8;
+}
+.layout-create-flow .create-page .flow-step-pill {
+  background: #f4f3f5;
+  border-radius: 7px;
+  box-shadow: none;
+  animation: none;
+}
+.layout-create-flow .create-page .flow-step-pill .flow-step-pill__title { color: #48434d; }
+.layout-create-flow .create-page .flow-step-pill--active { background: #262329; }
+.layout-create-flow .create-page .flow-step-pill--active .flow-step-pill__title { color: white; }
+.layout-create-flow .preview_bg_box:has(.series-script-upload) { background: #faf9fb; }
+@media (max-width: 760px) {
+  .layout-create-flow .create-page .toolbar { flex-wrap: wrap; }
+  .layout-create-flow .create-page .toolbar-right { max-width: 100%; flex-wrap: wrap; gap: 6px; }
+  .layout-create-flow .create-page .preview_bg_box { margin-inline: 6px; }
+}

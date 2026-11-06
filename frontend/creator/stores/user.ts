@@ -88,9 +88,11 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
   },
 
   async fetchBalance() {
-    if (!get().token) return null
+    const token = get().token
+    if (!token) return null
     try {
       const data = await userBalance()
+      if (get().token !== token) return null
       const user = get().user
       if (user) {
         get().setUser({

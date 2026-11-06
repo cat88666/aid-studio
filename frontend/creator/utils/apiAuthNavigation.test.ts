@@ -30,6 +30,8 @@ describe('API authentication navigation', () => {
 
   it.each([
     '/api/user/asset/custom/page',
+    '/api/user/faq/list',
+    '/api/user/faq/detail',
     '/api/user/asset/style/category/list',
     '/api/user/skill/execution/catalog',
     '/url/api/user/skill/execution/catalog?scene=home'

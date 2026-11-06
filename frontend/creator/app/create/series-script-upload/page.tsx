@@ -10,11 +10,12 @@
  * - 本页未使用 createFlowShellContext（utils/createFlowInjection.ts），无 Context 降级需求。
  */
 
-import { Suspense, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, DragEvent as ReactDragEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { message } from 'antd'
 import { CloudUploadOutlined, CloseOutlined } from '@ant-design/icons'
+import { takeSeriesImport } from '~/hooks/useHomeShellCreateModal'
 import { useRouteLike } from '~/hooks/useRouteLike'
 import { useCreationStore } from '~/stores/creation'
 import {
@@ -25,13 +26,11 @@ import {
 import type { ScriptSplitPreviewVO } from '~/types/business-api'
 import { CREATE_SERIES_EPISODE_LIST_PATH } from '~/utils/createFlowRoutes'
 import { assertScriptPlainTextFile, validateScriptUploadFile } from '~/utils/scriptFileUpload'
-import { noDataIconUrl as emptyImageIconRaw } from '~/utils/emptyImageIcon'
 import { fetchUserProjectDetailOnce } from '~/utils/userProjectDetailOnce'
 import { assetUrl } from '~/utils/assetUrl'
 import starBlackIconRaw from '~/assets/img/icon/star_black.svg'
 import './series-script-upload.css'
 
-const emptyImageIconUrl = assetUrl(emptyImageIconRaw)
 const starBlackIconUrl = assetUrl(starBlackIconRaw)
 
 const MAX_SCRIPT_BYTES = 15 * 1024 * 1024
@@ -67,6 +66,15 @@ function SeriesScriptUploadClient() {
   const [scriptText, setScriptText] = useState('')
   const [previewData, setPreviewData] = useState<ScriptSplitPreviewVO | null>(null)
   const dragDepthRef = useRef(0)
+
+  const projectIdFromRoute = String(route.query.projectId || route.query.id || '')
+  useEffect(() => {
+    const file = takeSeriesImport(projectIdFromRoute)
+    if (file) {
+      setPendingFile(file)
+      setDisplayFileName(file.name)
+    }
+  }, [projectIdFromRoute])
 
   const hasFile = !!pendingFile
 
@@ -321,8 +329,9 @@ function SeriesScriptUploadClient() {
       {!hasFile && !previewData ? (
         <div className="series-script-upload__panel">
           <div className="series-script-upload__icon" aria-hidden="true">
-            <img src={emptyImageIconUrl} alt="" className="empty-image-icon empty-image-icon--xl" />
+            <CloudUploadOutlined />
           </div>
+          <h1 className="series-script-upload__title">导入分集剧本</h1>
           <p className="series-script-upload__hint">
             仅支持 .txt 纯文本格式，剧本字数不超过10万字，可拖拽至此处上传
           </p>

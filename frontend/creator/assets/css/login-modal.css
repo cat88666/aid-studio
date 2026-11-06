@@ -2,7 +2,8 @@
 
 .login-modal-overlay {
   box-sizing: border-box;
-  padding: 1.75rem 1rem;
+  padding: 16px;
+  background: rgb(17 17 20 / 48%);
   opacity: 0;
   pointer-events: none;
   visibility: hidden;
@@ -17,9 +18,20 @@
 
 .login-modal-frame {
   box-sizing: border-box;
-  width: 1440px;
-  height: 1024px;
-  background: #191A1D;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  width: 100%;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  color: #18181b;
+  background: #fff;
+  border: 1px solid rgb(0 0 0 / 8%);
+  border-radius: 16px;
+  box-shadow: 0 8px 40px rgb(0 0 0 / 12%);
+  --login-modal-muted: #60606b;
+  --login-modal-divider: #dedee3;
+  --home-muted: #71717a;
+  --home-cyan: #4c1d95;
 }
 
 .login-modal-fit-shell {
@@ -44,26 +56,34 @@
   }
 }
 
+
+.login-modal-fit-shell { width: min(960px, 100%); }
+.login-modal-visual { width: 100%; height: auto; min-height: 0; background: #111; }
+.login-modal-visual video { position: absolute; inset: 0; }
+.login-modal-form { width: 100%; height: auto; padding: 46px 32px 26px; }
+.login-modal-form .login-form-body { padding: 0; gap: 24px; overflow: visible; }
+.login-modal-form .login-form-brand span { color: #4c1d95; font-size: 23px; letter-spacing: -.04em; }
+.login-modal-form h2 { color: #18181b; font-size: 24px; line-height: 1.25; }
+.login-modal-form form { width: 100%; gap: 15px; }
+.login-modal-form form > div:first-child { gap: 12px; }
+.login-modal-form form > div[aria-hidden='true'] { display: none; }
+.login-modal-form form > div.text-white, .login-modal-form > button { color: #373740; }
+.login-modal-form > button svg { width: 22px; height: 22px; }
+.login-modal-form p { min-height: 0; }
+.login-modal-form .auth-dark-field-wrap { height: 44px; background: white; border: 1px solid #dcdce1; border-radius: 10px; cursor: text; }
+.login-modal-form .auth-dark-field-wrap:focus-within { border-color: #8063a6; box-shadow: 0 0 0 2px #f0eaf6; }
+html body .login-modal-overlay .login-modal-form .auth-dark-field-wrap :is(.ant-input, .ant-input-affix-wrapper, input) { color: #18181b !important; caret-color: #18181b !important; cursor: text !important; }
+html body .login-modal-form button.auth-dark-submit { height: 44px; background: #111114 !important; color: #fff !important; font-size: 14px !important; border-radius: 10px !important; }
+.login-modal-form > .shrink-0 { margin-top: 20px; }
+.login-modal-form > .shrink-0 > .flex { gap: 20px; }
+.login-modal-form > .shrink-0 .h-16 { display: none; }
+.login-modal-form > .shrink-0 img { filter: brightness(.25); }
+.login-modal-form button:hover:not(:disabled):not([type='submit']):not(.absolute) { color: #4c1d95; }
+
+@media (min-width: 1280px) { .login-modal-fit-shell { width: min(1180px, 100%); } }
 @media (max-width: 1023px) {
-  .login-modal-fit-shell {
-    width: auto !important;
-    height: auto !important;
-    max-width: min(27.5rem, calc(100vw - 2rem));
-  }
-
-  .login-modal-frame {
-    width: 100% !important;
-    height: auto !important;
-    max-height: calc(100vh - 3.5rem);
-    max-height: calc(100dvh - 3.5rem);
-    transform: none !important;
-  }
-
-  .login-modal-visual {
-    display: none !important;
-  }
-
-  .login-modal-form {
-    width: 100% !important;
-  }
+  .login-modal-fit-shell { width: min(380px, 100%); }
+  .login-modal-frame { display: block; }
+  .login-modal-visual { display: none; }
+  .login-modal-form { padding: 44px clamp(20px, 6vw, 36px) 26px; }
 }

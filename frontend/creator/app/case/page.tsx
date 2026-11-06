@@ -2,11 +2,15 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useState } from 'react'
-import groupAvatarRaw from '~/assets/img/home/Group-avtor.svg'
-import iconReturnRaw from '~/assets/img/icon/icon-return.svg'
 import { HtmlShellClass } from '~/components/app/HtmlShellClass'
 import type { PublicProjectDetailRow } from '~/types/business-api'
-import { assetUrl } from '~/utils/assetUrl'
+import Link from 'next/link'
+import { creatorBrandName } from '~/config/creatorBrand'
+import { creatorLanguage } from '~/config/creatorLanguages'
+import { homeCopy } from '~/config/home-locales'
+import { useCreatorLocale } from '~/hooks/useCreatorLocale'
+import { withAppBasePath } from '~/utils/appBasePath'
+import { landingSamples } from '~/utils/landingSamples'
 import { publicProjectDetail } from '~/utils/businessApi'
 import {
   resolveActivePublicEpisode,
@@ -14,9 +18,6 @@ import {
   resolvePublicProjectType
 } from '~/utils/publicCasePlaza'
 import './case-page.css'
-
-const iconReturnUrl = assetUrl(iconReturnRaw)
-const groupAvatarUrl = assetUrl(groupAvatarRaw)
 
 function parseProjectId(value: string | null): number {
   const id = Number(value)
@@ -26,7 +27,12 @@ function parseProjectId(value: string | null): number {
 function CaseDetailContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const projectId = parseProjectId(searchParams.get('id'))
+  const { locale } = useCreatorLocale()
+  const t = homeCopy[locale]
+  const sampleId = searchParams.get('sample')
+  const sampleIndex = landingSamples.findIndex(item => item.id === sampleId)
+  const sample = landingSamples[sampleIndex]
+  const projectId = sampleId === null ? parseProjectId(searchParams.get('id')) : 0
   const [requestState, setRequestState] = useState<{
     projectId: number
     detail: PublicProjectDetailRow | null
@@ -77,31 +83,43 @@ function CaseDetailContent() {
     : { videoUrl: '', coverUrl: '' }
   const projectType = detail ? resolvePublicProjectType(detail.projectType) : 'movie'
 
-  const goBack = () => {
-    if (window.history.length > 1) router.back()
-    else router.push('/')
-  }
-
   return (
-    <div className="public-case-page">
+    <div className="public-case-page" lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
       <HtmlShellClass classes="public-case-shell" />
-      <div className="public-case-backdrop" aria-hidden="true">
-        {playback.coverUrl ? <img src={playback.coverUrl} alt="" /> : null}
-      </div>
+      <nav className="public-case-nav" aria-label={t.nav}>
+        <Link href={creatorLanguage(locale).path}>{creatorBrandName(locale)}</Link>
+        <span aria-hidden="true">/</span>
+        <Link href="/gallery">{t.examples}</Link>
+      </nav>
 
-      <button type="button" className="public-case-back" aria-label="返回案例广场" onClick={goBack}>
-        <img src={iconReturnUrl} alt="" width={36} height={36} />
-      </button>
-
-      {loading ? (
+      {sample ? (
+        <main className="public-case-content">
+          <header className="public-case-info">
+            <h1>{t.films[sampleIndex][0]}</h1>
+            <p>{t.films[sampleIndex][1]}</p>
+          </header>
+          <div className="public-case-player">
+            <video key={sample.id} controls playsInline preload="metadata" aria-label={t.player}
+              poster={withAppBasePath(sample.poster)} src={withAppBasePath(sample.video)} />
+          </div>
+        </main>
+      ) : loading ? (
         <div className="public-case-feedback" role="status">案例加载中...</div>
       ) : errorMessage || !detail ? (
         <div className="public-case-feedback" role="alert">
           <p>{errorMessage || '案例不存在或尚未公开'}</p>
-          <button type="button" onClick={() => router.push('/')}>返回案例广场</button>
+          <button type="button" onClick={() => router.push('/gallery')}>返回案例广场</button>
         </div>
       ) : (
         <main className="public-case-content">
+          <header className="public-case-info">
+            <h1>{detail.projectName || `公开项目 #${detail.id}`}</h1>
+            <p className="public-case-type">
+              {projectType === 'series' ? `电视剧集${detail.episodeCount ? ` · ${detail.episodeCount}集` : ''}` : '电影/短片'}
+            </p>
+            {detail.publishTime ? <p className="public-case-published">发布于 {detail.publishTime}</p> : null}
+            {detail.authorNickname && <p className="public-case-author">{detail.authorNickname}</p>}
+          </header>
           <section className="public-case-media" aria-label="案例视频">
             <div className="public-case-player">
               {playback.videoUrl ? (
@@ -128,6 +146,7 @@ function CaseDetailContent() {
                     key={episode.episodeId}
                     type="button"
                     className={activeEpisode?.episodeId === episode.episodeId ? 'is-active' : ''}
+                    aria-pressed={activeEpisode?.episodeId === episode.episodeId}
                     onClick={() => setActiveEpisodeId(episode.episodeId)}
                   >
                     {episode.coverUrl ? <img src={episode.coverUrl} alt="" loading="lazy" /> : null}
@@ -137,19 +156,8 @@ function CaseDetailContent() {
               </div>
             ) : null}
           </section>
+          {detail.projectDesc?.trim() && <p className="public-case-description">{detail.projectDesc.trim()}</p>}
 
-          <aside className="public-case-info">
-            <div className="public-case-author">
-              <img src={groupAvatarUrl} alt="" width={36} height={36} />
-              <span>{detail.authorNickname?.trim() || '作者'}</span>
-            </div>
-            <h1>{detail.projectName || `公开项目 #${detail.id}`}</h1>
-            <p className="public-case-type">
-              {projectType === 'series' ? `电视剧集${detail.episodeCount ? ` · ${detail.episodeCount}集` : ''}` : '电影/短片'}
-            </p>
-            <p className="public-case-description">{detail.projectDesc?.trim() || '暂无作品介绍'}</p>
-            {detail.publishTime ? <p className="public-case-published">发布于 {detail.publishTime}</p> : null}
-          </aside>
         </main>
       )}
     </div>

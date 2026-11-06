@@ -208,23 +208,19 @@ export function userProfile(): Promise<UserInfoFromApi> {
   return promise
 }
 
-let userBalanceInflight: Promise<UserBalanceFromApi> | null = null
+let userBalanceInflight: { token: string | null; promise: Promise<UserBalanceFromApi> } | null = null
 
-/**
- * 快捷查询账户积分 POST /api/user/balance。
- * 用于生成任务终态后刷新侧栏积分；in-flight 合并避免并发重复请求。
- */
+/** 只合并同一登录会话的余额请求。切换账号后必须向后端重新查询。 */
 export function userBalance(): Promise<UserBalanceFromApi> {
-  if (userBalanceInflight) return userBalanceInflight
+  const token = typeof window === 'undefined' ? null : localStorage.getItem('token')
+  if (userBalanceInflight && userBalanceInflight.token === token) return userBalanceInflight.promise
   const promise = request
     .post<ApiEnvelope<UserBalanceFromApi>>('/api/user/balance', {})
     .then((res) => unwrap(res))
     .finally(() => {
-      if (userBalanceInflight === promise) {
-        userBalanceInflight = null
-      }
+      if (userBalanceInflight?.promise === promise) userBalanceInflight = null
     })
-  userBalanceInflight = promise
+  userBalanceInflight = { token, promise }
   return promise
 }
 

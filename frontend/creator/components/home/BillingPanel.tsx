@@ -132,7 +132,7 @@ export default function BillingPanel() {
     <div className="home-new-sub-page billing-page">
       <div className="page-content billing-page__inner">
         <header className="billing-page__header">
-          <h1 className="billing-page__title">计费说明</h1>
+          <h2 className="billing-page__title">计费说明</h2>
           <p className="billing-page__subtitle">单位：{creditUnit}</p>
         </header>
 
@@ -143,6 +143,7 @@ export default function BillingPanel() {
                 key={tab.value}
                 type="button"
                 role="tab"
+                aria-selected={activeTab === tab.value}
                 className={`billing-page__tab${activeTab === tab.value ? ' is-active' : ''}`}
                 onClick={() => setActiveTab(tab.value)}
               >

@@ -350,3 +350,34 @@
     grid-column: 1 / -1;
   }
 }
+
+.assets-page.assets-library-figma {
+  --home-muted: #6a6670;
+  color: #211f25;
+  background: white;
+}
+.assets-page .assets-library-figma__inner { width: min(100%, 1080px); margin-inline: auto; padding: clamp(20px, 3vw, 36px); box-sizing: border-box; }
+.assets-page .works-lib-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.assets-page .works-lib-header__title { color: #221f26; font-size: 26px; }
+.assets-page .assets-lib-upload { background: #222025; color: white; padding: 9px 16px; border-radius: 8px; border: 0; cursor: pointer; }
+.assets-page .assets-lib-toolbar { flex-wrap: wrap; height: auto; gap: 12px; }
+.assets-page .works-lib-type-tabs { flex-wrap: wrap; background: #f4f3f5; padding: 3px; }
+.assets-page .works-lib-type-tabs__btn { color: #605b66; }
+.assets-page .works-lib-type-tabs__btn.is-active { background: #262329; color: white; }
+.assets-page .assets-lib-tab__ico { filter: grayscale(1) brightness(.56); }
+.assets-page .is-active .assets-lib-tab__ico { filter: brightness(0) invert(1); }
+.assets-page .works-lib-search { background: white; border: 1px solid #dfdce2; max-width: 300px; margin-inline-start: auto; }
+.assets-page :is(.works-lib-search__input, .works-lib-card__title) { color: #27232d; }
+.assets-page.assets-library-figma .works-lib-grid { grid-template-columns: repeat(auto-fill,minmax(min(100%,180px),1fr)); gap: 14px; }
+.assets-page .works-lib-card { border-color: #e5e2e7; background: white; border-radius: 10px; }
+.assets-page .works-lib-card__cover--placeholder { background: #f4f2f6; }
+.assets-page .works-lib-card__title-input { background: white; border-color: #8b739e; color: #252228; }
+.assets-page .works-lib-empty--full { border: 1px dashed #dcd7e1; min-height: 220px; background: #faf9fb; }
+.assets-page .works-lib-empty__title { color: #67616b; }
+@media (max-width: 680px) {
+  .assets-page .works-lib-search { margin: 0; width: 100%; max-width: none; min-height: 36px; flex: none; }
+  .assets-page .works-lib-type-tabs__btn { flex: auto; }
+}
+@media (hover: none) {
+  .assets-page .works-lib-card__cover-actions { opacity: 1; transform: none; pointer-events: auto; }
+}

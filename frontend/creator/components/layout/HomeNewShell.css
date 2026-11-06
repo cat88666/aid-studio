@@ -99,3 +99,17 @@ html.layout-home-new .home-layout-root {
   height: 100%;
   overflow: hidden;
 }
+
+.creator-public-info { min-height: 100dvh; background: white; }
+.creator-public-info .creator-public-masthead { position: sticky; top: 0; z-index: 6; min-height: 0; }
+
+.dashboard-nav > .creator-container { max-width: 1400px; height: 52px; gap: 18px; }
+.dashboard-nav .creator-brand { margin-inline-end: 4px; }
+.dashboard-nav .creator-links { margin-inline-end: auto; }
+.dashboard-nav .creator-links a[aria-current] { font-weight: 650; color: #17151e; background: #f1eff5; }
+@media (max-width: 940px) {
+  .dashboard-nav .creator-brand { margin-inline-end: auto; }
+  .dashboard-nav .creator-menu { display: inline-flex; }
+  .dashboard-nav .creator-links { display: none; }
+  .dashboard-nav .creator-links.is-open { display: grid; position: absolute; inset: 100% 12px auto; background: white; padding: 8px; border: 1px solid #ddd; border-radius: 10px; }
+}

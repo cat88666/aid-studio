@@ -84,6 +84,8 @@ const resolvedApiBaseURL = resolveApiBaseURL()
 
 const ANONYMOUS_USER_API_PATHS = new Set([
   '/api/user/asset/custom/page',
+  '/api/user/faq/list',
+  '/api/user/faq/detail',
   '/api/user/asset/style/category/list',
   '/api/user/skill/execution/catalog'
 ])

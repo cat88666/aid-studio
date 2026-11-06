@@ -14,6 +14,7 @@ interface HomeShellCreateModalState {
   createConfirmLoading: boolean
   /** 为 true 时弹窗左侧作品类型跟随父级（我的作品页按 tab）；首页我要创作为 false，固定默认剧集 */
   syncProjectTypeFromParent: boolean
+  scriptFileDraft: File | null
   creationTitleDraft: string
   creationProjectTypeDraft: 'movie' | 'series'
   creationGlobalSettingDraft: GlobalSettingData
@@ -30,13 +31,47 @@ const useHomeShellCreateModalStore = create<HomeShellCreateModalState>(() => ({
   showCreateFirstStepModal: false,
   createConfirmLoading: false,
   syncProjectTypeFromParent: false,
+  scriptFileDraft: null,
   creationTitleDraft: '未命名作品',
   creationProjectTypeDraft: 'series',
   creationGlobalSettingDraft: cloneStoreGlobalSetting()
 }))
 
+const importDraftKey = 'creator.pending-series-import'
+let pendingImport: { projectId: string; file: File } | null = null
+
+async function stageSeriesImport(projectId: string, file: File) {
+  pendingImport = { projectId, file }
+  try {
+    sessionStorage.setItem(importDraftKey, JSON.stringify({
+      projectId, name: file.name, text: await file.text(), expires: Date.now() + 15 * 60_000
+    }))
+  } catch { /* Soft navigation still carries the File if browser storage is unavailable. */ }
+}
+
+export function takeSeriesImport(projectId: string): File | null {
+  if (!projectId) return null
+  const memoryFile = pendingImport?.projectId === projectId ? pendingImport.file : null
+  if (memoryFile) pendingImport = null
+  try {
+    const raw = sessionStorage.getItem(importDraftKey)
+    if (!raw) return memoryFile
+    const draft = JSON.parse(raw)
+    if (draft.expires < Date.now()) {
+      sessionStorage.removeItem(importDraftKey)
+      return memoryFile
+    }
+    if (draft.projectId !== projectId) return memoryFile
+    sessionStorage.removeItem(importDraftKey)
+    if (typeof draft.text === 'string' && typeof draft.name === 'string') {
+      return memoryFile ?? new File([draft.text], draft.name, { type: 'text/plain' })
+    }
+  } catch { /* The in-memory File also covers disabled session storage. */ }
+  return memoryFile
+}
+
 function setShowCreateFirstStepModal(open: boolean) {
-  useHomeShellCreateModalStore.setState({ showCreateFirstStepModal: open })
+  useHomeShellCreateModalStore.setState(open ? { showCreateFirstStepModal: true } : { showCreateFirstStepModal: false, scriptFileDraft: null })
 }
 
 function setCreationTitleDraft(title: string) {
@@ -92,11 +127,12 @@ function updateGlobalSettingDraftField<K extends keyof GlobalSettingData>(
   })
 }
 
-function openCreateModal(options?: { worksTab?: 'film' | 'series' }) {
+function openCreateModal(options?: { worksTab?: 'film' | 'series'; scriptFile?: File }) {
   const base = cloneStoreGlobalSetting()
   const d = CREATE_FIRST_STEP_DEFAULTS
   // 新建作品不带入上次/当前作品的风格；selectedStyle 置空后由风格库默认选中精选第一项
   const next: Partial<HomeShellCreateModalState> = {
+    scriptFileDraft: options?.scriptFile ?? null,
     creationTitleDraft: '未命名作品',
     creationGlobalSettingDraft: {
       ...base,
@@ -181,11 +217,13 @@ async function runCreateConfirm(router: { push: (href: string) => void }) {
     creation.setCurrentStepIndex(1)
     message.success(createRes.msg || '项目创建成功')
     const pid = String(createRes.data.id)
+    if (state.scriptFileDraft && state.creationProjectTypeDraft === 'series') await stageSeriesImport(pid, state.scriptFileDraft)
     const createQuery = `projectId=${pid}&id=${pid}`
     setTimeout(() => {
       useHomeShellCreateModalStore.setState({
         createConfirmLoading: false,
-        showCreateFirstStepModal: false
+        showCreateFirstStepModal: false,
+        scriptFileDraft: null
       })
       if (state.creationProjectTypeDraft === 'series') {
         router.push(`${CREATE_SERIES_SCRIPT_UPLOAD_PATH}?${createQuery}`)

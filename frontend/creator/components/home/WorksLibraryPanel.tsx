@@ -9,6 +9,7 @@ import type { CSSProperties,SyntheticEvent } from 'react'
 import { useCallback,useEffect,useMemo,useRef,useState } from 'react'
 import deleteWhiteIcon from '~/assets/img/home/delete-white.svg'
 import editWhiteIcon from '~/assets/img/home/edit-white.svg'
+import { useOpenLibraryProject } from '~/hooks/useOpenLibraryProject'
 import { useEnterCreateFlowOverlay } from '~/composables/useEnterCreateFlowOverlay'
 import { useInfiniteScrollPagination } from '~/composables/useInfiniteScrollPagination'
 import { useCreationStore } from '~/stores/creation'
@@ -147,6 +148,7 @@ function serializeFlowQuery(query: Record<string, string>): string {
 export function WorksLibraryPanel({ onOpenCreate }: WorksLibraryPanelProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const openLibraryProject = useOpenLibraryProject()
   const { beginEnterCreateFlowOverlay, endEnterCreateFlowOverlay } = useEnterCreateFlowOverlay()
 
   const tabQuery = String(searchParams.get('tab') ?? '')
@@ -336,7 +338,7 @@ export function WorksLibraryPanel({ onOpenCreate }: WorksLibraryPanelProps) {
       void goToSeriesEpisodeManage(item)
       return
     }
-    void openWork(work)
+    void openWork(item)
   }
 
   const publishNavigatingProjectIdRef = useRef<number | null>(null)
@@ -468,40 +470,8 @@ export function WorksLibraryPanel({ onOpenCreate }: WorksLibraryPanelProps) {
     onOpenCreate?.(workType)
   }
 
-  async function openWork(work: Work) {
-    const projectId = Number(work.id)
-    if (!Number.isFinite(projectId) || projectId <= 0) {
-      message.error('项目ID无效')
-      return
-    }
-    const item = work as WorkListItem
-    const projectTypeGuess = item.category === 'series' ? 'series' : 'movie'
-    beginEnterCreateFlowOverlay()
-    try {
-      resetProjectDetailHydrateCache(projectId)
-      const q = buildOpenProjectFlowQuery(projectId, {
-        embedded: false,
-        projectType: projectTypeGuess
-      })
-      const entryPath = await resolveCreateFlowEntryPath(projectId, projectTypeGuess)
-      // 先对齐路由再 hydrate，避免 store↔route 分歧窗口把旧作品 generating 灌进新作品
-      router.push(`${entryPath}?${serializeFlowQuery(q)}`)
-      await hydrateCreationStoreFromProjectDetail(useCreationStore.getState(), projectId, {
-        force: true
-      })
-      const projectType = useCreationStore.getState().currentProjectType
-      if (projectType && projectType !== projectTypeGuess) {
-        const q2 = buildOpenProjectFlowQuery(projectId, {
-          embedded: false,
-          projectType
-        })
-        const entryPath2 = await resolveCreateFlowEntryPath(projectId, projectType)
-        router.replace(`${entryPath2}?${serializeFlowQuery(q2)}`)
-      }
-    } catch (_error) {
-      endEnterCreateFlowOverlay()
-      message.error('获取项目详情失败，请稍后重试')
-    }
+  function openWork(work: WorkListItem) {
+    return openLibraryProject(Number(work.id), work.category === 'series' ? 'series' : 'movie')
   }
 
   function deleteWork(work: Work) {
@@ -649,14 +619,6 @@ export function WorksLibraryPanel({ onOpenCreate }: WorksLibraryPanelProps) {
                     onError={(ev) => onWorkCoverImgError(ev, work.id)}
                   />
                 )}
-                {work.category === 'series' ? (
-                  <div className="works-lib-card__cover-meta">
-                    <h3 className="works-lib-card__cover-title">{work.title}</h3>
-                    <span className="works-lib-card__cover-updated">
-                      最后更新 {formatDate(work.updatedAt)}
-                    </span>
-                  </div>
-                ) : null}
                 {work.auditStatusLabel ? (
                   <span
                     className={`works-lib-card__cover-badge ${auditBadgeClass(
@@ -692,11 +654,13 @@ export function WorksLibraryPanel({ onOpenCreate }: WorksLibraryPanelProps) {
                 </div>
               </div>
               <div className="works-lib-card__body">
+                <h3 className="works-lib-card__title">{work.title}</h3>
                 {work.category === 'series' ? (
                   <div className="works-lib-card__episodes works-lib-card__episodes--series">
                     <div className="works-lib-card__ep-toolbar">
                       <span className="works-lib-card__ep-label">
-                        集数 <em>{work.episodeCount ?? 0}</em>
+                        <span>{work.episodeCount ?? 0} 集</span>
+                        <span className="works-lib-card__updated"> · {formatDate(work.updatedAt)}</span>
                       </span>
                       {work.isPublished ? (
                         <WorksLibraryPublishedAction
@@ -721,7 +685,6 @@ export function WorksLibraryPanel({ onOpenCreate }: WorksLibraryPanelProps) {
                   </div>
                 ) : (
                   <>
-                    <h3 className="works-lib-card__title">{work.title}</h3>
                     <div className="works-lib-card__row">
                       <span className="works-lib-card__updated">
                         最后更新 {formatDate(work.updatedAt)}
