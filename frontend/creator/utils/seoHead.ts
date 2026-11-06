@@ -1,5 +1,7 @@
+import { creatorInterfaceText } from '~/config/creatorInterfaceText'
+import type { CreatorLocale } from '~/config/creatorLanguages'
 import { request } from '~/utils/api'
-import { CREATOR_BRAND_DESCRIPTION, CREATOR_BRAND_KEYWORDS, creatorBrandName } from '~/config/creatorBrand'
+import { CREATOR_BRAND_KEYWORDS, creatorBrandName } from '~/config/creatorBrand'
 
 export interface PublicSeoMeta {
   title?: string
@@ -44,14 +46,15 @@ export function isPrivateSeoPath(pathname: string): boolean {
 }
 
 /** 品牌与头图由定制端维护；页面级内容、索引策略与规范地址沿用登记配置。 */
-export function resolveSiteSeo(pathname: string, registered?: PublicSeoMeta | null, locale: 'en' | 'zh' = 'en') {
+export function resolveSiteSeo(pathname: string, registered?: PublicSeoMeta | null, locale: CreatorLocale = 'en') {
   const route = normalizeSeoPath(pathname)
   const name = creatorBrandName(locale)
-  const pageTitle = PAGE_TITLES[route]?.[locale === 'en' ? 0 : 1]
+  const text = creatorInterfaceText[locale]
+  const localizedTitles: Record<string, string> = { '/login': text.login, '/forgot-password': text.reset, '/works': text.projects }
+  const pageTitle = localizedTitles[route] || PAGE_TITLES[route]?.[locale === 'zh' ? 1 : 0]
   const isPrivate = isPrivateSeoPath(route)
   const publicMeta = isPrivate ? null : registered
-  const description = locale === 'en' ? CREATOR_BRAND_DESCRIPTION : route === '/faq' ? '产品使用说明、常见问题与帮助中心'
-    : route === '/about' ? '了解产品、服务与创作平台' : '樱花 AGIC AI 短剧创作平台，从剧本到成片。'
+  const description = text.description
   return {
     title: pageTitle ? pageTitle + ' - ' + name : name,
     description: (locale === 'zh' && publicMeta?.description?.replace(/视觉·AID|AID Studio|镜序/gi, name)) || description,

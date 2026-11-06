@@ -1,6 +1,7 @@
 'use client'
 
-import { useAuthText } from '~/hooks/useAuthText'
+import { formatAuthSeconds, useAuthText } from '~/hooks/useAuthText'
+import { useCreatorLocale } from '~/hooks/useCreatorLocale'
 
 import { Form } from 'antd'
 import { ForgotPasswordField } from './ForgotPasswordField'
@@ -44,6 +45,7 @@ export function ForgotPasswordVerifyStep({
   onUnlockAutofill
 }: ForgotPasswordVerifyStepProps) {
   const t = useAuthText()
+  const { locale } = useCreatorLocale()
   return (
     <Form
       layout="vertical"
@@ -75,7 +77,7 @@ export function ForgotPasswordVerifyStep({
                 className={FORGOT_PASSWORD_CODE_BTN_CLASS}
                 onClick={onSendCode}
               >
-                {sendCodeCountdown > 0 ? `${sendCodeCountdown}s` : t('获取验证码')}
+                {sendCodeCountdown > 0 ? formatAuthSeconds(locale, sendCodeCountdown) : t('获取验证码')}
               </button>
             }
           />

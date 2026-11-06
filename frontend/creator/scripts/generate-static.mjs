@@ -66,6 +66,20 @@ rmSync(publicDir, { recursive: true, force: true })
 mkdirSync(publicDir, { recursive: true })
 cpSync(exportDir, publicDir, { recursive: true })
 
+// The shared Next root layout serves all routes. Stamp each exported home document
+// with the same language and direction as its rendered landing page before first paint.
+for (const file of readdirSync(join(projectRoot, 'config/home-locales'))) {
+  if (!file.endsWith('.json')) continue
+  const locale = file.slice(0, -5)
+  const htmlPath = join(publicDir, locale === 'en' ? '' : locale, 'index.html')
+  const html = readFileSync(htmlPath, 'utf8')
+  const landing = html.match(/class="creator-landing" lang="([^"]+)" dir="(rtl|ltr)"/)
+  if (!landing || landing[1].toLowerCase().split('-')[0] !== locale.split('-')[0]) {
+    throw new Error('Incorrect prerendered language for ' + htmlPath)
+  }
+  writeFileSync(htmlPath, html.replace(/<html lang="en">/, '<html lang="' + landing[1] + '" dir="' + landing[2] + '">'))
+}
+
 const notFoundPath = join(publicDir, '404.html')
 const fallbackSource = existsSync(notFoundPath)
   ? readFileSync(notFoundPath, 'utf8')

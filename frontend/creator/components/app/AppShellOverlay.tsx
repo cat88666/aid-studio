@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { ViewportCompactScaleToggle } from '@/components/common/ViewportCompactScaleToggle'
+import { creatorInterfaceText } from '~/config/creatorInterfaceText'
 import { useCreatorLocale } from '~/hooks/useCreatorLocale'
 import { creatorBrandName } from '~/config/creatorBrand'
 import { useEnterCreateFlowOverlay } from '~/composables/useEnterCreateFlowOverlay'
@@ -82,7 +83,7 @@ function useRouteReadySignal(onReady: () => void) {
 
 export function AppShellOverlay() {
   const { locale } = useCreatorLocale()
-  const loadingLabel = locale === 'en' ? 'Loading…' : '页面加载中…'
+  const loadingLabel = creatorInterfaceText[locale].loading
 
   const pathname = usePathname()
   const { enterCreateFlowOverlayPending, endEnterCreateFlowOverlay } = useEnterCreateFlowOverlay()
@@ -307,7 +308,7 @@ export function AppShellOverlay() {
           <div className="route-overlay__inner">
             <div className="route-overlay__glow" />
             <div className="route-overlay__brand">{creatorBrandName(locale)}</div>
-            <div className="route-overlay__hint">{locale === 'en' ? 'Opening the studio…' : '正在进入创作流程…'}</div>
+            <div className="route-overlay__hint">{loadingLabel}</div>
             <div className="route-overlay__bar" aria-hidden="true">
               <i />
             </div>

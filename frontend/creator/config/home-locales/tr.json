@@ -1,0 +1,124 @@
+{
+  "home": "Ana sayfa",
+  "nav": "Ana gezinme",
+  "menu": "Menüyü değiştir",
+  "account": "Projelerim",
+  "login": "Giriş yap",
+  "pricing": "Fiyatlandırma",
+  "guide": "Rehber",
+  "examples": "Örnekler",
+  "kicker": "AI film yapım stüdyosu",
+  "headline": "Hikayenizi kısa filme dönüştürün",
+  "intro": "Senaryoyu yazın, karakterlerinizi seçin ve her çekimi tek bir stüdyoda yönetin.",
+  "create": "Üretmeye başla",
+  "watch": "Örnekleri izle",
+  "formats": "Kısa dramalar · Filmler · Hareketli çizgi romanlar",
+  "note": "Senaryonuzla başlayın, yatay veya dikey formatta çekin.",
+  "models": "Model kataloğu",
+  "samples": "Örnek filmler",
+  "sampleTitle": "Hareket halindeki hikayeler",
+  "sampleLead": "Altı klibi keşfedin ve sanat yönetiminin ve kamera hareketinin bir sahneyi nasıl şekillendirdiğini görün.",
+  "gallery": "Herkese açık projelere göz atın",
+  "workflow": "İş akışı",
+  "workflowTitle": "İlk bölümünüzü üç adımda yapın",
+  "stages": [
+    [
+      "Birinci adım",
+      "Senaryoyu yaz",
+      "Hikayenin ana hatlarını çizin, karakterlerinize diyaloglar verin ve aksiyonu sahnelere bölün."
+    ],
+    [
+      "İkinci adım",
+      "Her çekimi planlayın",
+      "Karakter ve konum referanslarını seçin, ardından her çekim için çerçeveyi, eylemi ve diyaloğu ayarlayın."
+    ],
+    [
+      "Üçüncü adım",
+      "Bölümün kurgusunu yapın",
+      "Dışa aktarmadan önce klipler oluşturun, sesleri dinleyin ve çekimlerinizi zaman çizelgesinde düzenleyin."
+    ]
+  ],
+  "dialogue": "Diyalog",
+  "voiceTitle": "Karakteriniz için bir ses bulun",
+  "voiceLead": "Bu Mandarin ses örneklerini dinleyin ve oyuncu kadronuza uygun bir ses seçin.",
+  "audition": "Önizleme",
+  "pause": "Duraklat",
+  "playing": "Çalınıyor",
+  "voiceLanguage": "Mandarin Çincesi",
+  "usage": "Fiyatlandırma",
+  "pricingTitle": "Üretmeden önce maliyeti görün",
+  "pricingLead": "Teklifinizi görmek için bir model ve ayarlar seçin. Tamamlanan ödemeler fatura geçmişinizde görünür.",
+  "prices": [
+    [
+      "Görseller",
+      "Karakterler ve konumlar"
+    ],
+    [
+      "video",
+      "Çekimler ve sekanslar"
+    ],
+    [
+      "Ses",
+      "Diyalog ve seslendirme"
+    ]
+  ],
+  "bill": "Fatura geçmişimi görüntüle",
+  "help": "Yardım",
+  "faq": "Sık sorulan sorular",
+  "questions": [
+    [
+      "Kendi senaryomu getirebilir miyim?",
+      "Evet. Bir proje oluşturun, senaryo düzenleyiciyi açın ve hikaye taslağını oluşturmadan önce hikayenizi, karakterlerinizi ve diyaloğunuzu ekleyin."
+    ],
+    [
+      "Yalnızca bir çekimi değiştirebilir miyim?",
+      "Çekimi çalışma alanında açın, açıklamasını, referans görselini veya diyalogunu düzenleyin ve ardından o çekimi yeniden oluşturun."
+    ],
+    [
+      "Bir sesi nasıl seçerim?",
+      "Seslendirme adımında sesleri önizleyin, satırlarınızı girin ve oluşturulan sesi ilgili çekime ekleyin."
+    ],
+    [
+      "Filmimi nereden indirebilirim?",
+      "Bölüm zaman çizelgesindeki çekim sırasını kontrol edin ve dışa aktarın. Dışa aktarma bittiğinde videoyu indirebilirsiniz."
+    ]
+  ],
+  "helpCenter": "Yardım merkezini ziyaret edin",
+  "player": "Örnek oynatıcı",
+  "close": "Örneği kapat",
+  "audioError": "Bu ses çalınamadı. Lütfen tekrar deneyin.",
+  "videoError": "Bu klip oynatılamadı. Tekrar denemek için tekrar açın.",
+  "language": "Dil",
+  "voiceNames": [
+    "Vivi",
+    "Xiaotian",
+    "tatlı şeftali",
+    "Uyumlu Gençlik"
+  ],
+  "films": [
+    [
+      "Neon Bölgesi",
+      "Siberpunk portreleri · Stil çalışması · 6 sn"
+    ],
+    [
+      "Yıldızlardan Ziyaretçi",
+      "Uzay fantezisi · Konsept filmi · 10 sn"
+    ],
+    [
+      "Kağıt üzerinde yaşıyor",
+      "Boyalı portreler · Stil çalışması · 6 sn"
+    ],
+    [
+      "Çayıra Bir Bakış",
+      "Dış mekan portresi · Yörünge çekimi · 5 saniye"
+    ],
+    [
+      "Geçmişten Gelen Işık",
+      "Sinematik portreler · Stil çalışması · 6 sn"
+    ],
+    [
+      "Minyatür Macera",
+      "Fantastik karakterler · Stil çalışması · 6 sn"
+    ]
+  ]
+}

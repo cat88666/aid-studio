@@ -1,0 +1,124 @@
+{
+  "home": "Startseite",
+  "nav": "Hauptnavigation",
+  "menu": "Menü umschalten",
+  "account": "Meine Projekte",
+  "login": "Anmelden",
+  "pricing": "Preise",
+  "guide": "Anleitung",
+  "examples": "Filmbeispiele",
+  "kicker": "KI-Filmstudio",
+  "headline": "Verwandeln Sie Ihre Geschichte in einen Kurzfilm",
+  "intro": "Schreiben Sie das Drehbuch, besetzen Sie Ihre Charaktere und führen Sie Regie bei jeder Einstellung in einem Studio.",
+  "create": "Film erstellen",
+  "watch": "Beispiele ansehen",
+  "formats": "Kurzdramen · Filme · Motion-Comics",
+  "note": "Vom Drehbuch zum Film – im Hoch- oder Querformat.",
+  "models": "Modellkatalog",
+  "samples": "Filmbeispiele",
+  "sampleTitle": "Geschichten in Bewegung",
+  "sampleLead": "Entdecken Sie sechs Clips und sehen Sie, wie Art Direction und Kamerabewegung eine Szene prägen.",
+  "gallery": "Durchsuchen Sie öffentliche Projekte",
+  "workflow": "Arbeitsablauf",
+  "workflowTitle": "Erstellen Sie Ihre erste Episode in drei Schritten",
+  "stages": [
+    [
+      "Schritt eins",
+      "Drehbuch schreiben",
+      "Skizzieren Sie die Geschichte, geben Sie Ihren Charakteren Dialoge und unterteilen Sie die Handlung in Szenen."
+    ],
+    [
+      "Schritt zwei",
+      "Einstellungen planen",
+      "Wählen Sie Charakter- und Ortsreferenzen aus und legen Sie dann den Rahmen, die Aktion und den Dialog für jede Aufnahme fest."
+    ],
+    [
+      "Schritt drei",
+      "Folge schneiden",
+      "Erstellen Sie Clips, hören Sie Stimmen vor und ordnen Sie Ihre Aufnahmen vor dem Export auf der Timeline an."
+    ]
+  ],
+  "dialogue": "Dialog",
+  "voiceTitle": "Finden Sie eine Stimme für Ihren Charakter",
+  "voiceLead": "Hören Sie sich diese Sprachbeispiele für Mandarin an und wählen Sie einen Klang, der zu Ihrer Besetzung passt.",
+  "audition": "Vorschau",
+  "pause": "Pause",
+  "playing": "Wiedergabe",
+  "voiceLanguage": "Mandarin",
+  "usage": "Preise",
+  "pricingTitle": "Sehen Sie sich die Kosten an, bevor Sie generieren",
+  "pricingLead": "Wählen Sie ein Modell und Einstellungen, um Ihr Angebot anzuzeigen. Abgeschlossene Gebühren werden in Ihrem Abrechnungsverlauf angezeigt.",
+  "prices": [
+    [
+      "Bilder",
+      "Charaktere und Orte"
+    ],
+    [
+      "Video",
+      "Aufnahmen und Sequenzen"
+    ],
+    [
+      "Audio",
+      "Dialog und Voice-Over"
+    ]
+  ],
+  "bill": "Sehen Sie sich meinen Rechnungsverlauf an",
+  "help": "Hilfe",
+  "faq": "Häufig gestellte Fragen",
+  "questions": [
+    [
+      "Kann ich mein eigenes Skript mitbringen?",
+      "Ja. Erstellen Sie ein Projekt, öffnen Sie den Skripteditor und fügen Sie Ihre Geschichte, Charaktere und Dialoge hinzu, bevor Sie das Storyboard erstellen."
+    ],
+    [
+      "Kann ich eine einzelne Einstellung ändern?",
+      "Öffnen Sie die Aufnahme im Arbeitsbereich, bearbeiten Sie deren Beschreibung, Referenzbild oder Dialog und erstellen Sie dann die Aufnahme neu."
+    ],
+    [
+      "Wie wähle ich eine Stimme aus?",
+      "Im Voice-Over-Schritt sehen Sie sich die Stimmen in der Vorschau an, geben Ihre Zeilen ein und fügen den generierten Ton zur entsprechenden Aufnahme hinzu."
+    ],
+    [
+      "Wo kann ich meinen Film herunterladen?",
+      "Überprüfen Sie die Reihenfolge der Aufnahmen auf der Episoden-Timeline und exportieren Sie sie. Sie können das Video herunterladen, sobald der Export abgeschlossen ist."
+    ]
+  ],
+  "helpCenter": "Besuchen Sie das Hilfecenter",
+  "player": "Beispielspieler",
+  "close": "Probe schließen",
+  "audioError": "Diese Stimme konnte nicht abgespielt werden. Bitte versuchen Sie es erneut.",
+  "videoError": "Dieser Clip konnte nicht abgespielt werden. Öffnen Sie es erneut, um es erneut zu versuchen.",
+  "language": "Sprache",
+  "voiceNames": [
+    "Vivi",
+    "Xiaotian",
+    "Süßer Pfirsich",
+    "Lässige Jugend"
+  ],
+  "films": [
+    [
+      "Neonviertel",
+      "Cyberpunk-Porträts · Stilstudie · 6 Sek"
+    ],
+    [
+      "Besucher von den Sternen",
+      "Weltraumfantasie · Konzeptfilm · 10 Sek"
+    ],
+    [
+      "Lebt auf Papier",
+      "Gemalte Porträts · Stilstudie · 6 Sek"
+    ],
+    [
+      "Ein Blick auf die Wiese",
+      "Außenporträt · Orbitaufnahme · 5 Sek"
+    ],
+    [
+      "Licht aus der Vergangenheit",
+      "Filmische Porträts · Stilstudie · 6 Sek"
+    ],
+    [
+      "Miniaturabenteuer",
+      "Fantasy-Charaktere · Stilstudie · 6 Sek"
+    ]
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "home": "Beranda",
+  "nav": "Navigasi utama",
+  "menu": "Alihkan menu",
+  "account": "Proyek saya",
+  "login": "Masuk",
+  "pricing": "Harga",
+  "guide": "Panduan",
+  "examples": "Galeri",
+  "kicker": "Studio pembuatan film AI",
+  "headline": "Ubah cerita Anda menjadi film pendek",
+  "intro": "Tulis naskahnya, perankan karakter Anda, dan arahkan setiap pengambilan gambar dalam satu studio.",
+  "create": "Mulai berkarya",
+  "watch": "Lihat cuplikan",
+  "formats": "Drama pendek · Film · Komik gerak",
+  "note": "Mulailah dari naskah, lalu buat film dalam format horizontal atau vertikal.",
+  "models": "Katalog model",
+  "samples": "Cuplikan",
+  "sampleTitle": "Cerita sedang bergerak",
+  "sampleLead": "Jelajahi enam klip dan lihat bagaimana arah seni dan pergerakan kamera membentuk sebuah adegan.",
+  "gallery": "Jelajahi proyek publik",
+  "workflow": "Alur kerja",
+  "workflowTitle": "Buat episode pertama Anda dalam tiga langkah",
+  "stages": [
+    [
+      "Langkah pertama",
+      "Tulis naskahnya",
+      "Buat garis besar cerita, berikan dialog pada karakter Anda, dan bagi aksi menjadi beberapa adegan."
+    ],
+    [
+      "Langkah kedua",
+      "Rencanakan setiap adegan",
+      "Pilih referensi karakter dan lokasi, lalu atur framing, aksi, dan dialog untuk setiap pengambilan gambar."
+    ],
+    [
+      "Langkah ketiga",
+      "Sunting episode",
+      "Hasilkan klip, audisi suara, dan atur pengambilan gambar Anda di timeline sebelum mengekspor."
+    ]
+  ],
+  "dialogue": "Dialog",
+  "voiceTitle": "Temukan suara untuk karakter Anda",
+  "voiceLead": "Dengarkan contoh suara Mandarin ini dan pilih suara yang sesuai dengan pemeran Anda.",
+  "audition": "Pratinjau",
+  "pause": "Jeda",
+  "playing": "Sedang diputar",
+  "voiceLanguage": "Bahasa Mandarin",
+  "usage": "Harga",
+  "pricingTitle": "Lihat biayanya sebelum Anda menghasilkan",
+  "pricingLead": "Pilih model dan pengaturan untuk melihat penawaran Anda. Tagihan yang telah selesai muncul di riwayat penagihan Anda.",
+  "prices": [
+    [
+      "Gambar",
+      "Karakter dan lokasi"
+    ],
+    [
+      "Video",
+      "Bidikan dan urutan"
+    ],
+    [
+      "Audio",
+      "Dialog dan sulih suara"
+    ]
+  ],
+  "bill": "Lihat riwayat penagihan saya",
+  "help": "Bantuan",
+  "faq": "Pertanyaan yang sering diajukan",
+  "questions": [
+    [
+      "Bolehkah saya membawa naskah saya sendiri?",
+      "Ya. Buat proyek, buka editor skrip, dan tambahkan cerita, karakter, dan dialog Anda sebelum membuat storyboard."
+    ],
+    [
+      "Bisakah saya mengubah satu pengambilan gambar saja?",
+      "Buka bidikan di ruang kerja, edit deskripsi, gambar referensi, atau dialognya, lalu buat ulang bidikan tersebut."
+    ],
+    [
+      "Bagaimana cara memilih suara?",
+      "Pada langkah sulih suara, pratinjau suara, masukkan dialog Anda, dan tambahkan audio yang dihasilkan ke rekaman yang sesuai."
+    ],
+    [
+      "Di mana saya dapat mengunduh film saya?",
+      "Periksa urutan pengambilan gambar pada timeline episode dan ekspor. Anda dapat mengunduh video setelah ekspor selesai."
+    ]
+  ],
+  "helpCenter": "Kunjungi pusat bantuan",
+  "player": "Pemain sampel",
+  "close": "Tutup sampel",
+  "audioError": "Suara ini tidak dapat diputar. Silakan coba lagi.",
+  "videoError": "Klip ini tidak dapat diputar. Buka kembali untuk mencoba lagi.",
+  "language": "Bahasa",
+  "voiceNames": [
+    "Vivi",
+    "Xiaotian",
+    "Persik Manis",
+    "Pemuda Santai"
+  ],
+  "films": [
+    [
+      "Distrik Neon",
+      "Potret Cyberpunk · Studi gaya · 6 detik"
+    ],
+    [
+      "Pengunjung dari Bintang",
+      "Fantasi luar angkasa · Film konsep · 10 detik"
+    ],
+    [
+      "Hidup di Atas Kertas",
+      "Potret yang dilukis · Studi gaya · 6 detik"
+    ],
+    [
+      "Sekilas di Padang Rumput",
+      "Potret luar ruangan · Bidikan orbit · 5 detik"
+    ],
+    [
+      "Cahaya dari Masa Lalu",
+      "Potret sinematik · Studi gaya · 6 detik"
+    ],
+    [
+      "Petualangan Miniatur",
+      "Karakter fantasi · Studi gaya · 6 detik"
+    ]
+  ]
+}

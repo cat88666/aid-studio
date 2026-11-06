@@ -1,0 +1,124 @@
+{
+  "home": "Accueil",
+  "nav": "Navigation principale",
+  "menu": "Changer de menu",
+  "account": "Mes projets",
+  "login": "Connexion",
+  "pricing": "Tarifs",
+  "guide": "Guide",
+  "examples": "Réalisations",
+  "kicker": "Studio de réalisation de films IA",
+  "headline": "Transformez votre histoire en court métrage",
+  "intro": "Écrivez le scénario, choisissez vos personnages et réalisez chaque plan dans le même studio.",
+  "create": "Créer un film",
+  "watch": "Voir les extraits",
+  "formats": "Courts drames · Films · Bandes dessinées animées",
+  "note": "À partir de votre scénario, filmez au format horizontal ou vertical.",
+  "models": "Catalogue de modèles",
+  "samples": "Extraits",
+  "sampleTitle": "Des histoires en mouvement",
+  "sampleLead": "Explorez six clips et découvrez comment la direction artistique et les mouvements de caméra façonnent une scène.",
+  "gallery": "Parcourir les projets publics",
+  "workflow": "Flux de travail",
+  "workflowTitle": "Réalisez votre premier épisode en trois étapes",
+  "stages": [
+    [
+      "Première étape",
+      "Écrivez le scénario",
+      "Décrivez l'histoire, faites dialoguer vos personnages et divisez l'action en scènes."
+    ],
+    [
+      "Deuxième étape",
+      "Préparez les plans",
+      "Choisissez les références du personnage et du lieu, puis définissez le cadrage, l'action et le dialogue pour chaque plan."
+    ],
+    [
+      "Troisième étape",
+      "Montez l’épisode",
+      "Générez des clips, écoutez des voix et organisez vos plans sur la chronologie avant de les exporter."
+    ]
+  ],
+  "dialogue": "Dialogue",
+  "voiceTitle": "Trouvez une voix pour votre personnage",
+  "voiceLead": "Écoutez ces échantillons de voix en mandarin et choisissez un son qui correspond à votre casting.",
+  "audition": "Aperçu",
+  "pause": "Pause",
+  "playing": "En lecture",
+  "voiceLanguage": "Chinois mandarin",
+  "usage": "Tarifs",
+  "pricingTitle": "Voir le coût avant de générer",
+  "pricingLead": "Choisissez un modèle et des paramètres pour voir votre devis. Les frais terminés apparaissent dans votre historique de facturation.",
+  "prices": [
+    [
+      "Images",
+      "Personnages et lieux"
+    ],
+    [
+      "Vidéo",
+      "Plans et séquences"
+    ],
+    [
+      "Audio",
+      "Dialogues et voix off"
+    ]
+  ],
+  "bill": "Afficher mon historique de facturation",
+  "help": "Aide",
+  "faq": "Questions fréquemment posées",
+  "questions": [
+    [
+      "Puis-je apporter mon propre script ?",
+      "Oui. Créez un projet, ouvrez l'éditeur de script et ajoutez votre histoire, vos personnages et vos dialogues avant de créer le storyboard."
+    ],
+    [
+      "Puis-je modifier un seul plan ?",
+      "Ouvrez la prise de vue dans l'espace de travail, modifiez sa description, son image de référence ou son dialogue, puis régénérez cette prise de vue."
+    ],
+    [
+      "Comment choisir une voix ?",
+      "Dans l'étape de voix off, prévisualisez les voix, saisissez vos lignes et ajoutez l'audio généré au plan correspondant."
+    ],
+    [
+      "Où puis-je télécharger mon film ?",
+      "Vérifiez l'ordre des plans sur la chronologie de l'épisode et exportez-le. Vous pouvez télécharger la vidéo une fois l'exportation terminée."
+    ]
+  ],
+  "helpCenter": "Visitez le centre d'aide",
+  "player": "Exemple de lecteur",
+  "close": "Fermer l'échantillon",
+  "audioError": "Cette voix n'a pas pu être jouée. Veuillez réessayer.",
+  "videoError": "Ce clip n'a pas pu être lu. Rouvrez-le pour réessayer.",
+  "language": "Langue",
+  "voiceNames": [
+    "Vivi",
+    "Xiaotian",
+    "Pêche douce",
+    "Jeunesse décontractée"
+  ],
+  "films": [
+    [
+      "Quartier Néon",
+      "Portraits cyberpunk · Étude de style · 6 sec"
+    ],
+    [
+      "Visiteur des étoiles",
+      "Espace fantastique · Film concept · 10 sec"
+    ],
+    [
+      "Des vies sur papier",
+      "Portraits peints · Étude de style · 6 sec"
+    ],
+    [
+      "Un regard dans le pré",
+      "Portrait en extérieur · Prise de vue en orbite · 5 sec"
+    ],
+    [
+      "Lumière du passé",
+      "Portraits cinématographiques · Étude de style · 6 sec"
+    ],
+    [
+      "Aventure miniature",
+      "Personnages fantastiques · Étude de style · 6 sec"
+    ]
+  ]
+}

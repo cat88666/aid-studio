@@ -1,5 +1,7 @@
 'use client'
 
+import { creatorLanguage } from '~/config/creatorLanguages'
+import { readCreatorPreference } from '~/hooks/useCreatorLocale'
 import { Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { openLoginModal } from '@/stores/loginModal'
@@ -33,7 +35,7 @@ function LoginRedirectInner() {
       inviteCode: readInviteCodeFromSearch(searchParams),
       redirect
     })
-    router.replace('/')
+    router.replace(creatorLanguage(readCreatorPreference()).path)
   }, [router, searchParams])
 
   return null

@@ -1,0 +1,124 @@
+{
+  "home": "Início",
+  "nav": "Navegação principal",
+  "menu": "Alternar menu",
+  "account": "Meus projetos",
+  "login": "Entrar",
+  "pricing": "Preços",
+  "guide": "Guia",
+  "examples": "Mostruário",
+  "kicker": "Estúdio de cinema de IA",
+  "headline": "Transforme sua história em um curta-metragem",
+  "intro": "Escreva o roteiro, escolha seus personagens e dirija cada cena em um estúdio.",
+  "create": "Começar a criar",
+  "watch": "Ver exemplos",
+  "formats": "Curtas-metragens · Filmes · Motion comics",
+  "note": "Comece com um roteiro e filme na horizontal ou na vertical.",
+  "models": "Catálogo de modelos",
+  "samples": "Clipes",
+  "sampleTitle": "Histórias em movimento",
+  "sampleLead": "Explore seis clipes e veja como a direção de arte e o movimento da câmera moldam uma cena.",
+  "gallery": "Procure projetos públicos",
+  "workflow": "Fluxo de trabalho",
+  "workflowTitle": "Faça seu primeiro episódio em três etapas",
+  "stages": [
+    [
+      "Primeiro passo",
+      "Escreva o roteiro",
+      "Descreva a história, dê diálogo aos seus personagens e divida a ação em cenas."
+    ],
+    [
+      "Etapa dois",
+      "Planeje cada plano",
+      "Escolha referências de personagens e locais e defina o enquadramento, a ação e o diálogo para cada cena."
+    ],
+    [
+      "Etapa três",
+      "Edite o episódio",
+      "Gere clipes, ouça vozes e organize suas cenas na linha do tempo antes de exportar."
+    ]
+  ],
+  "dialogue": "Diálogo",
+  "voiceTitle": "Encontre uma voz para seu personagem",
+  "voiceLead": "Ouça essas amostras de voz em mandarim e escolha um som que combine com seu elenco.",
+  "audition": "Visualização",
+  "pause": "Pausa",
+  "playing": "Reproduzindo",
+  "voiceLanguage": "Chinês mandarim",
+  "usage": "Preços",
+  "pricingTitle": "Veja o custo antes de gerar",
+  "pricingLead": "Escolha um modelo e configurações para ver sua cotação. As cobranças concluídas aparecem no seu histórico de faturamento.",
+  "prices": [
+    [
+      "Imagens",
+      "Personagens e locais"
+    ],
+    [
+      "Vídeo",
+      "Cenas e sequências"
+    ],
+    [
+      "Áudio",
+      "Diálogo e narração"
+    ]
+  ],
+  "bill": "Ver meu histórico de faturamento",
+  "help": "Ajuda",
+  "faq": "Perguntas frequentes",
+  "questions": [
+    [
+      "Posso trazer meu próprio roteiro?",
+      "Sim. Crie um projeto, abra o editor de roteiro e adicione sua história, personagens e diálogos antes de construir o storyboard."
+    ],
+    [
+      "Posso alterar apenas um plano?",
+      "Abra a foto na área de trabalho, edite sua descrição, imagem de referência ou diálogo e, em seguida, gere novamente a foto."
+    ],
+    [
+      "Como escolho uma voz?",
+      "Na etapa de narração, visualize as vozes, insira suas falas e adicione o áudio gerado à cena correspondente."
+    ],
+    [
+      "Onde posso baixar meu filme?",
+      "Verifique a ordem das cenas na linha do tempo do episódio e exporte-a. Você pode baixar o vídeo assim que a exportação terminar."
+    ]
+  ],
+  "helpCenter": "Visite a central de ajuda",
+  "player": "Exemplo de jogador",
+  "close": "Fechar amostra",
+  "audioError": "Esta voz não pôde ser reproduzida. Por favor, tente novamente.",
+  "videoError": "Este clipe não pôde ser reproduzido. Abra-o novamente para tentar novamente.",
+  "language": "Idioma",
+  "voiceNames": [
+    "Vivi",
+    "Xiaotian",
+    "Pêssego Doce",
+    "Juventude descontraída"
+  ],
+  "films": [
+    [
+      "Distrito de néon",
+      "Retratos cyberpunk · Estudo de estilo · 6 segundos"
+    ],
+    [
+      "Visitante das Estrelas",
+      "Fantasia espacial · Filme conceitual · 10 segundos"
+    ],
+    [
+      "Vive no papel",
+      "Retratos pintados · Estudo de estilo · 6 segundos"
+    ],
+    [
+      "Um olhar no prado",
+      "Retrato ao ar livre · Foto em órbita · 5 segundos"
+    ],
+    [
+      "Luz do Passado",
+      "Retratos cinematográficos · Estudo de estilo · 6 segundos"
+    ],
+    [
+      "Aventura em miniatura",
+      "Personagens de fantasia · Estudo de estilo · 6 segundos"
+    ]
+  ]
+}

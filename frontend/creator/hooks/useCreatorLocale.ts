@@ -1,28 +1,41 @@
 'use client'
 
 import { useSyncExternalStore } from 'react'
+import { usePathname } from 'next/navigation'
+import { creatorLanguages, creatorLanguage, languageFromPath, type CreatorLocale } from '~/config/creatorLanguages'
+import { withAppBasePath } from '~/utils/appBasePath'
+export type { CreatorLocale } from '~/config/creatorLanguages'
 
-export type CreatorLocale = 'en' | 'zh'
 const preferenceKey = 'creator.locale'
 const changeEvent = 'creator:locale-change'
 let unsavedPreference: CreatorLocale | undefined
 
-function readLocale(): CreatorLocale {
+export function readCreatorPreference(): CreatorLocale {
   let saved: string | null = null
   try { saved = localStorage.getItem(preferenceKey) } catch { /* Storage is optional. */ }
   if (unsavedPreference) return unsavedPreference
-  if (saved === 'en' || saved === 'zh') return saved
-  return /^zh(?:-|$)/i.test(navigator.language) ? 'zh' : 'en'
+  const preference = creatorLanguages.find(language => language.code === saved)
+  if (preference) return preference.code
+  for (const tag of navigator.languages || [navigator.language]) {
+    if (/^zh-(hant|tw|hk|mo)\b/i.test(tag)) return 'zh-hant'
+    const match = creatorLanguages.find(language => language.code === tag.toLowerCase().split('-')[0])
+    if (match) return match.code
+  }
+  return 'en'
 }
 
-function setLocale(locale: CreatorLocale) {
+export function rememberCreatorLocale(locale: CreatorLocale) {
   try {
     localStorage.setItem(preferenceKey, locale)
     unsavedPreference = undefined
-  } catch {
-    unsavedPreference = locale
-  }
+  } catch { unsavedPreference = locale }
   window.dispatchEvent(new Event(changeEvent))
+}
+
+function setLocale(locale: CreatorLocale) {
+  rememberCreatorLocale(locale)
+  const url = withAppBasePath(creatorLanguage(locale).path)
+  if (window.location.pathname !== url) window.location.assign(url + window.location.search + window.location.hash)
 }
 
 function subscribe(callback: () => void) {
@@ -35,8 +48,8 @@ function subscribe(callback: () => void) {
 }
 
 const initialLocale = (): CreatorLocale => 'en'
-
 export function useCreatorLocale() {
-  const locale = useSyncExternalStore(subscribe, readLocale, initialLocale)
-  return { locale, setLocale }
+  const pathname = usePathname() || '/'
+  const preference = useSyncExternalStore(subscribe, readCreatorPreference, initialLocale)
+  return { locale: languageFromPath(pathname)?.code || preference, setLocale }
 }

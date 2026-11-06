@@ -1,0 +1,124 @@
+{
+  "home": "Home",
+  "nav": "Navigazione principale",
+  "menu": "Cambia menu",
+  "account": "I miei progetti",
+  "login": "Accedi",
+  "pricing": "Prezzi",
+  "guide": "Guida",
+  "examples": "Galleria",
+  "kicker": "Studio cinematografico AI",
+  "headline": "Trasforma la tua storia in un cortometraggio",
+  "intro": "Scrivi la sceneggiatura, scegli i tuoi personaggi e dirigi ogni ripresa in un unico studio.",
+  "create": "Inizia a creare",
+  "watch": "Guarda i video",
+  "formats": "Cortometraggi · Film · Fumetti in movimento",
+  "note": "Parti dalla sceneggiatura e gira in orizzontale o in verticale.",
+  "models": "Catalogo dei modelli",
+  "samples": "Esempi",
+  "sampleTitle": "Storie in movimento",
+  "sampleLead": "Esplora sei clip e scopri come la direzione artistica e il movimento della telecamera modellano una scena.",
+  "gallery": "Sfoglia i progetti pubblici",
+  "workflow": "Flusso di lavoro",
+  "workflowTitle": "Realizza il tuo primo episodio in tre passaggi",
+  "stages": [
+    [
+      "Primo passo",
+      "Scrivi la sceneggiatura",
+      "Delinea la storia, dai dialoghi ai tuoi personaggi e dividi l'azione in scene."
+    ],
+    [
+      "Passo due",
+      "Pianifica ogni inquadratura",
+      "Scegli i riferimenti al personaggio e al luogo, quindi imposta l'inquadratura, l'azione e il dialogo per ogni inquadratura."
+    ],
+    [
+      "Passo tre",
+      "Monta l’episodio",
+      "Genera clip, ascolta voci e organizza le tue riprese sulla timeline prima dell'esportazione."
+    ]
+  ],
+  "dialogue": "Dialogo",
+  "voiceTitle": "Trova una voce per il tuo personaggio",
+  "voiceLead": "Ascolta questi campioni vocali in mandarino e scegli un suono adatto al tuo cast.",
+  "audition": "Anteprima",
+  "pause": "Pausa",
+  "playing": "In riproduzione",
+  "voiceLanguage": "Cinese mandarino",
+  "usage": "Prezzi",
+  "pricingTitle": "Visualizza il costo prima di generare",
+  "pricingLead": "Scegli un modello e le impostazioni per vedere il tuo preventivo. Gli addebiti completati vengono visualizzati nella cronologia di fatturazione.",
+  "prices": [
+    [
+      "Immagini",
+      "Personaggi e luoghi"
+    ],
+    [
+      "Video",
+      "Inquadrature e sequenze"
+    ],
+    [
+      "Audio",
+      "Dialogo e voce fuori campo"
+    ]
+  ],
+  "bill": "Visualizza la mia cronologia di fatturazione",
+  "help": "Aiuto",
+  "faq": "Domande frequenti",
+  "questions": [
+    [
+      "Posso portare la mia sceneggiatura?",
+      "SÌ. Crea un progetto, apri l'editor di script e aggiungi la storia, i personaggi e i dialoghi prima di creare lo storyboard."
+    ],
+    [
+      "Posso modificare una sola inquadratura?",
+      "Apri la ripresa nell'area di lavoro, modificane la descrizione, l'immagine di riferimento o il dialogo, quindi rigenera la ripresa."
+    ],
+    [
+      "Come scelgo una voce?",
+      "Nel passaggio della voce fuori campo, visualizza l'anteprima delle voci, inserisci le battute e aggiungi l'audio generato alla ripresa corrispondente."
+    ],
+    [
+      "Dove posso scaricare il mio film?",
+      "Controlla l'ordine delle riprese sulla timeline dell'episodio ed esportalo. Puoi scaricare il video al termine dell'esportazione."
+    ]
+  ],
+  "helpCenter": "Visita il centro assistenza",
+  "player": "Giocatore campione",
+  "close": "Chiudi campione",
+  "audioError": "Impossibile riprodurre questa voce. Per favore riprova.",
+  "videoError": "Impossibile riprodurre questo clip. Riaprirlo per riprovare.",
+  "language": "Lingua",
+  "voiceNames": [
+    "Vivi",
+    "Xiaotian",
+    "Pesca dolce",
+    "Gioventù accomodante"
+  ],
+  "films": [
+    [
+      "Distretto del Neon",
+      "Ritratti cyberpunk · Studio dello stile · 6 sec"
+    ],
+    [
+      "Visitatore dalle stelle",
+      "Fantasia spaziale · Film concettuale · 10 sec"
+    ],
+    [
+      "Vive sulla carta",
+      "Ritratti dipinti · Studio di stile · 6 sec"
+    ],
+    [
+      "Uno sguardo al prato",
+      "Ritratto all'aperto · Scatto in orbita · 5 sec"
+    ],
+    [
+      "Luce dal passato",
+      "Ritratti cinematografici · Studio di stile · 6 sec"
+    ],
+    [
+      "Avventura in miniatura",
+      "Personaggi fantasy · Studio dello stile · 6 sec"
+    ]
+  ]
+}

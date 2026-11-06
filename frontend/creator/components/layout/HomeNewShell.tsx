@@ -1,5 +1,6 @@
 'use client'
 
+import { languageFromPath } from '~/config/creatorLanguages'
 import { HtmlShellClass } from '@/components/app/HtmlShellClass'
 import { PageLoadingOverlay } from '~/components/common/PageLoadingOverlay'
 import { useRouteNavigation } from '~/hooks/useRouteNavigation'
@@ -38,7 +39,7 @@ export function HomeNewShell({ children }: { children: ReactNode }) {
   const homeCreateModal = useHomeShellCreateModal()
 
   const isLoggedIn = !!token
-  const isLandingRoute = pathname === '/' || pathname === ''
+  const isLandingRoute = Boolean(languageFromPath(pathname))
   const isGalleryRoute = pathname.replace(/\/$/, '') === '/gallery'
   const isWorksRoute = pathname.startsWith('/works')
   const isAssetsRoute = pathname.startsWith('/assets')

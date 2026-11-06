@@ -1,4 +1,6 @@
-import { useCreatorLocale } from '~/hooks/useCreatorLocale'
+import { useCallback } from 'react'
+import authTranslations from '~/components/login/authTranslations.json'
+import { useCreatorLocale, type CreatorLocale } from '~/hooks/useCreatorLocale'
 
 const english: Record<string, string> = {
   '验证码登录': 'Sign in with a code',
@@ -81,14 +83,43 @@ const english: Record<string, string> = {
   '密码重置失败': 'Password reset failed.',
 }
 
-function englishText(text: string) {
-  if (Object.hasOwn(english, text)) return english[text]
-  const wait = /^发送过于频繁，请(\d+)秒后重试$/.exec(text)
-  return wait ? `Try again in ${wait[1]} seconds.` : text
+type Label = keyof typeof authTranslations.fr
+
+const aliases: Record<string, Label> = {
+  '，未注册的手机号将自动创建账号': '，未注册的手机号或邮箱将自动创建账号',
+  '，未注册的邮箱将自动创建账号': '，未注册的手机号或邮箱将自动创建账号',
+  '手机号或邮箱': '请输入手机号或邮箱',
+  '手机号': '请输入手机号',
+  '邮箱': '请输入邮箱',
+  '账号': '请输入账号',
+  '重置密码': '找回密码',
+  '请输入新密码': '输入新密码',
+  '用户名或密码错误': '账号或密码错误',
+  '账号不能为空': '请输入手机号或邮箱',
+  '密码不能为空': '请输入密码',
+  '用户不存在': '账号不存在',
+  '验证码不能为空': '请输入验证码',
+  '密码重置失败': '重置失败',
 }
 
-const chineseText = (text: string) => text
+function localizeAuthText(locale: CreatorLocale, text: string): string {
+  if (locale === 'zh') return text
+  const dictionary: Record<string, string> = locale === 'en' ? english : authTranslations[locale]
+  const key = Object.hasOwn(dictionary, text) ? text : aliases[text]
+  if (key && Object.hasOwn(dictionary, key)) return dictionary[key]
+  const wait = /^发送过于频繁，请(\d+)秒后重试$/.exec(text)
+  if (!wait) return text
+  const duration = formatAuthSeconds(locale, Number(wait[1]))
+  return (locale === 'en' ? 'Try again in {time}.' : authTranslations[locale].retry).replace('{time}', duration)
+}
+
+export function formatAuthSeconds(locale: CreatorLocale, seconds: number) {
+  return new Intl.NumberFormat(locale, {
+    style: 'unit', unit: 'second', unitDisplay: 'short',
+  }).format(seconds)
+}
 
 export function useAuthText() {
-  return useCreatorLocale().locale === 'en' ? englishText : chineseText
+  const { locale } = useCreatorLocale()
+  return useCallback((text: string) => localizeAuthText(locale, text), [locale])
 }

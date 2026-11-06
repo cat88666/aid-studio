@@ -1,7 +1,9 @@
+import type { CreatorLocale } from './creatorLanguages'
 import { withAppBasePath } from '~/utils/appBasePath'
 
 export const CREATOR_BRAND_NAME = 'Sakura AGIC'
-export function creatorBrandName(locale: 'en' | 'zh') {
+export function creatorBrandName(locale: CreatorLocale) {
+  if (locale === 'zh-hant') return '櫻花 AGIC'
   return locale === 'zh' ? '樱花 AGIC' : CREATOR_BRAND_NAME
 }
 

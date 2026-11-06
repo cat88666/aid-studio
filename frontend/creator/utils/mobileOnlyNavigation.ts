@@ -1,3 +1,4 @@
+import { languageFromPath } from '~/config/creatorLanguages'
 /** 移动端专属提示页路径（与 proxy.ts / RouteGuard 共用） */
 export const MOBILE_ONLY_PATH = '/mobile'
 
@@ -12,7 +13,7 @@ export function isMobileUserAgent(ua: string): boolean {
  * 公开首页支持移动设备，工作台仍使用专属提示页。
  */
 export function shouldForceMobileOnlyPath(pathname: string): boolean {
-  return pathname !== "/" && pathname.replace(/\/$/, "") !== MOBILE_ONLY_PATH
+  return !languageFromPath(pathname) && pathname.replace(/\/$/, "") !== MOBILE_ONLY_PATH
 }
 
 /** 桌面端访问 `/mobile` 时应回首页 */

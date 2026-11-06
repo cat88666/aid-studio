@@ -1,0 +1,124 @@
+{
+  "home": "Home",
+  "nav": "Main navigation",
+  "menu": "Toggle menu",
+  "account": "My projects",
+  "login": "Sign in",
+  "pricing": "Pricing",
+  "guide": "Creator guide",
+  "examples": "Showcase",
+  "kicker": "AI filmmaking studio",
+  "headline": "Turn your story into a short film",
+  "intro": "Write the script, cast your characters, and direct every shot in one studio.",
+  "create": "Start creating",
+  "watch": "Watch samples",
+  "formats": "Short dramas · Films · Motion comics",
+  "note": "Start with a script. Shoot in landscape or portrait.",
+  "models": "Model catalog",
+  "samples": "Samples",
+  "sampleTitle": "Stories in motion",
+  "sampleLead": "Explore six clips and see how art direction and camera movement shape a scene.",
+  "gallery": "Browse public projects",
+  "workflow": "Workflow",
+  "workflowTitle": "Make your first episode in three steps",
+  "stages": [
+    [
+      "Step one",
+      "Write the script",
+      "Outline the story, give your characters dialogue, and break the action into scenes."
+    ],
+    [
+      "Step two",
+      "Plan each shot",
+      "Choose character and location references, then set the framing, action, and dialogue for each shot."
+    ],
+    [
+      "Step three",
+      "Cut the episode",
+      "Generate clips, audition voices, and arrange your shots on the timeline before exporting."
+    ]
+  ],
+  "dialogue": "Dialogue",
+  "voiceTitle": "Find a voice for your character",
+  "voiceLead": "Listen to these Mandarin voice samples and choose a sound that fits your cast.",
+  "audition": "Preview",
+  "pause": "Pause",
+  "playing": "Playing",
+  "voiceLanguage": "Mandarin",
+  "usage": "Pricing",
+  "pricingTitle": "See the cost before you generate",
+  "pricingLead": "Choose a model and settings to see your quote. Completed charges appear in your billing history.",
+  "prices": [
+    [
+      "Images",
+      "Characters and locations"
+    ],
+    [
+      "Video",
+      "Shots and sequences"
+    ],
+    [
+      "Audio",
+      "Dialogue and voice-over"
+    ]
+  ],
+  "bill": "View my billing history",
+  "help": "Help",
+  "faq": "Frequently asked questions",
+  "questions": [
+    [
+      "Can I bring my own script?",
+      "Yes. Create a project, open the script editor, and add your story, characters, and dialogue before building the storyboard."
+    ],
+    [
+      "Can I change a single shot?",
+      "Open the shot in the workspace, edit its description, reference image, or dialogue, then regenerate that shot."
+    ],
+    [
+      "How do I choose a voice?",
+      "In the voice-over step, preview voices, enter your lines, and add the generated audio to the corresponding shot."
+    ],
+    [
+      "Where can I download my film?",
+      "Check the shot order on the episode timeline and export it. You can download the video once the export finishes."
+    ]
+  ],
+  "helpCenter": "Visit the help center",
+  "player": "Sample player",
+  "close": "Close sample",
+  "audioError": "This voice could not be played. Please try again.",
+  "videoError": "This clip could not be played. Reopen it to try again.",
+  "language": "Language",
+  "voiceNames": [
+    "Vivi",
+    "Xiaotian",
+    "Sweet Peach",
+    "Easygoing Youth"
+  ],
+  "films": [
+    [
+      "Neon District",
+      "Cyberpunk portraits · Style study · 6 sec"
+    ],
+    [
+      "Visitor from the Stars",
+      "Space fantasy · Concept film · 10 sec"
+    ],
+    [
+      "Lives on Paper",
+      "Painted portraits · Style study · 6 sec"
+    ],
+    [
+      "A Glance in the Meadow",
+      "Outdoor portrait · Orbit shot · 5 sec"
+    ],
+    [
+      "Light from the Past",
+      "Cinematic portraits · Style study · 6 sec"
+    ],
+    [
+      "Miniature Adventure",
+      "Fantasy characters · Style study · 6 sec"
+    ]
+  ]
+}

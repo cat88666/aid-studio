@@ -1,6 +1,7 @@
 'use client'
 
-import { useAuthText } from '~/hooks/useAuthText'
+import { formatAuthSeconds, useAuthText } from '~/hooks/useAuthText'
+import { useCreatorLocale } from '~/hooks/useCreatorLocale'
 
 import { LoadingOutlined } from '@ant-design/icons'
 import { LoginAgreementHint } from './LoginAgreementHint'
@@ -48,6 +49,7 @@ export function LoginCodePanel({
   onUnlockAutofill
 }: LoginCodePanelProps) {
   const t = useAuthText()
+  const { locale } = useCreatorLocale()
   return (
     <form
       className={LOGIN_MODAL_STACK_CLASS}
@@ -79,7 +81,7 @@ export function LoginCodePanel({
               className="cursor-pointer text-sm text-[var(--login-modal-muted)] transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
               onClick={onSendCode}
             >
-              {sendCodeCountdown > 0 ? `${sendCodeCountdown}s` : t('获取验证码')}
+                {sendCodeCountdown > 0 ? formatAuthSeconds(locale, sendCodeCountdown) : t('获取验证码')}
             </button>
           }
         />

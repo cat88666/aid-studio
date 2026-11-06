@@ -14,7 +14,9 @@ describe('mobileOnlyNavigation', () => {
   })
 
   it('keeps the responsive homepage accessible and redirects desktop workspace routes', () => {
-    expect(shouldForceMobileOnlyPath('/')).toBe(false)
+    for (const path of ['/', '/ja/', '/zh-hant', '/ar/']) {
+      expect(shouldForceMobileOnlyPath(path)).toBe(false)
+    }
     expect(shouldForceMobileOnlyPath('/case/12')).toBe(true)
     expect(shouldForceMobileOnlyPath('/works')).toBe(true)
     expect(shouldForceMobileOnlyPath(MOBILE_ONLY_PATH)).toBe(false)

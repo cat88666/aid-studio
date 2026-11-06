@@ -1,0 +1,124 @@
+{
+  "home": "Inicio",
+  "nav": "Navegación principal",
+  "menu": "Alternar menú",
+  "account": "Mis proyectos",
+  "login": "Acceder",
+  "pricing": "Precios",
+  "guide": "Guía",
+  "examples": "Galería",
+  "kicker": "Estudio de cine con IA",
+  "headline": "Convierte tu historia en un cortometraje",
+  "intro": "Escribe el guión, elige a tus personajes y dirige cada toma en un estudio.",
+  "create": "Empezar a crear",
+  "watch": "Ver ejemplos",
+  "formats": "Dramas cortos · Películas · Cómics en movimiento",
+  "note": "Empieza con un guion y rueda en formato horizontal o vertical.",
+  "models": "Catálogo de modelos",
+  "samples": "Cortometrajes",
+  "sampleTitle": "Historias en movimiento",
+  "sampleLead": "Explore seis clips y vea cómo la dirección de arte y el movimiento de la cámara dan forma a una escena.",
+  "gallery": "Explorar proyectos públicos",
+  "workflow": "Flujo de trabajo",
+  "workflowTitle": "Haz tu primer episodio en tres pasos",
+  "stages": [
+    [
+      "Paso uno",
+      "Escribe el guión",
+      "Describe la historia, ofrece diálogos a tus personajes y divide la acción en escenas."
+    ],
+    [
+      "Paso dos",
+      "Planifica cada plano",
+      "Elige referencias de personajes y ubicaciones, luego establece el encuadre, la acción y el diálogo para cada toma."
+    ],
+    [
+      "Paso tres",
+      "Monta el episodio",
+      "Genere clips, escuche voces y organice sus tomas en la línea de tiempo antes de exportarlas."
+    ]
+  ],
+  "dialogue": "Diálogo",
+  "voiceTitle": "Encuentra una voz para tu personaje.",
+  "voiceLead": "Escuche estas muestras de voz en mandarín y elija un sonido que se adapte a su elenco.",
+  "audition": "Vista previa",
+  "pause": "Pausa",
+  "playing": "Reproduciendo",
+  "voiceLanguage": "Chino mandarín",
+  "usage": "Precios",
+  "pricingTitle": "Vea el costo antes de generar",
+  "pricingLead": "Elige modelo y configuración para ver tu cotización. Los cargos completados aparecen en su historial de facturación.",
+  "prices": [
+    [
+      "Imágenes",
+      "Personajes y ubicaciones"
+    ],
+    [
+      "Vídeo",
+      "Planos y secuencias"
+    ],
+    [
+      "Audio",
+      "Diálogo y voz en off"
+    ]
+  ],
+  "bill": "Ver mi historial de facturación",
+  "help": "Ayuda",
+  "faq": "Preguntas frecuentes",
+  "questions": [
+    [
+      "¿Puedo traer mi propio guión?",
+      "Sí. Cree un proyecto, abra el editor de guiones y agregue su historia, personajes y diálogos antes de crear el guión gráfico."
+    ],
+    [
+      "¿Puedo modificar un solo plano?",
+      "Abra la toma en el espacio de trabajo, edite su descripción, imagen de referencia o diálogo y luego regenere esa toma."
+    ],
+    [
+      "¿Cómo elijo una voz?",
+      "En el paso de voz en off, obtenga una vista previa de las voces, ingrese sus líneas y agregue el audio generado a la toma correspondiente."
+    ],
+    [
+      "¿Dónde puedo descargar mi película?",
+      "Verifique el orden de las tomas en la línea de tiempo del episodio y expórtelo. Puede descargar el video una vez que finalice la exportación."
+    ]
+  ],
+  "helpCenter": "Visita el centro de ayuda",
+  "player": "Reproductor de muestra",
+  "close": "Cerrar muestra",
+  "audioError": "Esta voz no se pudo reproducir. Por favor inténtalo de nuevo.",
+  "videoError": "Este clip no se pudo reproducir. Vuelve a abrirlo para intentarlo de nuevo.",
+  "language": "Idioma",
+  "voiceNames": [
+    "Vivi",
+    "Xiaotian",
+    "melocotón dulce",
+    "Juventud tranquila"
+  ],
+  "films": [
+    [
+      "Distrito de neón",
+      "Retratos Cyberpunk · Estudio de estilo · 6 seg"
+    ],
+    [
+      "Visitante de las estrellas",
+      "Fantasía espacial · Película conceptual · 10 seg"
+    ],
+    [
+      "Vive en papel",
+      "Retratos pintados · Estudio de estilo · 6 seg"
+    ],
+    [
+      "Una mirada a la pradera",
+      "Retrato al aire libre · Toma en órbita · 5 seg"
+    ],
+    [
+      "Luz del pasado",
+      "Retratos cinematográficos · Estudio de estilo · 6 seg"
+    ],
+    [
+      "Aventura en miniatura",
+      "Personajes de fantasía · Estudio de estilo · 6 seg"
+    ]
+  ]
+}

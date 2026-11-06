@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- 展示静态导出的首页剧照 */
 
+import { creatorInterfaceText } from '~/config/creatorInterfaceText'
 import { useCreatorLocale } from '~/hooks/useCreatorLocale'
 import { withAppBasePath } from '~/utils/appBasePath'
 import { HtmlShellClass } from '@/components/app/HtmlShellClass'
@@ -20,14 +21,14 @@ const getServerOrigin = () => ''
 /** 移动端创作入口提供可复制的电脑端地址。 */
 export default function MobilePage() {
   const { locale } = useCreatorLocale()
-  const english = locale === 'en'
+  const textLabels = creatorInterfaceText[locale]
   const siteAddress = useSyncExternalStore(subscribeToLocation, getBrowserHost, getServerHost)
   const siteOrigin = useSyncExternalStore(subscribeToLocation, getBrowserOrigin, getServerOrigin)
 
   async function copyPcUrl() {
     const text = siteOrigin || (typeof window !== 'undefined' ? window.location.origin : '')
     if (!text) {
-      message.error(english ? 'Copy the address manually.' : '复制失败，请手动复制地址')
+      message.error(textLabels.copyError)
       return
     }
     try {
@@ -41,9 +42,9 @@ export default function MobilePage() {
         document.execCommand('copy')
         document.body.removeChild(input)
       }
-      message.success(english ? 'Address copied.' : '电脑端地址已复制')
+      message.success(textLabels.copied)
     } catch {
-      message.error(english ? 'Copy the address manually.' : '复制失败，请手动复制地址')
+      message.error(textLabels.copyError)
     }
   }
 
@@ -56,10 +57,10 @@ export default function MobilePage() {
           <img src={posterUrl} alt="" className={styles.heroImage} />
         </div>
         <div className={styles.tip}>
-          <p className={styles.tipTitle}>{english ? 'Open the studio on a computer' : '请使用电脑端打开本网页'}</p>
+          <p className={styles.tipTitle}>{textLabels.desktop}</p>
           <p className={styles.tipDomain}>{siteAddress}</p>
           <button type="button" className={styles.copyButton} onClick={copyPcUrl}>
-            {english ? 'Copy desktop link' : '复制电脑端地址'}
+            {textLabels.copy}
           </button>
         </div>
       </div>
