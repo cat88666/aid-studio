@@ -29,7 +29,16 @@ preflight() {
   "${remote[@]}" sudo -n bash -s -- "$sql_tree" <<'REMOTE'
 set -euo pipefail
 cd /opt/aid-studio/current
-test -s aid-admin.jar && test -s admin/index.html && test -s web-prefix/index.html || exit 1
+test -s aid-admin.jar
+test -s admin/index.html
+if [[ -s creator-public/index.html && -s web-original/index.html && -s admin-public/index.html ]]; then
+  layout=split
+elif [[ -s web-prefix/index.html ]]; then
+  layout=legacy
+else
+  echo "无法识别线上前端目录，请检查 /opt/aid-studio/current。" >&2
+  exit 1
+fi
 systemctl is-active --quiet aid-studio
 systemctl is-active --quiet aid-studio-mysql
 systemctl is-active --quiet aid-studio-redis
@@ -38,17 +47,32 @@ nginx -t
 installed_sql=1f358c52483ce5db7d6d1150e720eb9997cbe160
 if [[ -f .sql-tree ]]; then installed_sql=$(cat .sql-tree); fi
 [[ "$installed_sql" == "$1" ]] || { echo "SQL 已变化，请先单独备份、迁移并确认线上 schema 后更新 .sql-tree。" >&2; exit 1; }
-stat -Lc '%d:%i' .
+printf '%s %s\n' "$(stat -Lc '%d:%i' .)" "$layout"
 REMOTE
 }
 readiness() {
-  local base=https://43.154.247.11/aid-studio
-  curl -fsS --max-time 15 "$base/" | grep '/aid-studio/_next/' >/dev/null &&
-  curl -fsS --max-time 15 -X POST "$base/aid/auth/public-config" | python3 -c 'import json,sys; assert json.load(sys.stdin)["code"] == 200' &&
-  curl -fsS --max-time 15 --range 0-15 "$base/profile/aid/style/sample/1-linghu_01.jpg" | python3 -c 'import sys; assert sys.stdin.buffer.read().startswith(bytes.fromhex("ffd8ff"))'
+  local origin=https://43.154.247.11
+  local probe=(curl -fsS --max-time 15)
+  if [[ "$1" == legacy ]]; then
+    origin="$origin/aid-studio"
+    "${probe[@]}" "$origin/" | grep -F '/aid-studio/_next/' >/dev/null || return 1
+  else
+    "${probe[@]}" "$origin/" | grep -F 'href="/_next/' >/dev/null || return 1
+    "${probe[@]}" "$origin/web/works/" | grep -F '/web/_next/' >/dev/null || return 1
+    "${probe[@]}" "$origin/admin/login" | grep -F '/admin/static/' >/dev/null || return 1
+    "${probe[@]}" "$origin/admin/prod-api/getInfo" | python3 -c 'import json,sys; assert json.load(sys.stdin)["code"] == 401' || return 1
+    "${probe[@]}" -X POST "$origin/web/aid/auth/public-config" | python3 -c 'import json,sys; assert json.load(sys.stdin)["code"] == 200' || return 1
+  fi
+  "${probe[@]}" -X POST "$origin/aid/auth/public-config" | python3 -c 'import json,sys; assert json.load(sys.stdin)["code"] == 200' &&
+  "${probe[@]}" --range 0-15 "$origin/profile/aid/style/sample/1-linghu_01.jpg" | python3 -c 'import sys; assert sys.stdin.buffer.read().startswith(bytes.fromhex("ffd8ff"))'
 }
-baseline=$(preflight)
-readiness
+current=$(preflight)
+read -r baseline layout <<< "$current"
+readiness "$layout"
+if [[ "$mode" == deploy && "$layout" != split ]]; then
+  echo "请先完成根路径、/web/、/admin/ 的首次 Nginx 和前端目录切换。" >&2
+  exit 1
+fi
 echo "构建 Git 提交 ${commit}（只包含已提交文件）"
 mkdir "$work/src" "$work/package"
 git archive "$commit" | tar -xf - -C "$work/src"
@@ -61,13 +85,18 @@ cat > "$work/settings.xml" <<'XML'
 XML
 (cd "$work/src" && mvn -B -ntp -s "$work/settings.xml" clean package -DskipTests)
 (cd "$work/src/frontend/admin" && npm ci --prefer-offline --no-audit --no-fund && npm run build)
-(cd "$work/src/frontend/creator" && npm ci --prefer-offline --no-audit --no-fund && NEXT_PUBLIC_BASE_PATH=/aid-studio npm run generate)
+(cd "$work/src/frontend/admin" && VITE_APP_CONTEXT_PATH=/admin/ VITE_APP_BASE_API=/admin/prod-api npm run build -- --outDir "$work/package/admin-public")
+(cd "$work/src/frontend/web" && npm ci --prefer-offline --no-audit --no-fund && NEXT_PUBLIC_BASE_PATH=/web npm run generate)
+(cd "$work/src/frontend/creator" && npm ci --prefer-offline --no-audit --no-fund && NEXT_PUBLIC_BASE_PATH=/ npm run generate)
 mv "$work/src/aid-admin/target/aid-admin.jar" "$work/package/"
 mv "$work/src/frontend/admin/dist" "$work/package/admin"
-mv "$work/src/frontend/creator/dist/public" "$work/package/web-prefix"
+mv "$work/src/frontend/web/dist/public" "$work/package/web-original"
+mv "$work/src/frontend/creator/dist/public" "$work/package/creator-public"
 unzip -tq "$work/package/aid-admin.jar" >/dev/null
 test -s "$work/package/admin/index.html"
-grep -F '/aid-studio/_next/' "$work/package/web-prefix/works/index.html" >/dev/null
+grep -F '/admin/static/' "$work/package/admin-public/index.html" >/dev/null
+grep -F '/web/_next/' "$work/package/web-original/works/index.html" >/dev/null
+grep -F 'href="/_next/' "$work/package/creator-public/index.html" >/dev/null
 printf '%s\n' "$commit" > "$work/package/.commit"
 printf '%s\n' "$sql_tree" > "$work/package/.sql-tree"
 if [[ "$mode" == check ]]; then echo "构建、服务器预检和现役公网入口验证通过。"; exit 0; fi
@@ -96,7 +125,7 @@ if libc.renameat2(-100, b'current', -100, os.fsencode(sys.argv[1]), 2):
     raise OSError(ctypes.get_errno(), os.strerror(ctypes.get_errno()))
 PY
 }
-base='https://43.154.247.11/aid-studio'
+base='https://43.154.247.11'
 probe=(curl --noproxy '*' --resolve 43.154.247.11:443:127.0.0.1 -fsS --max-time 6)
 wait_api() {
   local n
@@ -119,11 +148,15 @@ trap rollback EXIT
 trap 'exit 1' HUP INT TERM
 systemctl restart aid-studio
 wait_api
-"${probe[@]}" "$base/" | grep -F '/aid-studio/_next/' >/dev/null
+"${probe[@]}" "$base/" | grep -F 'href="/_next/' >/dev/null
+"${probe[@]}" "$base/web/works/" | grep -F '/web/_next/' >/dev/null
+"${probe[@]}" -X POST "$base/web/aid/auth/public-config" | python3 -c 'import json,sys; assert json.load(sys.stdin)["code"] == 200'
 curl -fsS --max-time 8 http://127.0.0.1:18489/ | grep -Fi '<html' >/dev/null
+"${probe[@]}" "$base/admin/login" | grep -F '/admin/static/' >/dev/null
+"${probe[@]}" "$base/admin/prod-api/getInfo" | python3 -c 'import json,sys; assert json.load(sys.stdin)["code"] == 401'
 "${probe[@]}" --range 0-15 "$base/profile/aid/style/sample/1-linghu_01.jpg" | python3 -c 'import sys; assert sys.stdin.buffer.read().startswith(bytes.fromhex("ffd8ff"))'
 trap - EXIT HUP INT TERM
 echo "已切换 AID；旧程序保存在 $slot"
 REMOTE
-readiness || { echo "服务端验证已通过，但本机公网复验失败，请检查公网入口。" >&2; exit 1; }
-echo "发布成功 https://43.154.247.11/aid-studio/"
+readiness split || { echo "服务端验证已通过，但本机公网复验失败，请检查公网入口。" >&2; exit 1; }
+echo "发布成功：定制端 https://43.154.247.11/ ，原版 /web/ ，后台 /admin/ 。"
