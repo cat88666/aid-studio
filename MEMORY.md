@@ -11,6 +11,12 @@
 - 当前 HTTPS 站点引用 /etc/aid-studio/public-path.conf。Nginx 主配置引用 /etc/nginx/snippets/aid-studio.conf 和 /etc/aid-studio/http-redirect.conf。日后全量发布网关或重写 HTTPS 配置时须保留这些 include 和现役证书配置。部署前 Nginx 配置副本在 /etc/aid-studio。
 - 生产环境使用本地存储。已移除种子数据中指向缺失图片的交流二维码。模型生成及短信、邮件、微信登录待配置。
 
+## 下次发布
+
+在本机仓库中提交要上线的改动后，执行 `./deploy/ai-hk.sh`。脚本通过 SSH 别名 `ai-hk` 发布当前 Git 提交，构建使用 JDK 17、Maven、Node.js 22.13+ 和 npm。`./deploy/ai-hk.sh --check` 用于本机构建、服务器只读预检和现役公网入口检查。
+
+发布时脚本校验上传包，原子切换后端和两个前端，重启 AID 并检查 API、用户端、管理端和一张风格图。服务器验收失败会恢复原程序并再次启动服务。发布期间 API 会短暂中断，建议避开正在生成的任务。旧程序路径会打印在终端。数据库、上传素材和共享 Nginx 均独立维护；SQL 内容变化时，脚本会在切换前停止，需先安排相应迁移。
+
 ## 素材恢复与验收
 
 初始化 SQL 提供素材记录，媒体文件需要单独安装。缺文件时，部分图片请求返回 HTTP 200 和包含业务码 404 的 JSON，页面表现为风格卡片和资产预览空白。
