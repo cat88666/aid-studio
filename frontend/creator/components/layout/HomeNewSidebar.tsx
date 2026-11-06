@@ -107,7 +107,7 @@ const HomeNewSidebar = forwardRef<HomeNewSidebarHandle, HomeNewSidebarProps>(
     }, [skeleton, loadPublicConfig])
 
     const brandChildren = (
-      <PublicBrandLogo className="home-new-logo" alt="平台首页" compactFallback />
+      <PublicBrandLogo className="home-new-logo" alt="镜序首页" />
     )
 
     return (

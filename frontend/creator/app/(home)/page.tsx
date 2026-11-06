@@ -9,6 +9,7 @@ import { useUserStore } from '~/stores/user'
 import { withAppBasePath } from '~/utils/appBasePath'
 import { requireLogin } from '~/utils/authLoginNavigation'
 import { landingSamples } from '~/utils/landingSamples'
+import { CREATOR_BRAND_NAME } from '~/config/creatorBrand'
 import './creator-home.css'
 
 const navigation = [
@@ -81,12 +82,8 @@ export default function CreatorHomePage() {
     <div className="creator-landing">
       <header className="creator-nav">
         <div className="creator-container">
-          <Link href="/" aria-label="AID Studio 首页" className="creator-brand">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-              <path d="m5 23 9-16h5l8 16h-6l-4.4-9.5-5 9.5z" fill="currentColor"/>
-              <path d="m13.5 24.5 3.6-6.3 3.2 6.3z" fill="#a98acb"/>
-            </svg>
-            <b>AID <span>STUDIO</span></b>
+          <Link href="/" aria-label={`${CREATOR_BRAND_NAME}首页`} className="creator-brand">
+            {CREATOR_BRAND_NAME}
           </Link>
           <nav className={menuOpen ? 'creator-links is-open' : 'creator-links'} aria-label="主导航">
             {navigation.map(([label, href]) => <a key={href} href={href} onClick={() => setMenuOpen(false)}>{label}</a>)}
@@ -176,7 +173,7 @@ export default function CreatorHomePage() {
           <Link href="/faq" className="creator-sub-link">前往帮助中心 →</Link>
         </section>
       </main>
-      <footer className="creator-footer"><div className="creator-container"><b>AID Studio</b><a href="#samples">作品范例</a><a href="#guide">创作指南</a><a href="#faq">常见问题</a></div></footer>
+      <footer className="creator-footer"><div className="creator-container"><b>{CREATOR_BRAND_NAME}</b><a href="#samples">作品范例</a><a href="#guide">创作指南</a><a href="#faq">常见问题</a></div></footer>
 
       <dialog className="creator-player" ref={player} aria-label={sample?.title || '样片播放'} onClose={() => { setSample(null); setMediaError('') }} onClick={event => {
         if (event.target === event.currentTarget) player.current?.close()

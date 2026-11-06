@@ -1,5 +1,6 @@
 'use client'
 
+import { CREATOR_BRAND_NAME } from '~/config/creatorBrand'
 import { SearchOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -98,7 +99,7 @@ export default function HomeNewIndexPage() {
               <div className="home-new-hero-ambient" aria-hidden="true" />
               <div className="home-new-hero-fade" aria-hidden="true" />
               <div className="home-new-open-intro">
-                <p className="home-new-open-intro__eyebrow">AID · AI 内容创作平台</p>
+                <p className="home-new-open-intro__eyebrow">{CREATOR_BRAND_NAME} · AI 内容创作平台</p>
                 <h1 id="aid-open-home-title">从剧本到成片，完成一体化 AI 创作</h1>
                 <p>支持 AI 漫剧、AI 电影与 AI 漫画的项目化创作、资产管理和生成流程。</p>
               </div>

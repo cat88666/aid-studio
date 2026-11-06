@@ -1,3 +1,4 @@
+import { CREATOR_BRAND_NAME } from '~/config/creatorBrand'
 import { DEFAULT_STUDIO_ZONES } from '@/config/studioMeta'
 import type { StudioWorkspaceData } from '@/types/studio'
 
@@ -16,7 +17,7 @@ export function createEmptyStudioFlowWorkspace(scopeKey: string): StudioWorkspac
   return {
     version: 3,
     scopeKey,
-    title: 'AID Studio',
+    title: CREATOR_BRAND_NAME,
     nodes: [],
     edges: [],
     zones: structuredClone(DEFAULT_STUDIO_ZONES),
@@ -40,7 +41,7 @@ export async function loadStudioFlowLayout(scopeKey: string): Promise<StudioWork
     }
     return {
       ...createEmptyStudioFlowWorkspace(scopeKey),
-      title: String(parsed.title || 'AID Studio'),
+      title: String(parsed.title || CREATOR_BRAND_NAME).replace(/^AID Studio(?= · |$)/, CREATOR_BRAND_NAME),
       nodes: Array.isArray(parsed.nodes) ? parsed.nodes : [],
       edges: Array.isArray(parsed.edges) ? parsed.edges : [],
       zones: Array.isArray(parsed.zones) && parsed.zones.length

@@ -1,24 +1,22 @@
 'use client'
 
-/* eslint-disable @next/next/no-img-element -- 本地宣传 SVG 与公开配置直链需保持静态导出行为 */
+/* eslint-disable @next/next/no-img-element -- 展示静态导出的首页剧照 */
 
 import { withAppBasePath } from '~/utils/appBasePath'
 import { HtmlShellClass } from '@/components/app/HtmlShellClass'
-import PublicBrandLogo from '@/components/atoms/PublicBrandLogo'
+import { CREATOR_BRAND_NAME } from '~/config/creatorBrand'
 import { message } from 'antd'
 import { useSyncExternalStore } from 'react'
-import picMod from '~/assets/img/icon/pic.svg'
-import { assetUrl } from '~/utils/assetUrl'
 import styles from './mobile-page.module.css'
 
-const picUrl = assetUrl(picMod)
+const posterUrl = withAppBasePath('/creator-home/hero.webp')
 const subscribeToLocation = () => () => undefined
 const getBrowserHost = () => window.location.host + withAppBasePath('/').replace(/\/$/, '')
 const getServerHost = () => '当前站点'
 const getBrowserOrigin = () => window.location.origin + withAppBasePath('/')
 const getServerOrigin = () => ''
 
-/** 移动端拦截页：请使用电脑端打开（开源版：PublicBrandLogo + 当前站点地址） */
+/** 移动端创作入口提供可复制的电脑端地址。 */
 export default function MobilePage() {
   const siteAddress = useSyncExternalStore(subscribeToLocation, getBrowserHost, getServerHost)
   const siteOrigin = useSyncExternalStore(subscribeToLocation, getBrowserOrigin, getServerOrigin)
@@ -50,9 +48,9 @@ export default function MobilePage() {
     <div className={styles.page}>
       <HtmlShellClass classes="mobile-only-shell" />
       <div className={styles.panel}>
-        <PublicBrandLogo className={styles.logo} alt="平台标识" compactFallback />
+        <span className={styles.logo}>{CREATOR_BRAND_NAME}</span>
         <div className={styles.hero}>
-          <img src={picUrl} alt="用AI重新定义短剧创作" className={styles.heroImage} />
+          <img src={posterUrl} alt="" className={styles.heroImage} />
         </div>
         <div className={styles.tip}>
           <p className={styles.tipTitle}>请使用电脑端打开本网页</p>

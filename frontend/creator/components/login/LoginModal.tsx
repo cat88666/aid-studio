@@ -3,7 +3,7 @@
 import { withAppBasePath } from '~/utils/appBasePath'
 import { ConfigProvider, message } from 'antd'
 import { useRouter } from 'next/navigation'
-import AidHoverLogo from '@/components/atoms/AidHoverLogo'
+import { CREATOR_BRAND_NAME } from '~/config/creatorBrand'
 import { LoginAltMethods } from './LoginAltMethods'
 import { LoginCodePanel } from './LoginCodePanel'
 import { LoginPasswordPanel } from './LoginPasswordPanel'
@@ -46,8 +46,6 @@ export function LoginModal({ visible = true }: LoginModalProps) {
   const {
     tab,
     selectTab,
-    siteName,
-    platformLogoUrl,
     codeLoginPresentation,
     wechatLoginEnabled
   } = session
@@ -125,15 +123,7 @@ export function LoginModal({ visible = true }: LoginModalProps) {
 
           <div className={LOGIN_MODAL_BODY_CLASS}>
             <div className={LOGIN_MODAL_BRAND_CLASS}>
-              {platformLogoUrl ? (
-                <img
-                  src={platformLogoUrl}
-                  alt={siteName || 'AID'}
-                  className="h-16 w-16 object-contain"
-                />
-              ) : (
-                <AidHoverLogo className="!h-16 !w-16 !min-w-0" alt={siteName || 'AID'} />
-              )}
+              <span className="text-4xl font-bold leading-tight text-white">{CREATOR_BRAND_NAME}</span>
               <h2 className={LOGIN_MODAL_TITLE_CLASS}>{TITLE_MAP[tab]}</h2>
             </div>
             <div className="flex w-full justify-center">

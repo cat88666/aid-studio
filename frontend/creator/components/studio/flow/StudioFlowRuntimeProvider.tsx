@@ -1,5 +1,6 @@
 'use client'
 
+import { CREATOR_BRAND_NAME } from '~/config/creatorBrand'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Button, Result, Select, message } from 'antd'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -150,7 +151,7 @@ export function StudioFlowRuntimeProvider({
         tasks: snapshot.taskStateComplete
           ? preserveActiveStudioNodeTasks(state.tasks, mapStudioFlowUserTasks(snapshot.source.tasks))
           : state.tasks,
-        title: `AID Studio · ${snapshot.title}`
+        title: `${CREATOR_BRAND_NAME} · ${snapshot.title}`
       }
     })
     return episodeForStore

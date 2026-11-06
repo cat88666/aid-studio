@@ -1,5 +1,6 @@
 'use client'
 
+import { CREATOR_BRAND_NAME } from '~/config/creatorBrand'
 import {
   applyNodeChanges as applyReactFlowNodeChanges,
   type NodeChange,
@@ -95,7 +96,7 @@ function selectedState(nodes: StudioCanvasNode[]) {
 
 export const useStudioUiStore = create<StudioUiState>((set, get) => ({
   scopeKey: '',
-  title: 'AID Studio',
+  title: CREATOR_BRAND_NAME,
   nodes: [],
   edges: [],
   zones: structuredClone(DEFAULT_STUDIO_ZONES),
@@ -121,7 +122,7 @@ export const useStudioUiStore = create<StudioUiState>((set, get) => ({
 
   beginLoad: (scopeKey) => set({
     scopeKey,
-    title: 'AID Studio',
+    title: CREATOR_BRAND_NAME,
     nodes: [],
     edges: [],
     zones: structuredClone(DEFAULT_STUDIO_ZONES),
@@ -143,7 +144,7 @@ export const useStudioUiStore = create<StudioUiState>((set, get) => ({
 
   hydrate: (workspace) => set({
     scopeKey: workspace.scopeKey,
-    title: workspace.title || 'AID Studio',
+    title: workspace.title || CREATOR_BRAND_NAME,
     nodes: structuredClone(workspace.nodes ?? []).map((node) => ({ ...node, selected: false })),
     edges: structuredClone(workspace.edges ?? []),
     zones: workspace.zones?.length

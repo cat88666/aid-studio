@@ -18,9 +18,15 @@
 .creator-container { box-sizing: border-box; max-width: 1080px; margin-inline: auto; padding-inline: 20px; }
 .creator-nav { position: sticky; top: 0; z-index: 5; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.94); backdrop-filter: blur(14px); }
 .creator-nav > div { height: 56px; display: flex; align-items: center; gap: 16px; }
-.creator-brand { margin-right: auto; display: inline-flex; align-items: center; white-space: nowrap; color: var(--violet) !important; }
-.creator-brand b { font: 900 15px/1 "Arial Narrow", Arial,sans-serif; letter-spacing: -.065em; }
-.creator-brand b span { color: var(--ink); }
+.creator-brand {
+  margin-right: auto;
+  color: var(--ink) !important;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  line-height: 1;
+  white-space: nowrap;
+}
 .creator-links { display: flex; gap: 2px; }
 .creator-links a { padding: 7px 11px; color: #38383e; font-size: 13.5px; border-radius: 8px; }
 .creator-links a:hover { background: #f1f1f3; }

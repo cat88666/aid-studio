@@ -1,3 +1,4 @@
+import { CREATOR_BRAND_NAME, CREATOR_BRAND_DESCRIPTION, CREATOR_BRAND_KEYWORDS, CREATOR_BRAND_ICON } from '~/config/creatorBrand'
 import { create } from 'zustand'
 import type { AuthPublicConfigData } from '~/types/business-api'
 import {
@@ -159,11 +160,11 @@ export function useAuthPublicConfig() {
     smsLoginEnabled: config?.login?.smsEnabled === true,
     emailLoginEnabled: config?.login?.emailEnabled === true,
     wechatLoginEnabled: config?.login?.wechatEnabled === true,
-    siteName: trimConfigText(config?.basic?.site_name),
-    siteDescription: trimConfigText(config?.basic?.site_description),
-    siteKeywords: trimConfigText(config?.basic?.site_keywords),
-    faviconUrl: trimConfigText(config?.brand?.faviconUrl),
-    platformLogoUrl: trimConfigText(config?.brand?.platformLogoUrl),
+    siteName: CREATOR_BRAND_NAME,
+    siteDescription: CREATOR_BRAND_DESCRIPTION,
+    siteKeywords: CREATOR_BRAND_KEYWORDS,
+    faviconUrl: CREATOR_BRAND_ICON,
+    platformLogoUrl: '',
     recordFilingNumber: trimConfigText(config?.basic?.record_filing_number),
     termsOfServiceUrl: trimConfigText(config?.basic?.terms_of_service),
     membershipAgreementUrl: trimConfigText(config?.basic?.membership_agreement),

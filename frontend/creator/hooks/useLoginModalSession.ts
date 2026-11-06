@@ -34,8 +34,6 @@ export function useLoginModalSession() {
     smsLoginEnabled,
     emailLoginEnabled,
     wechatLoginEnabled,
-    siteName,
-    platformLogoUrl,
     termsOfServiceUrl,
     privacyPolicyUrl,
     loadPublicConfig,
@@ -213,8 +211,6 @@ export function useLoginModalSession() {
     wechatLoginEnabled,
     wechat,
     loginCodeMaxLength,
-    siteName,
-    platformLogoUrl,
     termsOfServiceUrl,
     privacyPolicyUrl
   }

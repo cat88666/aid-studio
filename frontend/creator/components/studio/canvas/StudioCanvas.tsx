@@ -1,5 +1,6 @@
 'use client'
 
+import { CREATOR_BRAND_NAME } from '~/config/creatorBrand'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { message } from 'antd'
 import {
@@ -118,7 +119,7 @@ function StudioCanvasInner({
       ref={canvasRef}
       className={`studio-canvas${spacePanning ? ' is-space-panning' : ''}`}
       role="region"
-      aria-label="AID Studio 流程画布"
+      aria-label={CREATOR_BRAND_NAME + '流程画布'}
       tabIndex={0}
       onPointerDownCapture={(event) => {
         if (

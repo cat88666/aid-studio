@@ -1,5 +1,6 @@
 'use client'
 
+import { CREATOR_BRAND_NAME } from '~/config/creatorBrand'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, Dropdown, Input, Modal, message } from 'antd'
 import type { MenuProps } from 'antd'
@@ -25,7 +26,7 @@ import {
 } from '@/utils/studio/studioFlowDelivery'
 import { userProjectDelete, userProjectUpdate } from '@/utils/business/project'
 import { assetUrl } from '@/utils/assetUrl'
-import AidHoverLogo from '@/components/atoms/AidHoverLogo'
+import PublicBrandLogo from '@/components/atoms/PublicBrandLogo'
 import '@/components/common/composer-flow.css'
 
 const agentIconUrl = assetUrl(agentIconRaw)
@@ -190,7 +191,7 @@ export function StudioTopbar({
   const handleTitleChange = (value: string) => {
     if (readOnly) return
     useCreationStore.getState().setWorkTitle(value)
-    setTitle(`AID Studio · ${(value.trim() || '未命名作品')}`)
+    setTitle(`${CREATOR_BRAND_NAME} · ${(value.trim() || '未命名作品')}`)
     syncTitleInputWidth()
   }
 
@@ -199,7 +200,7 @@ export function StudioTopbar({
     const store = useCreationStore.getState()
     const trimmed = (store.workTitle || '').trim() || '未命名作品'
     store.setWorkTitle(trimmed)
-    setTitle(`AID Studio · ${trimmed}`)
+    setTitle(`${CREATOR_BRAND_NAME} · ${trimmed}`)
     if (trimmed === workTitleSaveBaselineRef.current) {
       syncTitleInputWidth()
       return
@@ -223,7 +224,7 @@ export function StudioTopbar({
       const err = error as { msg?: string; message?: string }
       message.error(err?.msg || err?.message || '保存标题失败')
       useCreationStore.getState().setWorkTitle(workTitleSaveBaselineRef.current)
-      setTitle(`AID Studio · ${workTitleSaveBaselineRef.current}`)
+      setTitle(`${CREATOR_BRAND_NAME} · ${workTitleSaveBaselineRef.current}`)
     } finally {
       syncTitleInputWidth()
     }
@@ -235,7 +236,7 @@ export function StudioTopbar({
         <div className="studio-topbar__project">
           <Dropdown menu={projectMenu} trigger={['click']} placement="bottomLeft" classNames={dropdownClassNames}>
             <button type="button" className="studio-topbar__aid-trigger" aria-label="作品菜单">
-              <AidHoverLogo className="studio-topbar__aid-logo" alt="AID" />
+              <PublicBrandLogo className="studio-topbar__aid-logo" />
             </button>
           </Dropdown>
           <div className="studio-topbar__title-wrap" style={{ width: `${titleInputWidthPx}px` }}>
