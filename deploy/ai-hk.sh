@@ -61,10 +61,10 @@ cat > "$work/settings.xml" <<'XML'
 XML
 (cd "$work/src" && mvn -B -ntp -s "$work/settings.xml" clean package -DskipTests)
 (cd "$work/src/frontend/admin" && npm ci --prefer-offline --no-audit --no-fund && npm run build)
-(cd "$work/src/frontend/web" && npm ci --prefer-offline --no-audit --no-fund && NEXT_PUBLIC_BASE_PATH=/aid-studio npm run generate)
+(cd "$work/src/frontend/creator" && npm ci --prefer-offline --no-audit --no-fund && NEXT_PUBLIC_BASE_PATH=/aid-studio npm run generate)
 mv "$work/src/aid-admin/target/aid-admin.jar" "$work/package/"
 mv "$work/src/frontend/admin/dist" "$work/package/admin"
-mv "$work/src/frontend/web/dist/public" "$work/package/web-prefix"
+mv "$work/src/frontend/creator/dist/public" "$work/package/web-prefix"
 unzip -tq "$work/package/aid-admin.jar" >/dev/null
 test -s "$work/package/admin/index.html"
 grep -F '/aid-studio/_next/' "$work/package/web-prefix/works/index.html" >/dev/null
