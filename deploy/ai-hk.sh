@@ -50,6 +50,35 @@ if [[ -f .sql-tree ]]; then installed_sql=$(cat .sql-tree); fi
 printf '%s %s\n' "$(stat -Lc '%d:%i' .)" "$layout"
 REMOTE
 }
+# 同一组域名探针既经公网 DNS 验证，也在切换后的回滚窗口内经本机 Nginx 验证。
+domain_readiness() {
+  local core=https://thdrhdf.site ops=https://thdrhdf.fun
+  local url expected result
+  local probe=(curl -sS --max-time 15 "$@")
+  "${probe[@]}" -f "$core/" | grep -F 'href="/_next/' >/dev/null || return 1
+  "${probe[@]}" -f "$ops/admin/" | grep -F '/admin/static/' >/dev/null || return 1
+  "${probe[@]}" -f "$ops/web/" | grep -F '/web/_next/' >/dev/null || return 1
+  for url in "$core/aid" "$ops/web/aid"; do
+    "${probe[@]}" -f -X POST "$url/auth/public-config" |
+      python3 -c 'import json,sys; assert json.load(sys.stdin)["code"] == 200' || return 1
+    "${probe[@]}" -f -H 'Content-Type: application/json' -d '{}' "$url/api/user/project/list" |
+      python3 -c 'import json,sys; assert json.load(sys.stdin)["code"] == 401' || return 1
+  done
+  "${probe[@]}" -f "$ops/admin/prod-api/getInfo" |
+    python3 -c 'import json,sys; assert json.load(sys.stdin)["code"] == 401' || return 1
+  for url in "$core" "$ops"; do
+    "${probe[@]}" -f --range 0-15 "$url/profile/aid/style/sample/1-linghu_01.jpg" |
+      python3 -c 'import sys; assert sys.stdin.buffer.read().startswith(bytes.fromhex("ffd8ff"))' || return 1
+  done
+  expected="302 $ops/admin/"
+  result=$("${probe[@]}" -o /dev/null -w '%{http_code} %{redirect_url}' "$ops/") || return 1
+  [[ "$result" == "$expected" ]] || { echo "运营首页跳转异常：$result" >&2; return 1; }
+  for url in "$core/admin" "$core/admin/" "$core/admin/prod-api/getInfo" "$core/web" "$core/web/" "$core/web/works/" \
+             "$ops/aid/" "$ops/aid/auth/public-config" "$ops/works/"; do
+    result=$("${probe[@]}" -o /dev/null -w '%{http_code}' "$url") || return 1
+    [[ "$result" == 404 ]] || { echo "路由隔离异常：$url 返回 $result" >&2; return 1; }
+  done
+}
 readiness() {
   local origin=https://43.154.247.11
   local probe=(curl -fsS --max-time 15)
@@ -57,6 +86,7 @@ readiness() {
     origin="$origin/aid-studio"
     "${probe[@]}" "$origin/" | grep -F '/aid-studio/_next/' >/dev/null || return 1
   else
+    domain_readiness --proto '=https' || return 1
     "${probe[@]}" "$origin/" | grep -F 'href="/_next/' >/dev/null || return 1
     "${probe[@]}" "$origin/web/works/" | grep -F '/web/_next/' >/dev/null || return 1
     "${probe[@]}" "$origin/admin/login" | grep -F '/admin/static/' >/dev/null || return 1
@@ -105,7 +135,9 @@ digest=$(shasum -a 256 "$work/bundle.tgz" | awk '{print $1}')
 stage=$("${remote[@]}" 'mktemp -d /tmp/aid-publish.XXXXXXXX')
 [[ "$stage" =~ ^/tmp/aid-publish\.[[:alnum:]]+$ ]] || exit 1
 scp -o BatchMode=yes "$work/bundle.tgz" "$host:$stage/"
-"${remote[@]}" sudo -n bash -s -- "$stage" "$digest" "$baseline" <<'REMOTE'
+{
+  declare -f domain_readiness
+  cat <<'REMOTE'
 set -euo pipefail
 cd /opt/aid-studio
 exec 9>.publish.lock
@@ -155,8 +187,10 @@ curl -fsS --max-time 8 http://127.0.0.1:18489/ | grep -Fi '<html' >/dev/null
 "${probe[@]}" "$base/admin/login" | grep -F '/admin/static/' >/dev/null
 "${probe[@]}" "$base/admin/prod-api/getInfo" | python3 -c 'import json,sys; assert json.load(sys.stdin)["code"] == 401'
 "${probe[@]}" --range 0-15 "$base/profile/aid/style/sample/1-linghu_01.jpg" | python3 -c 'import sys; assert sys.stdin.buffer.read().startswith(bytes.fromhex("ffd8ff"))'
+domain_readiness --noproxy '*' --resolve thdrhdf.site:443:127.0.0.1 --resolve thdrhdf.fun:443:127.0.0.1
 trap - EXIT HUP INT TERM
 echo "已切换 AID；旧程序保存在 $slot"
 REMOTE
+} | "${remote[@]}" sudo -n bash -s -- "$stage" "$digest" "$baseline"
 readiness split || { echo "服务端验证已通过，但本机公网复验失败，请检查公网入口。" >&2; exit 1; }
-echo "发布成功：定制端 https://43.154.247.11/ ，原版 /web/ ，后台 /admin/ 。"
+echo "发布成功：定制端 https://thdrhdf.site/ ，原版 https://thdrhdf.fun/web/ ，后台 https://thdrhdf.fun/admin/ 。"

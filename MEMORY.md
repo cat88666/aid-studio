@@ -1,15 +1,21 @@
 # AID Studio 项目记忆
 
-更新于 2026-11-06。生产部署使用 SSH 别名 `ai-hk`，与 ArcReel、模型网关共用主机和 HTTPS 入口。
+更新于 2026-11-07。生产部署使用 SSH 别名 `ai-hk`，与 ArcReel、模型网关共用主机和 HTTPS 入口。
 
 ## 生产环境
 
-三套前端在同一 IP 的 HTTPS 站点。https://43.154.247.11/ 为定制 creator，https://43.154.247.11/web/ 为原版 web，https://43.154.247.11/admin/ 为管理后台。旧 /aid-studio/ 路径跳转到新地址。后端监听 127.0.0.1:18480，管理端另有本地维护入口 18489。管理员和创作者凭据分别位于 /etc/aid-studio/admin-login 与 /etc/aid-studio/creator-login，仅 root 可读。
+正式域名分工如下。核心 C 端使用 https://thdrhdf.site/ ，运营后台使用 https://thdrhdf.fun/admin/ ，备用原版 Web 使用 https://thdrhdf.fun/web/ 。直接访问 .fun 根路径进入运营后台。两个域名的 A 记录均指向 43.154.247.11，原 IP 入口保留兼容。后端监听 127.0.0.1:18480，管理端另有本地维护入口 18489。管理维护凭据在服务器 /etc/aid-studio/admin-login，仅 root 可读。历史 /etc/aid-studio/creator-login 对应的测试账号已失效。
 
 - frontend/creator 根路径静态导出到 current/creator-public，frontend/web 以 /web 为 basePath 导出到 current/web-original（Nginx 回环 18481）。frontend/admin 以 /admin/ 构建到 current/admin-public，请求 /admin/prod-api/；回环管理端使用独立根路径构建 current/admin。
 - 运行服务为 aid-studio、aid-studio-mysql、aid-studio-redis；配置与凭据在 /etc/aid-studio，应用数据在 /var/lib/aid-studio，数据库与缓存数据在 /var/lib/aid-studio-db。独立 JRE 和数据库程序位于 /opt/aid-studio。
 - 三端统一入口配置 deploy/nginx/ai-hk-frontends.conf 对应服务器 /etc/aid-studio/public-path.conf，由 HTTPS 站点引用。三端切换前配置备份 /etc/aid-studio/before-three-ka6wHHfj，之前管理端产物 /opt/aid-studio/releases/three-2q8h9j2Y/previous-admin。Nginx 主配置引用 /etc/nginx/snippets/aid-studio.conf 和 /etc/aid-studio/http-redirect.conf。日后全量发布网关或重写 HTTPS 配置时须保留这些 include 和现役证书配置。部署前 Nginx 配置副本在 /etc/aid-studio。
 - 生产环境使用本地存储。已移除种子数据中指向缺失图片的交流二维码。模型生成及短信、邮件、微信登录待配置。
+
+### 域名与证书
+
+Nginx 主配置在 http 上下文引用 `/etc/aid-studio/domains.conf`（仓库 `deploy/nginx/ai-hk-domains.conf`）。运营路由共用 `/etc/aid-studio/operations-paths.conf`（仓库 `deploy/nginx/ai-hk-operations.conf`）。原 IP 继续引用 `/etc/aid-studio/public-path.conf`。切换前备份位于服务器 `/etc/aid-studio/before-domains.mXVvTBKW`。
+
+两个域名共用 Certbot 证书 `aid-studio-domains`，HTTP-01 验证目录为 `/var/www/letsencrypt`。现役 `openclaw-cert-renew.timer` 定期运行 Certbot renew，证书更新后 reload Nginx。浏览器登录态按域名分别保存。
 
 ## 下次发布
 

@@ -13,7 +13,7 @@
 
 ## 当前 ai-hk 服务器的日常发布
 
-从本机仓库根目录执行 `./deploy/ai-hk.sh`，将当前 Git 提交发布到现有公网 IP 的 `/aid-studio/` 入口。仅验证构建和现役站点时执行 `./deploy/ai-hk.sh --check`。运行环境、回滚和数据库迁移约束见[项目记忆](../MEMORY.md#下次发布)。
+从本机仓库根目录执行 `./deploy/ai-hk.sh`，将当前 Git 提交发布到 `thdrhdf.site` 的核心 C 端，以及 `thdrhdf.fun/admin/` 和 `thdrhdf.fun/web/`。仅验证构建和现役站点时执行 `./deploy/ai-hk.sh --check`。运行环境、回滚和数据库迁移约束见[项目记忆](../MEMORY.md#下次发布)。
 
 ## 目录说明
 
