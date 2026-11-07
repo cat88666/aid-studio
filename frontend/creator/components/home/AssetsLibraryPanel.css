@@ -361,11 +361,25 @@
 .assets-page .works-lib-header__title { color: #221f26; font-size: 26px; }
 .assets-page .assets-lib-upload { background: #222025; color: white; padding: 9px 16px; border-radius: 8px; border: 0; cursor: pointer; }
 .assets-page .assets-lib-toolbar { flex-wrap: wrap; height: auto; gap: 12px; }
-.assets-page .works-lib-type-tabs { flex-wrap: wrap; background: #f4f3f5; padding: 3px; }
-.assets-page .works-lib-type-tabs__btn { color: #605b66; }
-.assets-page .works-lib-type-tabs__btn.is-active { background: #262329; color: white; }
-.assets-page .assets-lib-tab__ico { filter: grayscale(1) brightness(.56); }
-.assets-page .is-active .assets-lib-tab__ico { filter: brightness(0) invert(1); }
+/* Override the inherited dark asset theme as a complete set of states. */
+.assets-page.assets-library-figma .works-lib-type-tabs { flex-wrap: wrap; gap: 4px; background: #f5f5f7; padding: 4px; }
+.assets-page.assets-library-figma .works-lib-type-tabs__btn {
+  color: #6e6e73;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  padding: 7px 20px;
+  height: auto;
+  min-height: 36px;
+  font-size: 13px;
+  box-shadow: none;
+}
+.assets-page.assets-library-figma .works-lib-type-tabs__btn:hover { color: #1d1d1f; background: transparent; border-color: transparent; }
+.assets-page.assets-library-figma .works-lib-type-tabs__btn.is-active { background: #1d1d1f; color: #fff; border-color: #1d1d1f; }
+.assets-page.assets-library-figma .works-lib-type-tabs__btn:focus-visible { outline: 2px solid #6e5684; outline-offset: 2px; }
+.assets-page.assets-library-figma .assets-lib-tab__ico { filter: brightness(0); opacity: .6; }
+.assets-page.assets-library-figma .works-lib-type-tabs__btn:hover .assets-lib-tab__ico { opacity: 1; }
+.assets-page.assets-library-figma .is-active .assets-lib-tab__ico { filter: brightness(0) invert(1); opacity: 1; }
 .assets-page .works-lib-search { background: white; border: 1px solid #dfdce2; max-width: 300px; margin-inline-start: auto; }
 .assets-page :is(.works-lib-search__input, .works-lib-card__title) { color: #27232d; }
 .assets-page.assets-library-figma .works-lib-grid { grid-template-columns: repeat(auto-fill,minmax(min(100%,180px),1fr)); gap: 14px; }
