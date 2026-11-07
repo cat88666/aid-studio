@@ -17,7 +17,7 @@ public class DiagnosticSanitizer {
     private final AidAgentMapper agents;
     private volatile List<AidAgent> promptSources=List.of();
     private volatile long loadedAt;
-    private static final Pattern SECRET=Pattern.compile("(?i).*(password|passwd|authorization|cookie|apikey|api_key|secret|privatekey|private_key|accesstoken|access_token|refreshtoken|refresh_token|credential).*");
+    private static final Pattern SECRET=Pattern.compile("(?i).*(password|passwd|authorization|cookie|apikey|api_key|secret|privatekey|private_key|accesstoken|access_token|refreshtoken|refresh_token|nonce|googleNonce|credential).*");
     private static final String LOOSE_VALUE="(?:\"(?:\\\\.|[^\"\\\\])*+\"?|'(?:\\\\.|[^'\\\\])*+'?|[^\\r\\n,;}]+)";
 
     public Object clean(Object raw) {
@@ -105,11 +105,11 @@ public class DiagnosticSanitizer {
             text=text.replaceAll("(?is)([\"']?(?:content|parts)[\"']?\\s*:\\s*)[\\[{].*","$1[已省略无法解析的系统提示词片段]");
             text=text.replaceAll("(?i)([\"']?(?:content|parts)[\"']?\\s*:\\s*)"+LOOSE_VALUE,"$1[已省略系统提示词]");
         }
-        return text.replaceAll("(?i)([?&](?:key|api_key|token|signature|sign|x-amz-[^=\\s&]+|q-signature|access_token|authorization|credential|secret)=)[^&\\s]+","$1[已过滤]")
+        return text.replaceAll("(?i)([?&](?:key|api_key|token|signature|sign|x-amz-[^=\\s&]+|q-signature|access_token|authorization|nonce|googleNonce|credential|secret)=)[^&\\s]+","$1[已过滤]")
             .replaceAll("(?i)((?:Bearer|Basic)\\s+)[A-Za-z0-9._~+/=-]+","$1[已过滤]")
             .replaceAll("(?i)(https?://)[^/@\\s]+:[^/@\\s]+@","$1[已过滤]@")
             .replaceAll("(?im)(\\b(?:Cookie|Set-Cookie)\\s*:\\s*)[^\\r\\n]*","$1[已过滤]")
-            .replaceAll("(?i)((?:[\"']?(?:password|passwd|api[_-]?key|secret|authorization|cookie|token|access[_-]?key|xencrypt(?:key|iv|ts)|access[_-]?token|refresh[_-]?token|credential|system[_-]?prompt|prompt[_-]?content)[\"']?)\\s*[:=]\\s*)"+LOOSE_VALUE,"$1[已过滤]");
+            .replaceAll("(?i)((?:[\"']?(?:password|passwd|api[_-]?key|secret|authorization|cookie|token|access[_-]?key|xencrypt(?:key|iv|ts)|access[_-]?token|refresh[_-]?token|nonce|googleNonce|credential|system[_-]?prompt|prompt[_-]?content)[\"']?)\\s*[:=]\\s*)"+LOOSE_VALUE,"$1[已过滤]");
     }
     private Object promptMarker(Object value) {
         String text=value instanceof CharSequence sequence?sequence.toString():"";

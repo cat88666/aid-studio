@@ -3,6 +3,18 @@ import authTranslations from '~/components/login/authTranslations.json'
 import { useCreatorLocale, type CreatorLocale } from '~/hooks/useCreatorLocale'
 
 const english: Record<string, string> = {
+  'Google登录未开启': 'Google sign-in is not available.',
+  'Google登录请求来源无效': 'Please restart Google sign-in from this website.',
+  'Google登录已过期，请重试': 'Google sign-in expired. Please try again.',
+  'Google登录凭证无效': 'Google could not verify this sign-in. Please try again.',
+  'Google登录验证失败，请重试': 'Google sign-in verification failed. Please try again.',
+  '请求过于频繁，请稍后重试': 'Too many requests. Please try again later.',
+  '该邮箱已有账户，请使用原有方式登录': 'An account already uses this email. Sign in with your original method.',
+  '注册失败': 'Could not create your account. Please try again.',
+  '正在加载 Google 登录…': 'Loading Google sign-in…',
+  'Google 登录暂时不可用，请重试或选择其他方式': 'Google sign-in is unavailable. Retry or choose another method.',
+  'Google 登录已过期，请重试': 'Google sign-in expired. Please try again.',
+  '重试 Google 登录': 'Retry Google sign-in',
   '登录或注册': 'Sign in or sign up',
   '登录或创建账户': 'Sign in or create an account',
   '选择一种方式，开始你的创作': 'Choose how to continue your creative journey.',

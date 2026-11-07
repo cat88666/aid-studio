@@ -1,12 +1,12 @@
 # 注册渠道启用与 Google 接入准备
 
-核验时间：2026-11-07。本文件区分现有能力和待实现方案，不代表 Google 已上线。
+核验时间：2026-11-07。代码接入默认关闭；本文件不代表真实 Google 授权或短信/邮件投递已验收。
 
 ## 当前状态
 
 线上 `POST https://thdrhdf.site/aid/auth/public-config` 返回：`smsEnabled=false`、`emailEnabled=false`、`wechatEnabled=false`。这说明三个现有第三方/验证码渠道均关闭；不能把新注册界面视为短信或邮件投递已经可用。账号密码登录仍是独立入口。
 
-手机号和邮箱均已有“验证码验证后自动注册，已有账号直接登录”的后端实现，分别在 `SmsLoginStrategy` 和 `EmailLoginStrategy`。手机号目前只接受中国大陆 11 位号码，正则为 `^1[3-9]\\d{9}$`，并非国际号码服务。Google 登录策略、配置项、公开配置字段和凭证接收接口当前都未实现。
+手机号和邮箱均已有“验证码验证后自动注册，已有账号直接登录”的后端实现，分别在 `SmsLoginStrategy` 和 `EmailLoginStrategy`。手机号目前只接受中国大陆 11 位号码，正则为 `^1[3-9]\\d{9}$`，并非国际号码服务。Google 接入代码已准备，需完成下面的 OAuth 配置和真实授权验收后才能启用。
 
 ## 启用现有邮箱与短信
 
@@ -42,18 +42,30 @@
 
 现有接口：`POST /aid/auth/sendCode`，参数 `codeType=sms|email`、`target`、`scene=login`，可选 `inviteCode`；随后 `POST /aid/auth/login`，参数 `loginType=sms|email`、`account`、`code`。接口带现有行为验证码校验；Redis 中按场景隔离验证码和 TTL，并对发送目标/IP 限流。现有注册事务关联邀请和注册送积分，成功提交后消费验证码，应保留这些行为。
 
-## Google：建议的最小实现（尚未开发）
+## Google：默认关闭的接入
 
-建议使用 Google Identity Services 的官方“Sign in with Google”按钮，采用 JavaScript popup 回调接收 ID token，再向本站后端提交；不需要为了网站登录请求 Drive、Gmail 等 API 权限。按钮可按当前语言渲染。One Tap 可以后续另行评估，不是第一版必须项。[Google 官方按钮指南](https://developers.google.com/identity/gsi/web/guides/display-button)
+采用 Google Identity Services 官方按钮，popup 返回 ID token 后提交本站，不申请 Drive、Gmail 等额外权限，不使用 Client Secret，也不提供自动 One Tap 登录。[官方按钮指南](https://developers.google.com/identity/gsi/web/guides/display-button)
 
-所需应用配置：在 Google Auth Platform 创建 **Web application** 类型 OAuth 客户端，设置品牌名称、支持邮箱、首页与隐私政策。授权 JavaScript origin 应为 `https://thdrhdf.site`，不带路径；本地开发另加实际使用的 localhost origin。授权域填写 `thdrhdf.site`。`thdrhdf.fun` 当前为运营后台和原版 Web，不应自动加入消费者登录授权范围。若以后采用 redirect 模式，必须等服务端接收路径真正实现后，再登记完全一致的 redirect URI；当前没有可填写的已实现 Google 回调地址。[Google 官方设置指南](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid)
+配置模板在 `deploy/google-login.env.example`。本服务器由 systemd 读取 `/etc/aid-studio/app.env`，以后启用时填入：
 
-代码接入建议：
+```dotenv
+GOOGLE_LOGIN_ENABLED=false
+GOOGLE_CLIENT_ID=你的Web客户端ID.apps.googleusercontent.com
+GOOGLE_LOGIN_ORIGIN=https://thdrhdf.site
+```
 
-1. 新增受配置控制的 Google 凭证接收端点或登录策略，公开配置只提供启用状态和 Web client ID。client ID 是公开标识；任何服务端 secret 都不得下发。前端只在服务真实配置且后端可用时提供可用入口。
-2. Java 后端使用官方 `GoogleIdTokenVerifier` 或成熟 JWT 库，校验 Google 签名、`aud`、`iss`、`exp`；处理登录 CSRF，并验证与本次浏览器流程绑定的 nonce，拒绝无效或重放凭证。若选用 HTML POST 接收模式，按官方说明验证 `g_csrf_token` 双提交 cookie；不可直接把此检查套用到没有相同 cookie 的自定义 JS 回调。
-3. 身份键使用 `sub`，可复用 `aid_user_social`，设置 `platform_source=google`、`openid=sub`，现有 `(platform_source, openid)` 唯一索引可防重复身份绑定。不要用可变化的邮箱当 Google 身份主键，不存完整 ID token 到 `raw_data` 或日志。
-4. 遇到同邮箱已有账号，不应无条件自动合并。Google 对外部邮箱的权威性有条件限制；最保守的第一版是要求先用已有方式登录后绑定。官方推荐验证既有账号的访问权。核对账号停用、删除、注销冷静期，并在事务内创建普通用户和绑定身份，保留邀请码、积分幂等和多端会话策略。
-5. 为非法签名、错误 audience、过期 token、nonce 不匹配、重复注册竞争、停用账号、邮箱冲突和配置关闭增加后端测试。部署后完成真实 Google 授权、首次注册、重复登录和取消授权流程，再宣称可用。
+准备完成前保持 false。正式启用前，至少先开通并验证一个邮箱/短信验证码服务，保证 Google 专用账号可以绑定联系方式、设置密码和自助注销；本版本没有 Google 近期重认证注销流程。Google 注册不默认发放注册奖励，不能套用邮箱渠道的赠送配置。
 
-验证与身份关联要求依据 [Google 服务端 ID token 验证指南](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token)。现有 Google Gemini 模型服务 API key 与 Google 登录 OAuth client 无关，不能复用。
+在 Google Auth Platform 创建 Web application OAuth 客户端并配置品牌、支持邮箱、真实首页和隐私政策，授权 JavaScript origin 填 `https://thdrhdf.site`（不带路径），授权域为 `thdrhdf.site`。本实现只支持 HTTPS 同源，开发验收应使用 HTTPS 测试域名和对应独立客户端。不要把运营后台域名自动加入授权。本实现采用 JS popup，无需填写虚构的 redirect callback URL。[官方客户端设置](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid)
+
+代码接口：
+
+- `POST /aid/auth/public-config` 的 `login.googleEnabled` 和 `login.googleClientId` 控制入口；关闭时不展示按钮、不加载 Google 脚本。
+- `POST /aid/auth/google/challenge` 返回 `nonce`、`expiresIn`，设置 HttpOnly/Secure/SameSite 浏览器绑定 cookie；nonce 只保留短时有效期。
+- `POST /aid/auth/login` 提交 `{loginType: "google", credential, googleNonce, inviteCode?}`，复用现有 token、会话和登录回跳。
+
+服务端校验来源、浏览器绑定、nonce、签名、audience、issuer 和有效期，nonce 一次性消费。身份使用 Google `sub` 并复用 social 唯一索引；不会无条件按邮箱合并。遇到已有邮箱账号应使用原有方式登录，本版不提供已有账号的 Google 绑定入口。非 Google 权威邮箱不应作为本站的已验证恢复邮箱。参考 [官方服务端验证指南](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token)。Google Gemini 模型 API key 不能用作 Google 登录配置。
+
+启用时：备份 app.env，填好客户端和域名并设为 true，重启 `aid-studio`；通过 public-config 核对开关后，使用授权测试账号完成首次注册、重复登录、取消授权、邮箱冲突、登录回跳、绑定联系方式和注销入口验收。OAuth 应用在测试模式时只允许已加入的测试用户；需要公开使用时按 Google 控制台要求完成发布。失败时先恢复 `GOOGLE_LOGIN_ENABLED=false` 并重启。
+
+当前没有真实 OAuth 客户端、短信或 SMTP 配置；自动测试不能代替 Google 真机授权和验证码实际送达验收。

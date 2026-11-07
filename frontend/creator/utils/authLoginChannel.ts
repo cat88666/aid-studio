@@ -1,4 +1,4 @@
-export type AuthLoginChannel = 'wechat' | 'password' | 'sms' | 'email'
+export type AuthLoginChannel = 'wechat' | 'password' | 'sms' | 'email' | 'google'
 
 const STORAGE_KEY = 'auth:login-channel:v1'
 
@@ -10,7 +10,7 @@ export function setAuthLoginChannel(channel: AuthLoginChannel) {
 export function getAuthLoginChannel(): AuthLoginChannel | null {
   if (!(typeof window !== 'undefined')) return null
   const value = localStorage.getItem(STORAGE_KEY)
-  if (value === 'wechat' || value === 'password' || value === 'sms' || value === 'email') {
+  if (value === 'wechat' || value === 'password' || value === 'sms' || value === 'email' || value === 'google') {
     return value
   }
   return null

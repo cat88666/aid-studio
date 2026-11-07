@@ -33,6 +33,15 @@ public class AuthController {
     @Resource
     private AuthService authService;
 
+    @Resource
+    private com.aid.auth.google.GoogleLoginChallenge googleChallenge;
+
+    @Anonymous
+    @PostMapping("/google/challenge")
+    public AjaxResult googleChallenge(jakarta.servlet.http.HttpServletRequest request, jakarta.servlet.http.HttpServletResponse response) {
+        return AjaxResult.success(googleChallenge.issue(request, response));
+    }
+
 
     /**
      * 发送验证码

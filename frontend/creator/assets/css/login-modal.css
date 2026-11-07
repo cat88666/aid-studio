@@ -104,3 +104,7 @@ html body .login-modal-form button.auth-dark-submit { height: 44px; background: 
 .login-modal-frame--compact .login-entry-back { margin-top: 16px; }
 .login-modal-frame--compact button:focus-visible { outline: 2px solid #765492; outline-offset: 3px; }
 @media (max-width: 479px) { .login-modal-frame--compact .login-modal-form { padding: 46px 24px 24px; } }
+
+.login-google { width: 100%; min-width: 0; }
+.login-google-button { width: 100%; display: flex; justify-content: center; }
+.login-modal-frame--compact .login-google p { margin: 8px 0; color: #65616b; font-size: 13px; line-height: 1.6; text-align: center; }

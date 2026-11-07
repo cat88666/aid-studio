@@ -87,7 +87,12 @@ public class GlobalExceptionHandler
     public AjaxResult handleHttpMessageNotReadable(HttpMessageNotReadableException e, HttpServletRequest request)
     {
         String requestURI = request.getRequestURI();
-        log.warn("请求地址'{}',请求体格式错误: {}", requestURI, e.getMessage());
+        if (requestURI.contains("/auth/")) {
+            // JSON parser errors can include credential fragments.
+            log.warn("请求地址'{}',请求体格式错误", requestURI);
+        } else {
+            log.warn("请求地址'{}',请求体格式错误: {}", requestURI, e.getMessage());
+        }
         return AjaxResult.error(HttpStatus.BAD_REQUEST, MessageUtils.message("error.request.body.invalid"));
     }
 

@@ -35,6 +35,8 @@ export function useLoginModalSession() {
 
   const {
     loaded: configLoaded,
+    googleLoginEnabled,
+    googleClientId,
     smsLoginEnabled,
     emailLoginEnabled,
     wechatLoginEnabled,
@@ -206,6 +208,10 @@ export function useLoginModalSession() {
     smsLoginEnabled,
     emailLoginEnabled,
     configLoaded,
+    googleLoginEnabled,
+    googleClientId,
+    inviteCode,
+    completeGoogleLogin: (data: LoginData) => completeLogin(data, 'google'),
     account,
     setAccount,
     code,

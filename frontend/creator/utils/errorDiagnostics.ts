@@ -10,7 +10,7 @@ export interface DiagnosticRequest {
 
 const PREFIX = '/api/user/diagnostics/'
 const MAX_RESPONSE_BYTES = 4 * 1024 * 1024
-const PRIVATE_FIELD = /^(authorization|proxyauthorization|cookie|setcookie|password|passwd|secret|clientsecret|credential|credentials|apikey|apitoken|xapikey|xapitoken|accesskey|secretkey|privatekey|aeskey|token|accesstoken|refreshtoken|captchatoken|xencryptkey|xencryptiv|xencryptts)$/i
+const PRIVATE_FIELD = /^(authorization|proxyauthorization|cookie|setcookie|password|passwd|secret|clientsecret|credential|credentials|nonce|googlenonce|apikey|apitoken|xapikey|xapitoken|accesskey|secretkey|privatekey|aeskey|token|accesstoken|refreshtoken|captchatoken|xencryptkey|xencryptiv|xencryptts)$/i
 const PROMPT_FIELD = /^(systemprompt|systeminstruction|developerprompt|agentprompt|promptcontent)$/i
 let post: Post | undefined
 let status: { identity: string; until: number; enabled: boolean } | undefined
@@ -91,7 +91,7 @@ function cleanText(value: string): string {
     .replace(/^([ \t]*(?:authorization|proxy-authorization|cookie|set-cookie)\s*:\s*)[^\r\n]*/gim, '$1[已过滤]')
     .replace(/\b(Bearer|Basic)\s+[A-Za-z0-9._~+\/-]+=*/gi, '$1 [已过滤]')
     .replace(/([?&](?:token|key|api[_-]?key|signature|sign|credential|x-amz-[^=\s&]+|q-signature)=)[^&\s"']*/gi, '$1[已过滤]')
-    .replace(/(["']?(?:password|passwd|secret|client[_-]?secret|credentials?|api[_-]?(?:key|token)|x[_-]?api[_-]?(?:key|token)|access[_-]?key|secret[_-]?key|private[_-]?key|aes[_-]?key|token|access[_-]?token|refresh[_-]?token|captcha[_-]?token|x[_-]?encrypt[_-]?(?:key|iv|ts)|authorization|proxy[_-]?authorization|cookie|set[_-]?cookie|system[_-]?prompt|system[_-]?instruction|developer[_-]?prompt|agent[_-]?prompt|prompt[_-]?content|base64|b64[_-]?json)["']?\s*[:=]\s*)(?:"(?:\\[\s\S]|[^"\\])*(?:"|$)|'(?:\\[\s\S]|[^'\\])*(?:'|$)|[^\r\n]+)/gi, '$1[已过滤]')
+    .replace(/(["']?(?:password|passwd|secret|client[_-]?secret|credentials?|(?:google[_-]?)?nonce|api[_-]?(?:key|token)|x[_-]?api[_-]?(?:key|token)|access[_-]?key|secret[_-]?key|private[_-]?key|aes[_-]?key|token|access[_-]?token|refresh[_-]?token|captcha[_-]?token|x[_-]?encrypt[_-]?(?:key|iv|ts)|authorization|proxy[_-]?authorization|cookie|set[_-]?cookie|system[_-]?prompt|system[_-]?instruction|developer[_-]?prompt|agent[_-]?prompt|prompt[_-]?content|base64|b64[_-]?json)["']?\s*[:=]\s*)(?:"(?:\\[\s\S]|[^"\\])*(?:"|$)|'(?:\\[\s\S]|[^'\\])*(?:'|$)|[^\r\n]+)/gi, '$1[已过滤]')
     .replace(/data:[^;\s]+;base64,[A-Za-z0-9+/=\r\n]+/gi, '[媒体内容未采集]')
     .replace(/(https?:\/\/)[^/@\s]+:[^/@\s]+@/gi, '$1[已过滤]@')
 }

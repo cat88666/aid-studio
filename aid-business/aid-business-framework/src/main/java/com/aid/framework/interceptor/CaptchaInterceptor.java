@@ -129,10 +129,12 @@ public class CaptchaInterceptor implements HandlerInterceptor {
             String loginType = JSON.parseObject(body).getString("loginType");
             return CaptchaProperties.LOGIN_TYPE_SMS.equalsIgnoreCase(loginType)
                     || CaptchaProperties.LOGIN_TYPE_EMAIL.equalsIgnoreCase(loginType)
-                    || CaptchaProperties.LOGIN_TYPE_WECHAT.equalsIgnoreCase(loginType);
+                    || CaptchaProperties.LOGIN_TYPE_WECHAT.equalsIgnoreCase(loginType)
+                    // Google uses a browser-bound nonce and signed Google credential instead.
+                    || "google".equals(loginType);
         } catch (Exception e) {
             // 解析异常留痕并按需校验（从严）
-            log.warn("登录请求体解析失败,按需行为验证码处理: {}", e.getMessage());
+            log.warn("登录请求体解析失败,按需行为验证码处理");
             return false;
         }
     }

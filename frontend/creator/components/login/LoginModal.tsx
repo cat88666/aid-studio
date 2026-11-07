@@ -8,6 +8,7 @@ import { ConfigProvider, message } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useCreatorLocale } from '~/hooks/useCreatorLocale'
 import { creatorBrandName } from '~/config/creatorBrand'
+import { GoogleLoginButton } from './GoogleLoginButton'
 import { LoginCodePanel } from './LoginCodePanel'
 import { LoginPasswordPanel } from './LoginPasswordPanel'
 import { LoginWechatPanel } from './LoginWechatPanel'
@@ -53,7 +54,7 @@ export function LoginModal({ visible = true }: LoginModalProps) {
   function trapFocus(event: React.KeyboardEvent<HTMLDivElement>) {
     if (event.key !== 'Tab') return
     const nodes = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(
-      'button:not(:disabled), a[href], input:not(:disabled), [tabindex="0"]'
+      'button:not(:disabled), a[href], input:not(:disabled), iframe, [tabindex="0"]'
     )).filter((node) => node.getClientRects().length > 0)
     const first = nodes[0]
     const last = nodes[nodes.length - 1]
@@ -142,10 +143,11 @@ export function LoginModal({ visible = true }: LoginModalProps) {
             {choosing ? (
               <div className="login-entry-methods">
                 {!session.configLoaded && <p role="status">{t('正在加载登录方式…')}</p>}
+                <GoogleLoginButton enabled={visible && session.googleLoginEnabled} clientId={session.googleClientId} inviteCode={session.inviteCode} onSuccess={session.completeGoogleLogin} />
                 {session.smsLoginEnabled && <button type="button" className="login-entry-method" onClick={() => chooseCode('sms')}><span aria-hidden="true">＋86</span>{t('使用手机号继续')}</button>}
                 {session.emailLoginEnabled && <button type="button" className="login-entry-method" onClick={() => chooseCode('email')}><span aria-hidden="true">@</span>{t('使用邮箱继续')}</button>}
                 {wechatLoginEnabled && <button type="button" className="login-entry-method" onClick={() => { selectTab('wechat'); setChoosing(false) }}>{t('微信扫码登录')}</button>}
-                {session.configLoaded && !session.smsLoginEnabled && !session.emailLoginEnabled && !wechatLoginEnabled && <p className="login-entry-description" role="status">{t('注册暂未开放，已有账户可使用密码登录')}</p>}
+                {session.configLoaded && !session.smsLoginEnabled && !session.emailLoginEnabled && !wechatLoginEnabled && !session.googleLoginEnabled && <p className="login-entry-description" role="status">{t('注册暂未开放，已有账户可使用密码登录')}</p>}
                 <button type="button" className="login-entry-password" onClick={() => { selectTab('password'); setChoosing(false) }}>{t('已有账户？密码登录')}</button>
                 <LoginAgreementHint termsOfServiceUrl={session.termsOfServiceUrl} privacyPolicyUrl={session.privacyPolicyUrl} />
               </div>
@@ -174,7 +176,7 @@ export function LoginModal({ visible = true }: LoginModalProps) {
                   account={session.account}
                   password={session.password}
                   loading={session.loading}
-                  showRegister={codeLoginPresentation.enabled}
+                  showRegister={codeLoginPresentation.enabled || session.googleLoginEnabled}
                   termsOfServiceUrl={session.termsOfServiceUrl}
                   privacyPolicyUrl={session.privacyPolicyUrl}
                   onAccountChange={session.setAccount}

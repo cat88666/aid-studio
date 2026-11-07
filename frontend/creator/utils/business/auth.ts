@@ -68,6 +68,11 @@ export async function authLogin(body: LoginRequest, captchaToken?: string): Prom
   return unwrap(res)
 }
 
+/** Google 登录的短期、浏览器绑定 challenge；不持久化 nonce。 */
+export async function authGoogleChallenge(): Promise<{ nonce: string; expiresIn: number }> {
+  return unwrap(await request.post<ApiEnvelope<{ nonce: string; expiresIn: number }>>('/auth/google/challenge', {}))
+}
+
 /** 2. 退出登录 */
 export async function authLogout(): Promise<void> {
   await request.post<ApiEnvelope>('/auth/logout')

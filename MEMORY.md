@@ -43,4 +43,4 @@ Nginx 主配置在 http 上下文引用 `/etc/aid-studio/domains.conf`（仓库 
 
 2026-11-07 可读性巡检：公共壳通过html.creator-public-shell隔离浅色菜单、账户和确认浮层；资产表单使用creator-asset-dialog独立portal类；样片使用creator-showcase-modal。/create只对create-main__flow-stack直属toolbar应用浅色顶栏，避免污染深色剧本工具栏。AntD6部分组件DOM已变化，检查实际节点（如checkbox根span、modal-container），不能只按旧class写覆盖。
 
-注册入口：creator使用紧凑的登录/创建账户方式选择弹窗，手机与邮箱分别选择并固定验证码渠道。2026-11-07线上短信、邮箱、微信开关均false，仅已有账号密码登录可用；Google登录尚未开发。不得把UI准备描述为注册服务已开通。配置说明见docs/registration-channels.md，待提供Google OAuth、SMTP/短信服务配置后接入与真实送达验收。
+注册入口：creator使用紧凑的登录/创建账户方式选择弹窗，手机与邮箱分别选择并固定验证码渠道。2026-11-07线上短信、邮箱、微信开关均false，仅已有账号密码登录可用；Google登录代码已准备但默认关闭，真实授权未验收。不得把UI准备描述为注册服务已开通。配置说明见docs/registration-channels.md，Google使用GIS官方按钮及服务端ID token验证，GOOGLE_LOGIN_ENABLED/GOOGLE_CLIENT_ID/GOOGLE_LOGIN_ORIGIN由/etc/aid-studio/app.env注入；无Client Secret。待提供OAuth、SMTP/短信服务配置后启用和真实送达验收，Google启用前至少开放一个验证码通道以支持绑定/注销。

@@ -160,6 +160,8 @@ export function useAuthPublicConfig() {
     smsLoginEnabled: config?.login?.smsEnabled === true,
     emailLoginEnabled: config?.login?.emailEnabled === true,
     wechatLoginEnabled: config?.login?.wechatEnabled === true,
+    googleLoginEnabled: config?.login?.googleEnabled === true && Boolean(config?.login?.googleClientId?.trim()),
+    googleClientId: config?.login?.googleClientId?.trim() ?? '',
     siteName: CREATOR_BRAND_NAME,
     siteDescription: CREATOR_BRAND_DESCRIPTION,
     siteKeywords: CREATOR_BRAND_KEYWORDS,

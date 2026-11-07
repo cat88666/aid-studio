@@ -30,7 +30,9 @@ export interface ApiListEnvelopeData<T> {
 
 /** /auth/login */
 export interface LoginRequest {
-  loginType: 'password' | 'sms' | 'email'
+  loginType: 'password' | 'sms' | 'email' | 'google'
+  credential?: string
+  googleNonce?: string
   account?: string
   password?: string
   code?: string
@@ -119,6 +121,8 @@ export interface AuthLoginPublicConfig {
   smsEnabled: boolean
   emailEnabled: boolean
   wechatEnabled: boolean
+  googleEnabled?: boolean
+  googleClientId?: string
 }
 
 /** /auth/public-config → crypto */

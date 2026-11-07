@@ -139,6 +139,8 @@ public class PublicConfigVO
     @Builder
     public static class LoginChannels
     {
+        private boolean googleEnabled;
+        private String googleClientId;
         /** 短信验证码登录是否可用 */
         private boolean smsEnabled;
 

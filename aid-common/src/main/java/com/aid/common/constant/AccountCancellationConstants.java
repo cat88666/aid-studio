@@ -16,6 +16,7 @@ public final class AccountCancellationConstants {
     public static final int MIN_DAYS = 1;
     public static final int MAX_DAYS = 3650;
 
+    public static final String IDENTITY_GOOGLE_SUB = "google_sub";
     public static final String IDENTITY_PHONE = "phone";
     public static final String IDENTITY_EMAIL = "email";
     public static final String IDENTITY_WECHAT_OPENID = "wechat_openid";

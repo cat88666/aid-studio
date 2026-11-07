@@ -12,10 +12,16 @@ import lombok.Data;
 public class LoginRequest {
 
     /**
-     * 登录类型 (password/sms/email/wechat)
+     * 登录类型 (password/sms/email/wechat/google)
      */
     @NotBlank(message = "登录类型不能为空")
     private String loginType;
+
+    @lombok.ToString.Exclude
+    private String credential;
+
+    @lombok.ToString.Exclude
+    private String googleNonce;
 
     /**
      * 账号 (用户名/手机号/邮箱)

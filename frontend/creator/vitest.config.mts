@@ -13,6 +13,7 @@ export default defineConfig({
     ]
   },
   test: {
+    setupFiles: ['./vitest.setup.ts'],
     include: ['**/*.test.ts', '**/*.test.tsx'],
     exclude: ['node_modules/**', '.next/**']
   }

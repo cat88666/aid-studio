@@ -101,6 +101,9 @@ public class AuthService {
     private List<LoginStrategy> loginStrategies;
 
     @Resource
+    private com.aid.auth.google.GoogleLoginConfig googleLoginConfig;
+
+    @Resource
     private RedisCache redisCache;
 
     @Resource
@@ -563,6 +566,8 @@ public class AuthService {
             log.error("读取微信登录开关失败", e);
         }
         return PublicConfigVO.LoginChannels.builder()
+                .googleEnabled(googleLoginConfig.isReady())
+                .googleClientId(googleLoginConfig.isReady() ? googleLoginConfig.getClientId() : "")
                 .smsEnabled(smsEnabled)
                 .emailEnabled(emailEnabled)
                 .wechatEnabled(wechatEnabled)
@@ -855,6 +860,12 @@ public class AuthService {
         if (wechatBound) {
             loginMethods.add(AuthConstants.BIND_TYPE_WECHAT);
         }
+        if (userSocialMapper.selectCount(new LambdaQueryWrapper<AidUserSocial>()
+                .eq(AidUserSocial::getUserId, user.getUserId())
+                .eq(AidUserSocial::getPlatformSource, "google")
+                .eq(AidUserSocial::getDelFlag, "0")) > 0) {
+            loginMethods.add("google");
+        }
         if (passwordSet) {
             loginMethods.add("password");
         }
@@ -1091,6 +1102,9 @@ public class AuthService {
                 userId, AccountCancellationConstants.IDENTITY_EMAIL, user.getEmail());
         if (CollUtil.isNotEmpty(socialList)) {
             for (AidUserSocial social : socialList) {
+                if ("google".equals(social.getPlatformSource())) {
+                    accountCancellationService.recordCancellation(userId, AccountCancellationConstants.IDENTITY_GOOGLE_SUB, social.getOpenid());
+                }
                 if (!AuthConstants.BIND_TYPE_WECHAT.equals(social.getPlatformSource())) {
                     continue;
                 }
