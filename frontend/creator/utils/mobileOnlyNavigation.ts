@@ -14,7 +14,7 @@ export function isMobileUserAgent(ua: string): boolean {
  */
 export function shouldForceMobileOnlyPath(pathname: string): boolean {
   const path = pathname.replace(/\/+$/, '')
-  return !languageFromPath(pathname) && ![MOBILE_ONLY_PATH, '/gallery', '/case', '/faq', '/login', '/guide', '/assets', '/billing', '/membership', '/referral', '/invite'].includes(path)
+  return !languageFromPath(pathname) && ![MOBILE_ONLY_PATH, '/start', '/gallery', '/case', '/faq', '/login', '/guide', '/assets', '/billing', '/membership', '/referral', '/invite'].includes(path)
 }
 
 /** 桌面端访问 `/mobile` 时应回首页 */

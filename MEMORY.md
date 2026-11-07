@@ -34,3 +34,7 @@ Nginx 主配置在 http 上下文引用 `/etc/aid-studio/domains.conf`（仓库 
 [部署与验收记录](tasks/todo.md) · [协作与排障经验](tasks/lessons.md)
 
 - AID Studio 的 C 端定制只修改 frontend/creator（公网根路径）。frontend/web（公网 /web/）保留为作者原版，仅在同步作者代码时更新。
+
+## Creator 首页结构（2026-11-07）
+
+根路径及16语言首页使用 CreatorLanding 产品介绍页：视频首屏、6个现有短片、工作流、运镜预览、4个音色试听、真实计费和8条FAQ。原 CreatorDashboard 输入与TXT上传入口移至 /start/，继续复用原登录续接；该路径允许移动浏览并保留语言与方向。首页 projects=1 项目弹层仍保留。样片为数秒片段，不代表完整剧集；运镜演示使用已恢复的真实素材。

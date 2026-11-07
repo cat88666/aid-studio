@@ -23,7 +23,7 @@ export function PublicSiteHead() {
   const language = creatorLanguage(locale)
   useEffect(() => {
     if (route !== '/' && landing) rememberCreatorLocale(landing.code)
-    const localized = landing || ['/login', '/forgot-password', '/mobile'].includes(route)
+    const localized = landing || ['/start', '/login', '/forgot-password', '/mobile'].includes(route)
     document.documentElement.lang = localized ? language.tag : 'zh-CN'
     document.documentElement.dir = localized && locale === 'ar' ? 'rtl' : 'ltr'
   }, [landing, language, locale, route])

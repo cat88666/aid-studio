@@ -2,7 +2,7 @@
 
 import { Suspense } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import CreatorDashboard from '~/components/home/CreatorDashboard'
+import CreatorLanding from '~/components/home/CreatorLanding'
 import DashboardProjects from '~/components/home/DashboardProjects'
 import { creatorLanguage } from '~/config/creatorLanguages'
 import { useCreatorLocale } from '~/hooks/useCreatorLocale'
@@ -23,7 +23,7 @@ function ProjectOverlay() {
 export default function CreatorHomePage() {
   const { locale } = useCreatorLocale()
   return <div className="creator-landing" lang={creatorLanguage(locale).tag} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
-    <CreatorDashboard />
+    <CreatorLanding />
     <Suspense fallback={null}><ProjectOverlay /></Suspense>
   </div>
 }

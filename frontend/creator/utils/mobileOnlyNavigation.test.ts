@@ -14,7 +14,7 @@ describe('mobileOnlyNavigation', () => {
   })
 
   it('keeps the responsive homepage accessible and redirects desktop workspace routes', () => {
-    for (const path of ['/', '/ja/', '/en/', '/zh-hant', '/ar/', '/gallery/', '/case/', '/faq', '/login/', '/assets', '/membership/', '/billing', '/referral/']) {
+    for (const path of ['/start', '/start/', '/', '/ja/', '/en/', '/zh-hant', '/ar/', '/gallery/', '/case/', '/faq', '/login/', '/assets', '/membership/', '/billing', '/referral/']) {
       expect(shouldForceMobileOnlyPath(path)).toBe(false)
     }
     expect(shouldForceMobileOnlyPath('/case/12')).toBe(true)

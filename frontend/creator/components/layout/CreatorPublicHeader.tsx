@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation'
 import navLabels from '~/config/dashboardNav.json'
 import { useEffect, useRef, useState } from 'react'
 import { GlobalOutlined, MenuOutlined } from '@ant-design/icons'
-import { creatorBrandName } from '~/config/creatorBrand'
-import { creatorLanguage, creatorLanguages } from '~/config/creatorLanguages'
+import { creatorBrandName, CREATOR_BRAND_ICON } from '~/config/creatorBrand'
+import { creatorLanguage, creatorLanguages, languageFromPath } from '~/config/creatorLanguages'
 import { homeCopy } from '~/config/home-locales'
 import { useCreatorLocale } from '~/hooks/useCreatorLocale'
 import { useUserStore } from '~/stores/user'
@@ -22,7 +22,7 @@ export default function CreatorPublicHeader({ onAccount }: { onAccount: () => vo
   const [menuOpen, setMenuOpen] = useState(false)
   const token = useUserStore(state => state.token)
   const pathname = usePathname()?.replace(/\/$/, '') || '/'
-  const home = '/'
+  const home = language.path
   const destinations = [home, home + '?projects=1', '/assets/', '/membership/', '/billing/', '/referral/']
   const current = destinations.findIndex(href => href.replace(/\/$/, '') === pathname)
 
@@ -48,10 +48,12 @@ export default function CreatorPublicHeader({ onAccount }: { onAccount: () => vo
 
 
   return (
-    <header className="creator-nav dashboard-nav">
+    <>
+      {languageFromPath(pathname) && <div className="showcase-announcement"><span>{t.formats}</span><a href="#workflow">{t.workflowTitle}<span aria-hidden="true"> →</span></a></div>}
+      <header className="creator-nav dashboard-nav">
       <div className="creator-container">
         <Link href={language.path} aria-label={creatorBrandName(locale) + ' ' + t.home} className="creator-brand">
-          {creatorBrandName(locale)}
+          <img src={CREATOR_BRAND_ICON} width="26" height="26" alt="" />{creatorBrandName(locale)}
         </Link>
         <nav className={menuOpen ? 'creator-links is-open' : 'creator-links'} aria-label={t.nav}>
           {destinations.map((href, index) => (
@@ -80,9 +82,10 @@ export default function CreatorPublicHeader({ onAccount }: { onAccount: () => vo
             ))}
           </ul>
         </details>
-        <button type="button" className="creator-nav-account" onClick={() => token ? onAccount() : requireLogin({ redirect: home })}>{token ? t.account : t.login}</button>
+        <button type="button" className="creator-nav-account" onClick={() => token ? onAccount() : requireLogin({ redirect: null, leaveAuthRoute: false })}>{token ? t.account : t.login}</button>
         <button type="button" className="creator-menu" aria-label={t.menu} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}><MenuOutlined /></button>
       </div>
     </header>
+    </>
   )
 }

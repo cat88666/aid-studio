@@ -1,0 +1,290 @@
+{
+  "zh": [
+    [
+      "首页支持哪些剧本文件？",
+      "可以粘贴剧本文本或上传 TXT 纯文本文件，最多 10 万字。首页导入暂时只支持 TXT。"
+    ],
+    [
+      "可以制作横屏或竖屏视频吗？",
+      "可以在创建项目的配置中选择画面比例，再按选定比例继续创作。"
+    ],
+    [
+      "重新生成镜头怎样计费？",
+      "重新生成前请查看该次操作的报价。费用以生成前显示的报价为准，可能随模型、时长和其他设置变化。"
+    ],
+    [
+      "样片就是一集完整短剧吗？",
+      "首页样片是几秒钟的短片演示。完整成片需要逐镜生成，在时间线上整理镜头后提交导出。"
+    ]
+  ],
+  "zh-hant": [
+    [
+      "首頁支援哪些劇本檔案？",
+      "可以貼上劇本文字或上傳 TXT 純文字檔，最多 10 萬字。首頁匯入目前僅支援 TXT。"
+    ],
+    [
+      "可以製作橫式或直式影片嗎？",
+      "可以在建立專案的設定中選擇畫面比例，再依選定比例繼續創作。"
+    ],
+    [
+      "重新生成鏡頭如何計費？",
+      "重新生成前請查看該次操作的報價。費用以生成前顯示的報價為準，可能隨模型、片長和其他設定變動。"
+    ],
+    [
+      "樣片就是一集完整短劇嗎？",
+      "首頁樣片是幾秒鐘的短片示範。完整成片需要逐鏡生成，在時間軸上整理鏡頭後提交匯出。"
+    ]
+  ],
+  "en": [
+    [
+      "Which script files can I import on the homepage?",
+      "Paste your script or upload a plain-text TXT file, up to 100,000 characters. Homepage file import currently supports TXT only."
+    ],
+    [
+      "Can I create landscape or portrait videos?",
+      "Choose the aspect ratio in the project setup when creating a project, then continue working in that format."
+    ],
+    [
+      "How much does regenerating a shot cost?",
+      "Check the quote for that operation before regenerating. The displayed quote determines the charge and may vary with the model, duration and other settings."
+    ],
+    [
+      "Are the samples complete episodes?",
+      "The homepage samples are short demonstrations lasting a few seconds. A complete video requires generating individual shots, arranging them on the timeline and submitting an export."
+    ]
+  ],
+  "ja": [
+    [
+      "ホーム画面で読み込める脚本ファイルは？",
+      "脚本を貼り付けるか、TXT形式のプレーンテキストファイルをアップロードできます。上限は10万文字です。ホーム画面のファイル読み込みは現在TXTのみ対応しています。"
+    ],
+    [
+      "横向き・縦向きの動画を作れますか？",
+      "プロジェクト作成時の設定でアスペクト比を選び、その形式で制作を進められます。"
+    ],
+    [
+      "ショットの再生成にはいくらかかりますか？",
+      "再生成する前に、その操作の見積もりを確認してください。料金は生成前に表示される見積もりに従い、モデル、長さ、その他の設定によって変わる場合があります。"
+    ],
+    [
+      "サンプルは完成したエピソードですか？",
+      "ホーム画面のサンプルは数秒の短いデモです。完成動画を作るには、各ショットを生成し、タイムラインで並べてから書き出しを実行します。"
+    ]
+  ],
+  "ko": [
+    [
+      "홈페이지에서 어떤 대본 파일을 가져올 수 있나요?",
+      "대본을 붙여 넣거나 일반 텍스트 TXT 파일을 업로드할 수 있으며, 최대 100,000자까지 지원합니다. 홈페이지 파일 가져오기는 현재 TXT만 지원합니다."
+    ],
+    [
+      "가로형이나 세로형 영상을 만들 수 있나요?",
+      "프로젝트를 만들 때 설정에서 화면 비율을 선택한 후 해당 형식으로 제작을 진행할 수 있습니다."
+    ],
+    [
+      "샷을 다시 생성하면 비용이 얼마나 드나요?",
+      "다시 생성하기 전에 해당 작업의 견적을 확인하세요. 생성 전에 표시된 견적이 적용되며 모델, 길이 및 기타 설정에 따라 달라질 수 있습니다."
+    ],
+    [
+      "샘플은 완성된 에피소드인가요?",
+      "홈페이지 샘플은 몇 초 길이의 짧은 시연 영상입니다. 완성 영상을 만들려면 개별 샷을 생성하고 타임라인에 배치한 후 내보내기를 실행해야 합니다."
+    ]
+  ],
+  "pt": [
+    [
+      "Que arquivos de roteiro posso importar na página inicial?",
+      "Cole o roteiro ou envie um arquivo TXT de texto simples, com até 100.000 caracteres. A importação na página inicial aceita apenas TXT no momento."
+    ],
+    [
+      "Posso criar vídeos na horizontal ou na vertical?",
+      "Escolha a proporção da imagem nas configurações ao criar o projeto e continue a produção nesse formato."
+    ],
+    [
+      "Quanto custa gerar uma tomada novamente?",
+      "Confira o orçamento da operação antes de gerar novamente. Vale o preço exibido antes da geração, que pode variar conforme o modelo, a duração e outras configurações."
+    ],
+    [
+      "As amostras são episódios completos?",
+      "As amostras da página inicial são demonstrações de poucos segundos. Para criar um vídeo completo, gere cada tomada, organize-as na linha do tempo e solicite a exportação."
+    ]
+  ],
+  "es": [
+    [
+      "¿Qué archivos de guion puedo importar desde la página de inicio?",
+      "Pega el guion o sube un archivo TXT de texto sin formato, de hasta 100.000 caracteres. La importación desde el inicio admite únicamente TXT por ahora."
+    ],
+    [
+      "¿Puedo crear vídeos horizontales o verticales?",
+      "Elige la relación de aspecto en la configuración al crear el proyecto y continúa trabajando en ese formato."
+    ],
+    [
+      "¿Cuánto cuesta volver a generar un plano?",
+      "Consulta el presupuesto de esa operación antes de repetirla. Se aplica el precio mostrado antes de generar, que puede variar según el modelo, la duración y otros ajustes."
+    ],
+    [
+      "¿Las muestras son episodios completos?",
+      "Las muestras de la página de inicio son demostraciones de unos segundos. Para obtener un vídeo completo, genera cada plano, organízalos en la línea de tiempo y solicita la exportación."
+    ]
+  ],
+  "id": [
+    [
+      "File naskah apa yang dapat diimpor di beranda?",
+      "Tempel naskah atau unggah file teks biasa TXT, hingga 100.000 karakter. Impor file di beranda saat ini hanya mendukung TXT."
+    ],
+    [
+      "Bisakah saya membuat video horizontal atau vertikal?",
+      "Pilih rasio aspek dalam pengaturan saat membuat proyek, lalu lanjutkan produksi dalam format tersebut."
+    ],
+    [
+      "Berapa biaya untuk membuat ulang satu shot?",
+      "Periksa penawaran biaya untuk operasi tersebut sebelum membuat ulang. Biaya mengikuti penawaran yang ditampilkan sebelum pembuatan dan dapat berubah sesuai model, durasi, serta pengaturan lainnya."
+    ],
+    [
+      "Apakah contoh video merupakan episode lengkap?",
+      "Contoh di beranda adalah demonstrasi singkat berdurasi beberapa detik. Video lengkap memerlukan pembuatan setiap shot, penyusunan di linimasa, lalu pengajuan ekspor."
+    ]
+  ],
+  "ru": [
+    [
+      "Какие файлы сценария можно импортировать на главной странице?",
+      "Вставьте текст сценария или загрузите обычный текстовый файл TXT объёмом до 100 000 символов. Импорт файлов на главной странице пока поддерживает только TXT."
+    ],
+    [
+      "Можно ли создавать горизонтальные и вертикальные видео?",
+      "Выберите соотношение сторон в настройках при создании проекта и продолжайте работу в этом формате."
+    ],
+    [
+      "Сколько стоит повторная генерация кадра?",
+      "Перед повторной генерацией проверьте стоимость этой операции. Применяется цена, показанная до запуска генерации; она может зависеть от модели, длительности и других настроек."
+    ],
+    [
+      "Демонстрационные ролики — это полные эпизоды?",
+      "На главной странице представлены короткие демонстрации длиной в несколько секунд. Для полного видео нужно сгенерировать отдельные кадры, расположить их на временной шкале и запустить экспорт."
+    ]
+  ],
+  "fr": [
+    [
+      "Quels fichiers de scénario puis-je importer depuis la page d’accueil ?",
+      "Collez votre scénario ou importez un fichier TXT en texte brut, dans la limite de 100 000 caractères. L’importation sur la page d’accueil accepte actuellement uniquement le format TXT."
+    ],
+    [
+      "Puis-je créer des vidéos horizontales ou verticales ?",
+      "Choisissez le format de l’image dans les paramètres lors de la création du projet, puis poursuivez la réalisation dans ce format."
+    ],
+    [
+      "Combien coûte la régénération d’un plan ?",
+      "Consultez le devis de cette opération avant de la relancer. Le tarif affiché avant la génération s’applique et peut varier selon le modèle, la durée et les autres réglages."
+    ],
+    [
+      "Les exemples sont-ils des épisodes complets ?",
+      "Les exemples de la page d’accueil sont de courtes démonstrations de quelques secondes. Pour produire une vidéo complète, générez les plans, organisez-les sur la timeline et lancez l’exportation."
+    ]
+  ],
+  "it": [
+    [
+      "Quali file di copione posso importare dalla pagina iniziale?",
+      "Incolla il copione o carica un file TXT di testo semplice, fino a 100.000 caratteri. L’importazione dalla pagina iniziale supporta attualmente solo TXT."
+    ],
+    [
+      "Posso creare video orizzontali o verticali?",
+      "Scegli le proporzioni dell’immagine nelle impostazioni quando crei il progetto, quindi prosegui la produzione in quel formato."
+    ],
+    [
+      "Quanto costa rigenerare un’inquadratura?",
+      "Controlla il preventivo dell’operazione prima di rigenerarla. Si applica il prezzo mostrato prima della generazione, che può variare in base al modello, alla durata e alle altre impostazioni."
+    ],
+    [
+      "I video di esempio sono episodi completi?",
+      "Gli esempi nella pagina iniziale sono brevi dimostrazioni di pochi secondi. Per un video completo, genera le singole inquadrature, disponile sulla timeline e avvia l’esportazione."
+    ]
+  ],
+  "nl": [
+    [
+      "Welke scriptbestanden kan ik op de homepage importeren?",
+      "Plak je script of upload een TXT-bestand met platte tekst van maximaal 100.000 tekens. Bestandsimport op de homepage ondersteunt momenteel alleen TXT."
+    ],
+    [
+      "Kan ik liggende of staande video’s maken?",
+      "Kies de beeldverhouding in de instellingen wanneer je een project maakt en werk daarna verder in dat formaat."
+    ],
+    [
+      "Wat kost het om een shot opnieuw te genereren?",
+      "Bekijk eerst de prijsopgave voor die handeling. De prijs die vóór het genereren wordt getoond is van toepassing en kan verschillen per model, duur en overige instellingen."
+    ],
+    [
+      "Zijn de voorbeelden volledige afleveringen?",
+      "De voorbeelden op de homepage zijn korte demonstraties van enkele seconden. Voor een volledige video genereer je afzonderlijke shots, rangschik je ze op de tijdlijn en start je de export."
+    ]
+  ],
+  "ar": [
+    [
+      "ما ملفات النص التي يمكن استيرادها من الصفحة الرئيسية؟",
+      "يمكنك لصق النص أو رفع ملف نص عادي بصيغة TXT، بحد أقصى ١٠٠٬٠٠٠ حرف. يدعم استيراد الملفات من الصفحة الرئيسية صيغة TXT فقط حاليًا."
+    ],
+    [
+      "هل يمكن إنشاء فيديو أفقي أو عمودي؟",
+      "اختر نسبة أبعاد الصورة في إعدادات المشروع عند إنشائه، ثم تابع العمل بذلك التنسيق."
+    ],
+    [
+      "كم تبلغ تكلفة إعادة توليد لقطة؟",
+      "راجع عرض السعر لهذه العملية قبل إعادة التوليد. يُعتمد السعر المعروض قبل التوليد، وقد يتغير بحسب النموذج والمدة والإعدادات الأخرى."
+    ],
+    [
+      "هل المقاطع النموذجية حلقات كاملة؟",
+      "المقاطع المعروضة في الصفحة الرئيسية نماذج قصيرة مدتها بضع ثوانٍ. يتطلب الفيديو الكامل توليد كل لقطة وترتيب اللقطات على الخط الزمني ثم بدء التصدير."
+    ]
+  ],
+  "tr": [
+    [
+      "Ana sayfada hangi senaryo dosyalarını içe aktarabilirim?",
+      "Senaryonuzu yapıştırın veya en fazla 100.000 karakter içeren düz metin TXT dosyası yükleyin. Ana sayfada dosya içe aktarma şu anda yalnızca TXT biçimini destekler."
+    ],
+    [
+      "Yatay veya dikey video oluşturabilir miyim?",
+      "Projeyi oluştururken ayarlardan en boy oranını seçin ve üretime bu biçimde devam edin."
+    ],
+    [
+      "Bir planı yeniden üretmenin maliyeti nedir?",
+      "Yeniden üretmeden önce o işlem için gösterilen fiyat teklifini kontrol edin. Üretim öncesinde gösterilen fiyat geçerlidir; modele, süreye ve diğer ayarlara göre değişebilir."
+    ],
+    [
+      "Örnek videolar tam bölüm mü?",
+      "Ana sayfadaki örnekler birkaç saniyelik kısa gösterimlerdir. Tam bir video için planları tek tek üretmeniz, zaman çizelgesinde sıralamanız ve dışa aktarmayı başlatmanız gerekir."
+    ]
+  ],
+  "de": [
+    [
+      "Welche Drehbuchdateien kann ich auf der Startseite importieren?",
+      "Füge dein Drehbuch ein oder lade eine reine TXT-Textdatei mit bis zu 100.000 Zeichen hoch. Der Dateiimport auf der Startseite unterstützt derzeit nur TXT."
+    ],
+    [
+      "Kann ich Videos im Quer- oder Hochformat erstellen?",
+      "Wähle beim Erstellen des Projekts das Seitenverhältnis in den Projekteinstellungen und arbeite anschließend in diesem Format weiter."
+    ],
+    [
+      "Was kostet es, eine Einstellung erneut zu generieren?",
+      "Prüfe vor der erneuten Generierung den Preis für diesen Vorgang. Es gilt der vor der Generierung angezeigte Preis, der je nach Modell, Dauer und weiteren Einstellungen variieren kann."
+    ],
+    [
+      "Sind die Beispiele vollständige Episoden?",
+      "Die Beispiele auf der Startseite sind kurze Demonstrationen von wenigen Sekunden. Für ein vollständiges Video musst du die einzelnen Einstellungen generieren, auf der Timeline anordnen und den Export starten."
+    ]
+  ],
+  "uk": [
+    [
+      "Які файли сценарію можна імпортувати на головній сторінці?",
+      "Вставте текст сценарію або завантажте звичайний текстовий файл TXT обсягом до 100 000 символів. Імпорт файлів на головній сторінці наразі підтримує лише TXT."
+    ],
+    [
+      "Чи можна створювати горизонтальні та вертикальні відео?",
+      "Виберіть співвідношення сторін у налаштуваннях під час створення проєкту й продовжуйте працювати в цьому форматі."
+    ],
+    [
+      "Скільки коштує повторна генерація кадру?",
+      "Перед повторною генерацією перевірте вартість цієї операції. Застосовується ціна, показана перед запуском генерації; вона може залежати від моделі, тривалості та інших налаштувань."
+    ],
+    [
+      "Чи є зразки повними епізодами?",
+      "Зразки на головній сторінці — це короткі демонстрації тривалістю кілька секунд. Для повного відео потрібно згенерувати окремі кадри, розташувати їх на часовій шкалі й запустити експорт."
+    ]
+  ]
+}

@@ -113,3 +113,16 @@ html.layout-home-new .home-layout-root {
   .dashboard-nav .creator-links { display: none; }
   .dashboard-nav .creator-links.is-open { display: grid; position: absolute; inset: 100% 12px auto; background: white; padding: 8px; border: 1px solid #ddd; border-radius: 10px; }
 }
+
+/* Landing masthead follows the same width as the page sections. */
+.showcase-announcement { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 24px; min-height: 34px; padding: 7px 16px; background: #29262d; color: #e6e2eb; font-size: 11px; line-height: 1.5; }
+.showcase-announcement > span { color: #fff; font-weight: 600; }
+.showcase-announcement a { color: #d0c3e2; }
+.dashboard-nav .creator-brand { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.dashboard-nav > .creator-container { max-width: 1152px; }
+.dashboard-nav .creator-brand img { display: block; flex-shrink: 0; }
+@media (max-width:767px) {
+  .showcase-announcement > span { display: none; }
+  .dashboard-nav .creator-brand { font-size: 18px; gap: 5px; }
+  .dashboard-nav .creator-brand img { width: 23px; height: 23px; }
+}
