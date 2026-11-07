@@ -1,0 +1,119 @@
+{
+  "project": "Pyramid Flow",
+  "authors": "Yang Jin et al.",
+  "source": "https://pyramid-flow.github.io/",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "retrieved": "2026-11-07",
+  "changes": "Videos compressed to 960px-wide H.264; original audio absent. WebP posters extracted at 0.8 seconds. Adapted media remain under CC BY-SA 4.0. These are external model demonstrations, not user projects created on this service.",
+  "videos": [
+    {
+      "id": "tokyo",
+      "source": "https://pyramid-flow.github.io/static/videos/t2v_10s/tokyo.mp4",
+      "duration": 10.375,
+      "sha256": "aed5519600120c4ae016064cac66bbeda8c6671d22f8c0ee424161a5e76d5cc7"
+    },
+    {
+      "id": "dusk",
+      "source": "https://pyramid-flow.github.io/static/videos/t2v_10s/dusk.mp4",
+      "duration": 10.375,
+      "sha256": "c643bd567e4eb5cf7c52bb4eba5b7ea2bafe05e52ff4812e366e4675fc0305d9"
+    },
+    {
+      "id": "chicken",
+      "source": "https://pyramid-flow.github.io/static/videos/t2v_10s/chicken.mp4",
+      "duration": 10.375,
+      "sha256": "7a26803e8142deb265192130018eebcaf25ce3aa4d1e5179786544ad99b84449"
+    },
+    {
+      "id": "fireworks",
+      "source": "https://pyramid-flow.github.io/static/videos/t2v_10s/fireworks.mp4",
+      "duration": 10.375,
+      "sha256": "f104b56fba5edbf538aa018cce5e15f0063e3679d93d29b8ab5a4c6f3b683c23"
+    },
+    {
+      "id": "trailer",
+      "source": "https://pyramid-flow.github.io/static/videos/t2v/trailer.mp4",
+      "duration": 5.041667,
+      "sha256": "d1c986fc547cc997754fb286cd529811a8d6aff06795c9cb5ad5e2cdc12d83fc"
+    },
+    {
+      "id": "eiffel",
+      "source": "https://pyramid-flow.github.io/static/videos/t2v/eiffel.mp4",
+      "duration": 5.041667,
+      "sha256": "f3a9541644c03eb2eae33ae76b07d222743dde174798653ac5b917a9f122eb62"
+    },
+    {
+      "id": "waking",
+      "source": "https://pyramid-flow.github.io/static/videos/t2v/waking.mp4",
+      "duration": 5.041667,
+      "sha256": "09e4c87949317fd42cc34005591960b4ab516bd149fd8c364763fcac2b52d70e"
+    },
+    {
+      "id": "church",
+      "source": "https://pyramid-flow.github.io/static/videos/t2v/church.mp4",
+      "duration": 5.041667,
+      "sha256": "139908577df8c629a873847324e1c89f4d641d5c7f7948ca422dfa415daa3238"
+    },
+    {
+      "id": "waves",
+      "source": "https://pyramid-flow.github.io/static/videos/t2v/waves.mp4",
+      "duration": 5.041667,
+      "sha256": "7c91c85603d8c2d14c20faabe1cd506bae0a9a516024b8cf809b033b369c3abc"
+    },
+    {
+      "id": "lighthouse",
+      "source": "https://pyramid-flow.github.io/static/videos/t2v/lighthouse.mp4",
+      "duration": 5.041667,
+      "sha256": "252ac0fb397d678cd0c6e1f17f649ac7a562f694bfac10a5449876085c6223b3"
+    },
+    {
+      "id": "tsunami",
+      "source": "https://pyramid-flow.github.io/static/videos/t2v/tsunami.mp4",
+      "duration": 5.041667,
+      "sha256": "17a957eaf8151cad335e085868d4a2d7700ab7bec28d64911181b689aa7e10fb"
+    },
+    {
+      "id": "explosion",
+      "source": "https://pyramid-flow.github.io/static/videos/t2v/explosion.mp4",
+      "duration": 5.041667,
+      "sha256": "0e985facba01c21879040f3d0400c181e0414c18181b7034c637083eae2f0cbc"
+    },
+    {
+      "id": "campfire",
+      "source": "https://pyramid-flow.github.io/static/videos/t2v/campfire.mp4",
+      "duration": 5.041667,
+      "sha256": "9e2e3d914f154a910b0955d7f4356a4bd1aaf23e17af0b5dddd70db25bc54266"
+    },
+    {
+      "id": "hikers",
+      "source": "https://pyramid-flow.github.io/static/videos/t2v/hikers.mp4",
+      "duration": 5.041667,
+      "sha256": "09e59a114b379272a42a10b94ec5542fc24f34ab829ef80ecb76199f4fc3cfd6"
+    },
+    {
+      "id": "rail",
+      "source": "https://pyramid-flow.github.io/static/videos/t2v/rail.mp4",
+      "duration": 5.041667,
+      "sha256": "af62c23bd6f0a362f3f7a8d5fdc14deb2a18f684de32d8b5362427ebce2a9f98"
+    },
+    {
+      "id": "monster",
+      "source": "https://pyramid-flow.github.io/static/videos/i2v/monster.mp4",
+      "duration": 5.375,
+      "sha256": "cbd7d845b7cf2bc80244692be2ee947d5685aeca47218a7a0fd0a86044458549"
+    },
+    {
+      "id": "wall",
+      "source": "https://pyramid-flow.github.io/static/videos/i2v/wall.mp4",
+      "duration": 5.375,
+      "sha256": "4ca780eb04708198492f9d11c3039b4b62b3d852b946e9326151da3f728181e1"
+    },
+    {
+      "id": "sunday",
+      "source": "https://pyramid-flow.github.io/static/videos/i2v/sunday.mp4",
+      "duration": 5.375,
+      "sha256": "ebfa2cc55e9f17af88cd5052d625a801c3d4b71d65ff5442b34f4c5b467153da"
+    }
+  ]
+}

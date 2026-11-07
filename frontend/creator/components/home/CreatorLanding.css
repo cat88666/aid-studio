@@ -73,3 +73,29 @@
   .showcase-footer nav { gap: 18px; }
 }
 @media (prefers-reduced-motion:reduce) { .showcase-sample img { transition: none; } }
+
+.showcase-sample-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.showcase-sample-toolbar > span { color: #76767f; font-size: 12px; white-space: nowrap; }
+.showcase-sample-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.showcase-sample-filters button { display: inline-flex; align-items: center; gap: 9px; padding: 9px 15px; border: 1px solid #e7e4eb; border-radius: 99px; color: #66616d; font-size: 13px; background: white; }
+.showcase-sample-filters button[aria-pressed=true] { background: #28232e; border-color: #28232e; color: white; }
+.showcase-sample-filters button span { opacity: .65; font-size: 11px; }
+.creator-showcase .showcase-model-note { margin-bottom: 24px; font-size: 12px; line-height: 1.7; color: #817a89; }
+.showcase-model-note a, .showcase-source a { text-decoration: underline; text-underline-offset: 3px; }
+.showcase-sample-grid:not([data-category=films]) { grid-template-columns: repeat(4,minmax(0,1fr)); }
+.showcase-sample-grid:not([data-category=films]) .showcase-sample { aspect-ratio: 1; }
+.showcase-sample-grid:not([data-category=films]) .showcase-sample:is(:first-child,:nth-child(10)) { grid-column: span 2; grid-row: span 2; aspect-ratio: auto; }
+.showcase-sample-grid[data-category=all] .showcase-sample:nth-last-child(-n+2) { grid-column: span 2; aspect-ratio: 2/1; }
+.showcase-player .showcase-source { font-size: 12px; line-height: 1.8; }
+@media (max-width:1023px) and (min-width:768px) { .showcase-sample-caption { inset-inline: 14px; bottom: 14px; } .showcase-sample-caption strong { font-size: 15px; } }
+@media (max-width:767px) {
+  .showcase-sample-toolbar { align-items: flex-start; }
+  .showcase-sample-toolbar > span { display: none; }
+  .showcase-sample-filters { gap: 6px; }
+  .showcase-sample-filters button { padding: 8px 12px; font-size: 12px; }
+  .showcase-sample-grid:not([data-category=films]) { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .showcase-sample-grid:not([data-category=films]) .showcase-sample { aspect-ratio: 1; }
+  .showcase-sample-grid:not([data-category=films]) .showcase-sample:is(:first-child,:nth-child(10)) { grid-column: span 2; grid-row: auto; aspect-ratio: 16/10; }
+  .showcase-sample-grid[data-category=all] .showcase-sample:nth-last-child(-n+2) { grid-column: auto; aspect-ratio: 1; }
+  .showcase-sample-grid:not([data-category=films]) .showcase-sample:last-child { grid-column: auto; }
+}

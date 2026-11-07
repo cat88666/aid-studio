@@ -10,7 +10,8 @@ import { creatorLanguage } from '~/config/creatorLanguages'
 import { homeCopy } from '~/config/home-locales'
 import { useCreatorLocale } from '~/hooks/useCreatorLocale'
 import { withAppBasePath } from '~/utils/appBasePath'
-import { landingSamples } from '~/utils/landingSamples'
+import { sampleLibrary, sampleCopy, sampleSource } from '~/utils/sampleLibrary'
+import libraryLabels from '~/config/sampleLibraryLabels.json'
 import { publicProjectDetail } from '~/utils/businessApi'
 import {
   resolveActivePublicEpisode,
@@ -30,8 +31,9 @@ function CaseDetailContent() {
   const { locale } = useCreatorLocale()
   const t = homeCopy[locale]
   const sampleId = searchParams.get('sample')
-  const sampleIndex = landingSamples.findIndex(item => item.id === sampleId)
-  const sample = landingSamples[sampleIndex]
+  const sample = sampleLibrary.find(item => item.id === sampleId)
+  const sampleText = sample ? sampleCopy(sample.id, locale) : null
+  const labels = libraryLabels[locale]
   const projectId = sampleId === null ? parseProjectId(searchParams.get('id')) : 0
   const [requestState, setRequestState] = useState<{
     projectId: number
@@ -95,13 +97,19 @@ function CaseDetailContent() {
       {sample ? (
         <main className="public-case-content">
           <header className="public-case-info">
-            <h1>{t.films[sampleIndex][0]}</h1>
-            <p>{t.films[sampleIndex][1]}</p>
+            <h1>{sampleText?.[0]}</h1>
+            <p>{sampleText?.[1]}</p>
           </header>
           <div className="public-case-player">
             <video key={sample.id} controls playsInline preload="metadata" aria-label={t.player}
               poster={withAppBasePath(sample.poster)} src={withAppBasePath(sample.video)} />
           </div>
+          {sample.category === 'models' && <div className="public-case-info">
+            <p>{labels.modelLead}</p>
+            <p>{labels.source}: <a href={sampleSource.url} target="_blank" rel="noopener noreferrer">{sampleSource.name}</a>
+              {' · '}<a href={sampleSource.licenseUrl} target="_blank" rel="noopener noreferrer">{sampleSource.license}</a></p>
+            <p>{labels.adapted}</p>
+          </div>}
         </main>
       ) : loading ? (
         <div className="public-case-feedback" role="status">案例加载中...</div>

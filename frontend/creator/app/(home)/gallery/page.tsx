@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { homeCopy } from '~/config/home-locales'
 import { useCreatorLocale } from '~/hooks/useCreatorLocale'
 import publicCopy from '~/components/home/landingGalleryCopy.json'
-import { landingSamples } from '~/utils/landingSamples'
+import { sampleLibrary, sampleCopy } from '~/utils/sampleLibrary'
 import filterLabels from './filterLabels.json'
 import './gallery.css'
 import { SearchOutlined } from '@ant-design/icons'
@@ -106,14 +106,14 @@ export default function GalleryPage() {
       </header>
 
       <section aria-label={t.samples} className="sample-library__grid sample-library__films">
-        {landingSamples.map((sample, index) => (
+        {sampleLibrary.map((sample, index) => (
           <Link key={sample.id} href={`/case?sample=${sample.id}`} className="sample-library__card">
             <div className="sample-library__cover">
               <img src={withAppBasePath(sample.poster)} alt="" loading={index === 0 ? 'eager' : 'lazy'} />
             </div>
             <div className="sample-library__caption">
-              <h2>{t.films[index][0]}</h2>
-              <p>{t.films[index][1]}</p>
+              <h2>{sampleCopy(sample.id, locale)[0]}</h2>
+              <p>{sampleCopy(sample.id, locale)[1]}</p>
             </div>
           </Link>
         ))}
