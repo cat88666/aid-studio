@@ -99,3 +99,10 @@
   .showcase-sample-grid[data-category=all] .showcase-sample:nth-last-child(-n+2) { grid-column: auto; aspect-ratio: 1; }
   .showcase-sample-grid:not([data-category=films]) .showcase-sample:last-child { grid-column: auto; }
 }
+
+/* The player portal must not inherit the editor's dark modal theme. */
+.creator-showcase-modal :is(.ant-modal-container,.ant-modal-content,.ant-modal-header) { background: #fff !important; color: #29262d; }
+.creator-showcase-modal :is(.ant-modal-title,.ant-modal-close) { color: #29262d !important; }
+.creator-showcase-modal .ant-modal-close:hover { color: #1d1d1f !important; background: #f5f5f7; }
+.creator-showcase-modal .showcase-source a { color: #593c76; }
+.creator-showcase-modal :is(button,a):focus-visible { outline: 2px solid #6e5684; outline-offset: 2px; }

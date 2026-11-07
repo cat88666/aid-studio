@@ -25,8 +25,8 @@
   background: white;
   border-bottom: 1px solid var(--dialog-line);
 }
-.creator-project-dialog .ant-modal-title { color: var(--home-text); font-size: 20px; font-weight: 650; }
-.creator-project-dialog .ant-modal-close { color: #59535e; }
+.creator-project-dialog .create-first-step-modal .ant-modal-title { color: var(--home-text); font-size: 20px; font-weight: 650; }
+.creator-project-dialog .create-first-step-modal .ant-modal-close { color: #59535e; }
 .creator-project-dialog .modal-shell {
   display: flex;
   flex-direction: column;
@@ -117,3 +117,7 @@
   .creator-project-dialog .modal-body .right-panel { margin-top: 12px; }
   .creator-project-dialog .modal-actions { padding: 10px 14px; }
 }
+
+.creator-project-dialog .create-first-step-modal .dict-placeholder,
+.creator-project-dialog .create-first-step-modal .global-setting .style-card.add-style :is(.add-icon, .add-text) { color: #66616b; }
+.creator-project-dialog .create-first-step-modal .head_box > img { filter: grayscale(1) brightness(.45); }

@@ -224,8 +224,8 @@
 
 /* 剧本空态使用次级文字色；同时覆盖公共编辑器强制设置的 WebKit 白色填充。 */
 .story-script .script-editor .ql-editor.ql-blank::before {
-  color: rgba(142, 151, 165, 0.55) !important;
-  -webkit-text-fill-color: rgba(142, 151, 165, 0.55) !important;
+  color: #8e97a5 !important;
+  -webkit-text-fill-color: #8e97a5 !important;
 }
 
 /* 历史版本抽屉标题插槽 */

@@ -625,3 +625,48 @@
     flex-direction: column;
   }
 }
+
+/* Keep account settings light when opened from the public creator shell. */
+html.creator-public-shell .account-settings-drawer { --home-text: #29262d; --home-muted: #6e6e73; --home-cyan: #593c76; --create-surface-modal: #fff; }
+html.creator-public-shell .account-settings-drawer :is(.ant-drawer-content,.ant-drawer-header) { background: #fff !important; border-color: #e4e1e6 !important; }
+html.creator-public-shell .account-settings-drawer :is(.ant-drawer-title,.ant-drawer-close) { color: #29262d !important; }
+html.creator-public-shell .account-settings__nav { background: #f5f5f7; border-color: #e4e1e6; }
+html.creator-public-shell .account-settings__content { background: #fff; }
+html.creator-public-shell .account-settings__nav button:hover { color: #1d1d1f; background: #eae8ed; }
+html.creator-public-shell .account-settings__nav button.is-active { color: #fff; background: #29262d; }
+html.creator-public-shell .account-settings__nav button.is-active .account-settings__nav-icon { color: #fff; background: #ffffff18; }
+html.creator-public-shell .account-settings__nav button.is-danger { color: #a33439; }
+html.creator-public-shell .account-settings__nav button.is-danger.is-active { background: #fff1f0; }
+html.creator-public-shell .account-settings__nav button.is-danger.is-active .account-settings__nav-icon { color: #a33439; background: #f7d8d8; }
+html.creator-public-shell .account-settings-drawer :is(.account-settings__section-head h3,.account-settings__field > span,.account-settings__contact-head strong,.account-settings__action-card strong,.account-settings__history-top strong,.account-settings__wechat-bound,.ant-checkbox-wrapper) { color: #29262d; }
+html.creator-public-shell .account-settings-drawer :is(.account-settings__form-card,.account-settings__contact-card,.account-settings__action-card,.account-settings__history-list article) { background: #faf9fb; border-color: #e4e1e6; }
+html.creator-public-shell .account-settings__notice { background: #f5f5f7; border-color: #e4e1e6; }
+html.creator-public-shell .account-settings__danger-notice { background: #fff1f0; color: #a33439; border-color: #e9b7b8; }
+html.creator-public-shell .account-settings-drawer .auth-dark-field-wrap--solid { background: #fff; border-color: #d8d4dd; }
+html.creator-public-shell .account-settings-drawer .auth-dark-field-wrap:focus-within { border-color: #6e5684; box-shadow: 0 0 0 2px #6e568420; }
+html.creator-public-shell .account-settings-drawer .auth-dark-field-wrap :is(.ant-input,.ant-input-affix-wrapper,.ant-input-affix-wrapper input) { color: #29262d !important; caret-color: #29262d !important; }
+html.creator-public-shell .account-settings-drawer .auth-dark-field-wrap .ant-input::placeholder { color: #6e6e73 !important; }
+html.creator-public-shell .account-settings-drawer .auth-dark-field-wrap .ant-input-suffix .anticon:hover,
+html.creator-public-shell .account-settings__code-btn:hover:not(:disabled) { color: #29262d; }
+html.creator-public-shell .account-settings__channel-tabs { background: #f5f5f7; }
+html.creator-public-shell .account-settings__channel-tabs button.is-active { background: #29262d; color: #fff; }
+html.creator-public-shell .account-settings-drawer button.auth-dark-submit { background: #29262d !important; color: #fff !important; }
+html.creator-public-shell .account-settings-drawer .ant-btn-default { background: #fff !important; color: #29262d !important; border-color: #d8d4dd !important; }
+html.creator-public-shell .account-settings-drawer .ant-btn-default:hover:not(:disabled) { background: #f5f5f7 !important; color: #1d1d1f !important; border-color: #9b8aa8 !important; }
+html.creator-public-shell .account-settings-drawer .ant-btn-default.ant-btn-dangerous:not(.account-settings__danger-submit),
+html.creator-public-shell .account-settings-drawer .ant-btn-default.ant-btn-dangerous:not(.account-settings__danger-submit):hover:not(:disabled) { background: #fff1f0 !important; color: #a33439 !important; border-color: #e9b7b8 !important; }
+html.creator-public-shell .account-settings-drawer .ant-btn-default:disabled,
+html.creator-public-shell .account-settings-drawer .ant-btn-default.ant-btn-disabled { color: #76717b !important; background: #f0eef2 !important; opacity: 1; }
+html.creator-public-shell .account-settings-drawer .ant-btn.account-settings__danger-submit:disabled,
+html.creator-public-shell .account-settings-drawer .ant-btn.account-settings__danger-submit.ant-btn-disabled { background: #f8e4e4 !important; color: #9b4b50 !important; border-color: #e9b7b8 !important; }
+html.creator-public-shell .account-settings-drawer :is(.ant-checkbox,.ant-checkbox-inner) { background: #fff !important; border-color: #9b95a2 !important; }
+html.creator-public-shell .account-settings-drawer :is(.ant-checkbox-checked,.ant-checkbox-checked .ant-checkbox-inner) { background: #593c76 !important; border-color: #593c76 !important; }
+html.creator-public-shell .account-settings__contact-form { border-color: #e4e1e6; }
+html.creator-public-shell .account-settings__status { background: #ece9ef; }
+html.creator-public-shell .account-settings__status.is-bound { background: #e6f4e4; color: #346b24 !important; }
+html.creator-public-shell .account-settings__status.is-failed { background: #fff1f0; color: #a33439 !important; }
+html.creator-public-shell .account-settings__history-list p { color: #6e6e73; }
+html.creator-public-shell .account-settings__pagination .ant-pagination-item-active { background: #f1ecf5 !important; }
+html.creator-public-shell .account-settings-drawer :is(button,a,input):focus-visible { outline: 2px solid #6e5684; outline-offset: 2px; }
+html.creator-public-shell .account-settings__contact-card.is-disabled { opacity: 1; }
+html.creator-public-shell .account-settings-drawer button.auth-dark-submit:disabled { background: #f0eef2 !important; color: #76717b !important; opacity: 1; }

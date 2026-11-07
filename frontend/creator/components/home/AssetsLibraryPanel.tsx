@@ -754,7 +754,7 @@ export function AssetsLibraryPanel() {
         open={assetFormOpen}
         footer={null}
         width="50%"
-        wrapClassName="create-flow-modal asset-form-modal-wrap"
+        wrapClassName="creator-asset-dialog asset-form-modal-wrap"
         onCancel={closeAssetFormModal}
         title={
           <ModalTitleWatermark
@@ -836,7 +836,7 @@ export function AssetsLibraryPanel() {
                 disabled={assetFormMode === 'edit'}
                 placeholder="类型"
                 options={assetTypeSelectOptions}
-                classNames={{ popup: { root: 'asset-form-select-dropdown' } }}
+                classNames={{ popup: { root: 'asset-form-select-dropdown creator-asset-select-dropdown' } }}
                 onChange={(v: string) => setAssetForm((f) => ({ ...f, assetType: v }))}
               />
             </Form.Item>

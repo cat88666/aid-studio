@@ -186,3 +186,23 @@ html.app-shell-create .user-menu-dropdown__switch.ant-switch .ant-switch-handle:
 html.layout-home-new .user-menu-dropdown__switch.ant-switch .ant-switch-handle::before {
   background: #ffffff !important;
 }
+
+/* Public pages use the same neutral surfaces as their navigation. */
+html.creator-public-shell .user-menu-dropdown { background: #fff; border: 1px solid #e4e1e6; box-shadow: 0 12px 32px #211a291f; }
+html.creator-public-shell .user-menu-dropdown__name,
+html.creator-public-shell .user-menu-dropdown__wechat-notify-label,
+html.creator-public-shell .user-menu-dropdown__item { color: #29262d; }
+html.creator-public-shell .user-menu-dropdown__sub,
+html.creator-public-shell .user-menu-dropdown__item .anticon { color: #6e6e73; }
+html.creator-public-shell .user-menu-dropdown__avatar,
+html.creator-public-shell .user-menu-dropdown__wechat-notify { background: #f5f5f7; }
+html.creator-public-shell .user-menu-dropdown__item:hover { background: #f5f5f7; }
+html.creator-public-shell .user-menu-dropdown__item:hover .anticon { color: #1d1d1f; }
+html.creator-public-shell .user-menu-dropdown__item--danger,
+html.creator-public-shell .user-menu-dropdown__item--danger .anticon,
+html.creator-public-shell .user-menu-dropdown__item--danger:hover .anticon { color: #a33439; }
+html.creator-public-shell .user-menu-dropdown__item--danger:hover { color: #8c252a; background: #fff1f0; }
+html.creator-public-shell .user-menu-dropdown__item:focus-visible { outline: 2px solid #6e5684; outline-offset: -2px; }
+html.creator-public-shell .user-menu-dropdown__switch.ant-switch { background: #b4b0b9 !important; border-color: #b4b0b9 !important; }
+html.creator-public-shell .user-menu-dropdown__switch.ant-switch.ant-switch-checked,
+html.creator-public-shell .user-menu-dropdown__switch.ant-switch.ant-switch-checked:hover:not(.ant-switch-disabled) { background: #29262d !important; border-color: #29262d !important; }

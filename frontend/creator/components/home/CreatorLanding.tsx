@@ -93,7 +93,7 @@ export default function CreatorLanding() {
       </nav><span>© {new Date().getFullYear()} {creatorBrandName(locale)}</span>
     </div></footer>
 
-    <Modal open={selected !== null} onCancel={() => setSelected(null)} footer={null} width={1000} centered destroyOnHidden title={activeSample ? sampleCopy(activeSample.id, locale)[0] : t.player}>
+    <Modal rootClassName="creator-showcase-modal" open={selected !== null} onCancel={() => setSelected(null)} footer={null} width={1000} centered destroyOnHidden title={activeSample ? sampleCopy(activeSample.id, locale)[0] : t.player}>
       {activeSample && <div className="showcase-player">
         <video key={activeSample.id} src={withAppBasePath(activeSample.video)} poster={withAppBasePath(activeSample.poster)} controls autoPlay playsInline onError={() => setPlayError(true)} />
         <p role={playError ? 'alert' : undefined}>{playError ? t.videoError : sampleCopy(activeSample.id, locale)[1]}</p>

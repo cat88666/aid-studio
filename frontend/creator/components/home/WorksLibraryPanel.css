@@ -234,9 +234,11 @@
 }
 .works-page .works-lib-header__title { color: #211f25; font-size: 24px; }
 .works-page .works-lib-toolbar { height: auto; gap: 12px; }
-.works-page .works-lib-type-tabs { background: #f2f1f3; padding: 3px; }
-.works-page .works-lib-type-tabs__btn { color: #59565f; }
-.works-page .works-lib-type-tabs__btn.is-active { background: #242226; color: white; }
+.works-page.works-library-figma .works-lib-type-tabs { background: #f5f5f7; padding: 4px; gap: 4px; }
+.works-page.works-library-figma .works-lib-type-tabs__btn { color: #6e6e73; background: transparent; border: 1px solid transparent; border-radius: 7px; padding: 7px 20px; font-size: 13px; height: auto; min-height: 36px; }
+.works-page.works-library-figma .works-lib-type-tabs__btn:hover { color: #1d1d1f; }
+.works-page.works-library-figma .works-lib-type-tabs__btn.is-active { background: #1d1d1f; color: white; }
+.works-page.works-library-figma .works-lib-type-tabs__btn:focus-visible { outline: 2px solid #6e5684; outline-offset: 2px; }
 .works-page .works-lib-search { background: white; border-color: #dedde1; max-width: 320px; margin-inline-start: auto; }
 .works-page .works-lib-search__input { color: #211f25; }
 .works-page .works-lib-header .ant-btn { background: white; color: #35313b; border-color: #dddbe0; }

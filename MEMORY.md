@@ -40,3 +40,5 @@ Nginx 主配置在 http 上下文引用 `/etc/aid-studio/domains.conf`（仓库 
 根路径及16语言首页使用 CreatorLanding 产品介绍页：视频首屏、24个视频（6个精选片段及18个公开模型演示）、工作流、运镜预览、4个音色试听、真实计费和8条FAQ。原 CreatorDashboard 输入与TXT上传入口移至 /start/，继续复用原登录续接；该路径允许移动浏览并保留语言与方向。首页 projects=1 项目弹层仍保留。样片为数秒片段，不代表完整剧集；运镜演示使用已恢复的真实素材。
 
 2026-11-07 视频库扩充：新增18个不同场景的Pyramid Flow公开模型演示，本地960px H.264按需播放，封面WebP。utils/sampleLibrary.ts供首页、gallery与case共用；原6精选仍用于创作输入与指南。新增媒体遵循原站CC BY-SA4.0，来源与许可随public/creator-home/library/SOURCES.json和LICENSE.txt发布，播放窗口显示署名与改编说明。不能将这些外部模型示例描述为本站用户生成的作品。
+
+2026-11-07 可读性巡检：公共壳通过html.creator-public-shell隔离浅色菜单、账户和确认浮层；资产表单使用creator-asset-dialog独立portal类；样片使用creator-showcase-modal。/create只对create-main__flow-stack直属toolbar应用浅色顶栏，避免污染深色剧本工具栏。AntD6部分组件DOM已变化，检查实际节点（如checkbox根span、modal-container），不能只按旧class写覆盖。
