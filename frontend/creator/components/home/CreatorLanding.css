@@ -19,10 +19,6 @@
 .showcase-hero-guide { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 20px; padding: 11px 17px; border: 1px solid #ffffff38; border-radius: 10px; margin-top: 24px; background: #07101955; color: #ecedf0 !important; font-size: 12px; backdrop-filter: blur(8px); }
 .showcase-hero-guide span:last-child { display: inline-flex; gap: 8px; align-items: center; color: #bfc6cd; }
 .showcase-content { width: min(1152px,calc(100% - 64px)); margin: 0 auto; }
-.showcase-models { border-block: 1px solid #e9e9ec; padding: 25px 0 30px; text-align: center; margin-top: 44px; color: #8c8c95; }
-.showcase-models p { font-size: 11px; letter-spacing: .22em; }
-.showcase-models > div { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px 40px; margin-top: 20px; }
-.showcase-models span { font-size: 22px; font-weight: 650; letter-spacing: -.045em; }
 .showcase-samples { margin-top: 96px; scroll-margin-top: 112px; }
 .showcase-section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 34px; }
 .showcase-section-heading > div { max-width: 770px; }
@@ -54,9 +50,6 @@
   .creator-showcase .showcase-intro { font-size: 15px; }
   .showcase-hero-guide { gap: 10px; margin-top: 20px; }
   .showcase-content { width: calc(100% - 40px); }
-  .showcase-models { margin-top: 28px; }
-  .showcase-models > div { gap: 14px 22px; }
-  .showcase-models span { font-size: 18px; }
   .showcase-samples { margin-top: 56px; }
   .showcase-section-heading { display: block; margin-bottom: 24px; }
   .showcase-section-heading > a { margin-top: 16px; }
@@ -80,8 +73,7 @@
 .showcase-sample-filters button { display: inline-flex; align-items: center; gap: 9px; padding: 9px 15px; border: 1px solid #e7e4eb; border-radius: 99px; color: #66616d; font-size: 13px; background: white; }
 .showcase-sample-filters button[aria-pressed=true] { background: #28232e; border-color: #28232e; color: white; }
 .showcase-sample-filters button span { opacity: .65; font-size: 11px; }
-.creator-showcase .showcase-model-note { margin-bottom: 24px; font-size: 12px; line-height: 1.7; color: #817a89; }
-.showcase-model-note a, .showcase-source a { text-decoration: underline; text-underline-offset: 3px; }
+.showcase-source a { text-decoration: underline; text-underline-offset: 3px; }
 .showcase-sample-grid:not([data-category=films]) { grid-template-columns: repeat(4,minmax(0,1fr)); }
 .showcase-sample-grid:not([data-category=films]) .showcase-sample { aspect-ratio: 1; }
 .showcase-sample-grid:not([data-category=films]) .showcase-sample:is(:first-child,:nth-child(10)) { grid-column: span 2; grid-row: span 2; aspect-ratio: auto; }

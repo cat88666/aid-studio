@@ -50,15 +50,9 @@ export default function CreatorLanding() {
     </section>
 
     <div className="showcase-content">
-      <section className="showcase-models" aria-label={t.models}>
-        <p>{t.models}</p>
-        <div>{['MiniMax', 'Vidu', 'Seedance', 'DeepSeek', 'Seedream', 'Qwen'].map(model => <span key={model}>{model}</span>)}</div>
-      </section>
-
       <section className="showcase-samples" id="samples" aria-labelledby="showcase-samples-title">
         <div className="showcase-section-heading">
-          <div><p className="showcase-eyebrow">{t.samples}</p><h2 id="showcase-samples-title">{t.sampleTitle}</h2><p>{t.sampleLead}</p></div>
-          <Link href="/gallery/" onClick={() => rememberCreatorLocale(locale)}>{t.gallery}<ArrowRightOutlined /></Link>
+          <div><h2 id="showcase-samples-title">{t.sampleTitle}</h2></div>
         </div>
         <div className="showcase-sample-toolbar">
           <div role="group" aria-label={t.samples} className="showcase-sample-filters">
@@ -66,7 +60,6 @@ export default function CreatorLanding() {
           </div>
           <span>{visibleSamples.length} {labels.count}</span>
         </div>
-        {category !== 'films' && <p className="showcase-model-note">{labels.modelLead} · <a href={sampleSource.url} target="_blank" rel="noreferrer">Pyramid Flow ↗</a></p>}
         <div className="showcase-sample-grid" data-category={category}>
           {visibleSamples.map((sample) => <button key={sample.id} type="button" className="showcase-sample" aria-label={`${t.watch} · ${sampleCopy(sample.id, locale)[0]}`}
             onClick={() => { setPlayError(false); setHovered(null); setSelected(sample.id) }}
