@@ -69,3 +69,7 @@ GOOGLE_LOGIN_ORIGIN=https://thdrhdf.site
 启用时：备份 app.env，填好客户端和域名并设为 true，重启 `aid-studio`；通过 public-config 核对开关后，使用授权测试账号完成首次注册、重复登录、取消授权、邮箱冲突、登录回跳、绑定联系方式和注销入口验收。OAuth 应用在测试模式时只允许已加入的测试用户；需要公开使用时按 Google 控制台要求完成发布。失败时先恢复 `GOOGLE_LOGIN_ENABLED=false` 并重启。
 
 当前没有真实 OAuth 客户端、短信或 SMTP 配置；自动测试不能代替 Google 真机授权和验证码实际送达验收。
+
+## 本轮验收记录
+
+代码提交 `d5eb48e` 已部署，线上保持关闭。前端429项、后端17项测试通过，桌面/手机浏览器通过隔离GIS/API验证登录回跳；关闭态已从公网验证Google challenge/login拒绝请求。真实Google授权和验证码送达仍待配置后验收；重复身份回滚使用Spring事务代理测试，未替代真实数据库并发集成验证。

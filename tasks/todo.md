@@ -193,8 +193,10 @@
 - [x] 实现默认关闭的Google服务配置、凭证校验及身份注册/登录。
 - [x] 接入官方Google按钮，配置未启用时不加载外部脚本或显示假入口。
 - [x] 验证非法凭证、nonce、账号冲突、现有登录兼容与前端交互。
-- [ ] 更新启用文档与记忆，构建、提交push、按关闭配置发布复验。
+- [x] 更新启用文档与记忆，构建、提交push、按关闭配置发布复验。
 
 用户确认尚无OAuth/SMTP/短信配置，本轮仅准备代码，不开通真实注册渠道。Google使用官方GIS，服务端验证ID token并复用现有账号会话；不自动合并同邮箱账号。
 
 代码验收：Google服务端采用官方SDK2.7.2，默认关闭且无客户端ID；浏览器绑定nonce和精确Origin校验，签名/aud/iss/exp验证，Redis条件删除防重放，sub唯一身份不按邮箱自动合并。后端17项测试通过（含Spring事务代理触发rollback，未做真实DB并发集成）；前端429项测试在Node22/26通过、静态构建通过。1440/390浏览器隔离GIS+API测试验证关闭不请求Google、邀请码透传、登录只提交一次、回到works。无真实OAuth凭证，尚未真实Google授权。
+
+发布验收：d5eb48e已通过deploy/ai-hk.sh发布，回退目录/opt/aid-studio/releases/release-Xupolm3w。公网公开配置googleEnabled=false、googleClientId为空、sms/email=false；Google challenge及login在关闭时明确拒绝。三个AID服务active，正式目录.commit与发布提交一致。公网1440/390关闭态无Google脚本且密码入口正常，隔离GIS/API模拟授权验证邀请码、单次提交和works回跳通过。未使用真实Google账号授权，也未发送短信/邮件或创建生产账号。日志/tmp/aid-google-ready/。
