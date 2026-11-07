@@ -99,7 +99,7 @@ export function LoginCodePanel({
             {t('登录中...')}
           </span>
         ) : (
-          t('登录')
+          t('登录或注册')
         )}
       </button>
       <LoginAgreementHint

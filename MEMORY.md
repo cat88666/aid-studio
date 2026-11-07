@@ -42,3 +42,5 @@ Nginx 主配置在 http 上下文引用 `/etc/aid-studio/domains.conf`（仓库 
 2026-11-07 视频库扩充：新增18个不同场景的Pyramid Flow公开模型演示，本地960px H.264按需播放，封面WebP。utils/sampleLibrary.ts供首页、gallery与case共用；原6精选仍用于创作输入与指南。新增媒体遵循原站CC BY-SA4.0，来源与许可随public/creator-home/library/SOURCES.json和LICENSE.txt发布，播放窗口显示署名与改编说明。不能将这些外部模型示例描述为本站用户生成的作品。
 
 2026-11-07 可读性巡检：公共壳通过html.creator-public-shell隔离浅色菜单、账户和确认浮层；资产表单使用creator-asset-dialog独立portal类；样片使用creator-showcase-modal。/create只对create-main__flow-stack直属toolbar应用浅色顶栏，避免污染深色剧本工具栏。AntD6部分组件DOM已变化，检查实际节点（如checkbox根span、modal-container），不能只按旧class写覆盖。
+
+注册入口：creator使用紧凑的登录/创建账户方式选择弹窗，手机与邮箱分别选择并固定验证码渠道。2026-11-07线上短信、邮箱、微信开关均false，仅已有账号密码登录可用；Google登录尚未开发。不得把UI准备描述为注册服务已开通。配置说明见docs/registration-channels.md，待提供Google OAuth、SMTP/短信服务配置后接入与真实送达验收。

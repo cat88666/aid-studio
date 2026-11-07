@@ -3,6 +3,17 @@ import authTranslations from '~/components/login/authTranslations.json'
 import { useCreatorLocale, type CreatorLocale } from '~/hooks/useCreatorLocale'
 
 const english: Record<string, string> = {
+  '登录或注册': 'Sign in or sign up',
+  '登录或创建账户': 'Sign in or create an account',
+  '选择一种方式，开始你的创作': 'Choose how to continue your creative journey.',
+  '验证后自动登录，新用户将创建账户': 'Verify to sign in. New here? We’ll create your account.',
+  '欢迎回来，继续你的创作': 'Welcome back. Your next story awaits.',
+  '使用手机号继续': 'Continue with phone',
+  '使用邮箱继续': 'Continue with email',
+  '正在加载登录方式…': 'Loading sign-in options…',
+  '注册暂未开放，已有账户可使用密码登录': 'Registration is not available yet. Existing accounts can sign in with a password.',
+  '已有账户？密码登录': 'Already have an account? Sign in with password',
+  '返回其他登录方式': 'Back to sign-in options',
   '验证码登录': 'Sign in with a code',
   '微信扫码登录': 'Sign in with WeChat',
   '密码登录': 'Sign in with a password',
@@ -108,7 +119,7 @@ function localizeAuthText(locale: CreatorLocale, text: string): string {
   const key = Object.hasOwn(dictionary, text) ? text : aliases[text]
   if (key && Object.hasOwn(dictionary, key)) return dictionary[key]
   const wait = /^发送过于频繁，请(\d+)秒后重试$/.exec(text)
-  if (!wait) return text
+  if (!wait) return english[text] ?? text
   const duration = formatAuthSeconds(locale, Number(wait[1]))
   return (locale === 'en' ? 'Try again in {time}.' : authTranslations[locale].retry).replace('{time}', duration)
 }

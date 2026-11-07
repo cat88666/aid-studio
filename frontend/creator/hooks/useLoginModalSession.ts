@@ -34,6 +34,7 @@ export function useLoginModalSession() {
   const setTab = useLoginModalStore((s) => s.setTab)
 
   const {
+    loaded: configLoaded,
     smsLoginEnabled,
     emailLoginEnabled,
     wechatLoginEnabled,
@@ -43,6 +44,7 @@ export function useLoginModalSession() {
     getCodeMaxLength
   } = useAuthPublicConfig()
 
+  const [selectedChannel, setSelectedChannel] = useState<'sms' | 'email'>()
   const [account, setAccount] = useState('')
   const [code, setCode] = useState('')
   const [password, setPassword] = useState('')
@@ -55,7 +57,8 @@ export function useLoginModalSession() {
     countdownScope: LOGIN_SEND_CODE_COUNTDOWN_SCOPE,
     captchaBindEl: LOGIN_CAPTCHA_EL,
     account,
-    inviteCode
+    inviteCode,
+    selectedChannel
   })
 
   const codeLoginPresentation = authSend.codeLoginPresentation
@@ -198,6 +201,11 @@ export function useLoginModalSession() {
   return {
     tab,
     selectTab,
+    selectedChannel,
+    setSelectedChannel,
+    smsLoginEnabled,
+    emailLoginEnabled,
+    configLoaded,
     account,
     setAccount,
     code,

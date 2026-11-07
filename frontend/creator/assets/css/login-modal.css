@@ -87,3 +87,20 @@ html body .login-modal-form button.auth-dark-submit { height: 44px; background: 
   .login-modal-visual { display: none; }
   .login-modal-form { padding: 44px clamp(20px, 6vw, 36px) 26px; }
 }
+
+/* A compact method picker keeps account creation in the same visual language as the public site. */
+.login-modal-fit-shell:has(.login-modal-frame--compact) { width: min(440px, 100%); }
+.login-modal-frame--compact { display: block; }
+.login-modal-frame--compact .login-modal-form { padding: 48px 32px 28px; }
+.login-modal-frame--compact .login-form-brand { gap: 12px; }
+.login-modal-frame--compact .login-form-brand > span { font-size: 20px; color: #242228; }
+.login-modal-frame--compact .login-form-brand h2 { font-size: 25px; letter-spacing: -.025em; }
+.login-modal-frame--compact .login-entry-description { color: #65616b; font-size: 13px; line-height: 1.6; text-align: center; margin: 0; }
+.login-entry-methods { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+.login-modal-frame--compact .login-entry-method { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 48px; padding: 10px 16px; border: 1px solid #dedce2; border-radius: 9px; background: #fff; color: #242228; font-size: 14px; font-weight: 600; cursor: pointer; }
+.login-entry-method > span { font-size: 16px; font-weight: 500; }
+.login-modal-frame--compact .login-entry-method:hover { background: #f5f4f7; color: #242228; border-color: #b5afbf; }
+.login-modal-frame--compact .login-entry-password, .login-modal-frame--compact .login-entry-back { position: static; width: 100%; height: auto; border: 0; padding: 12px 0; background: transparent; color: #595360; font-size: 13px; line-height: 1.5; cursor: pointer; }
+.login-modal-frame--compact .login-entry-back { margin-top: 16px; }
+.login-modal-frame--compact button:focus-visible { outline: 2px solid #765492; outline-offset: 3px; }
+@media (max-width: 479px) { .login-modal-frame--compact .login-modal-form { padding: 46px 24px 24px; } }
