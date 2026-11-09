@@ -58,6 +58,11 @@ domain_readiness() {
   "${probe[@]}" -f "$core/" | grep -F 'href="/_next/' >/dev/null || return 1
   "${probe[@]}" -f "$ops/admin/" | grep -F '/admin/static/' >/dev/null || return 1
   "${probe[@]}" -f "$ops/web/" | grep -F '/web/_next/' >/dev/null || return 1
+  "${probe[@]}" -f "$ops/gateway/playground" | grep -F '<title>gateway</title>' >/dev/null || return 1
+  "${probe[@]}" -f "$ops/gateway/health" |
+    python3 -c 'import json,sys; assert json.load(sys.stdin)["status"] == "ok"' || return 1
+  result=$("${probe[@]}" -o /dev/null -w '%{http_code}' "$ops/v1/models") || return 1
+  [[ "$result" == 401 ]] || { echo "网关鉴权路由异常：$result" >&2; return 1; }
   for url in "$core/aid" "$ops/web/aid"; do
     "${probe[@]}" -f -X POST "$url/auth/public-config" |
       python3 -c 'import json,sys; assert json.load(sys.stdin)["code"] == 200' || return 1

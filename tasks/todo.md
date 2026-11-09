@@ -200,3 +200,11 @@
 代码验收：Google服务端采用官方SDK2.7.2，默认关闭且无客户端ID；浏览器绑定nonce和精确Origin校验，签名/aud/iss/exp验证，Redis条件删除防重放，sub唯一身份不按邮箱自动合并。后端17项测试通过（含Spring事务代理触发rollback，未做真实DB并发集成）；前端429项测试在Node22/26通过、静态构建通过。1440/390浏览器隔离GIS+API测试验证关闭不请求Google、邀请码透传、登录只提交一次、回到works。无真实OAuth凭证，尚未真实Google授权。
 
 发布验收：d5eb48e已通过deploy/ai-hk.sh发布，回退目录/opt/aid-studio/releases/release-Xupolm3w。公网公开配置googleEnabled=false、googleClientId为空、sms/email=false；Google challenge及login在关闭时明确拒绝。三个AID服务active，正式目录.commit与发布提交一致。公网1440/390关闭态无Google脚本且密码入口正常，隔离GIS/API模拟授权验证邀请码、单次提交和works回跳通过。未使用真实Google账号授权，也未发送短信/邮件或创建生产账号。日志/tmp/aid-google-ready/。
+
+## 2026-11-09 恢复共享主机模型网关入口
+用户已授权恢复网关并使用 https://thdrhdf.fun/gateway/playground，按最小路由修复执行。
+- [x] 核对网关进程、HTTPS 路由及静态资源/API路径，确认根因。
+- [x] 备份现役配置，修复新入口和旧入口兼容，同步仓库配置。
+- [x] 验证页面、资源、API鉴权及AID现有入口，记录回顾和教训。
+
+回顾：网关进程正常，HTTPS缺少网关路由，旧/playground落到AID、新/gateway返回404。新增共享gateway-paths.conf，恢复/playground跳转、新/gateway/和/v1/代理，并补齐.fun健康路由。public_base_url从HTTP IP改为https://thdrhdf.fun以避免新媒体跨源；网关已重启、Nginx验证并reload。公网页面200、旧地址跳转200、匿名API401、浏览器健康按钮200、AID三个入口200。浏览器现有密钥返回invalid API key，未验证真实模型生成；上游视频轮询日志另有502，未将入口恢复等同于模型上游可用。备份/etc/aid-studio/before-gateway.BuAntb40。部署预检追加网关页面/health/鉴权检查；本次修复单独提交并推送；其他已有工作区改动不包含在此提交。
