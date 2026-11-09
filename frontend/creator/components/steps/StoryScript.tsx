@@ -1,5 +1,7 @@
 'use client'
 
+import { useCreateCopy } from '~/components/create/useCreateCopy'
+
 import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
@@ -106,6 +108,7 @@ export const StoryScript = forwardRef<StoryScriptHandle, Props>(function StorySc
   },
   forwardedRef
 ) {
+  const copy = useCreateCopy()
   const currentProjectType = useCreationStore((s) => s.currentProjectType)
   const createFlowShell = useContext(createFlowShellContext)
   const editorRef = useRef<RichTextEditorHandle | null>(null)
@@ -397,21 +400,21 @@ export const StoryScript = forwardRef<StoryScriptHandle, Props>(function StorySc
     <div className="story-script create-step-story-script">
       <div className="toolbar">
         <div className={`toolbar-left${hasEditorText ? ' toolbar-left--has-text' : ''}`}>
-          <button className="toolbar-btn" onClick={handleUndo} disabled={!canUndo} title="撤销">
+          <button className="toolbar-btn" onClick={handleUndo} disabled={!canUndo} title={copy('撤销', 'Undo')}>
             <UndoOutlined />
-            <span>撤销</span>
+            <span>{copy('撤销', 'Undo')}</span>
           </button>
-          <button className="toolbar-btn" onClick={handleRedo} disabled={!canRedo} title="重做">
+          <button className="toolbar-btn" onClick={handleRedo} disabled={!canRedo} title={copy('重做', 'Redo')}>
             <RedoOutlined />
-            <span>重做</span>
+            <span>{copy('重做', 'Redo')}</span>
           </button>
-          <button className="toolbar-btn" onClick={handleCopy} title="复制">
+          <button className="toolbar-btn" onClick={handleCopy} title={copy('复制', 'Copy')}>
             <CopyOutlined />
-            <span>复制</span>
+            <span>{copy('复制', 'Copy')}</span>
           </button>
-          <button className="toolbar-btn" onClick={handleClear} title="清空">
+          <button className="toolbar-btn" onClick={handleClear} title={copy('清空', 'Clear')}>
             <DeleteOutlined />
-            <span>清空</span>
+            <span>{copy('清空', 'Clear')}</span>
           </button>
         </div>
         <div className="toolbar-right">
@@ -420,13 +423,13 @@ export const StoryScript = forwardRef<StoryScriptHandle, Props>(function StorySc
               <Button
                 onClick={onAgentToggle}
                 className="agent-btn"
-                aria-label="打开 AI写剧本"
+                aria-label={copy('打开 AI写剧本', 'Open AI writer')}
                 aria-expanded={agentOpen}
                 aria-hidden={agentOpen}
                 tabIndex={agentOpen ? -1 : 0}
                 icon={<img src={agentIconUrl} alt="" className="agent-btn__icon" />}
               >
-                AI写剧本
+                {copy('AI写剧本', 'AI writer')}
               </Button>
             </div>
           ) : null}
@@ -435,10 +438,10 @@ export const StoryScript = forwardRef<StoryScriptHandle, Props>(function StorySc
             className="import-btn"
             icon={<UploadOutlined />}
           >
-            导入剧本(单集)
+            {copy('导入剧本(单集)', 'Import script')}
           </Button>
           <Button onClick={openHistoryPanel} className="history-btn" icon={<HistoryOutlined />}>
-            历史版本
+            {copy('历史版本', 'Version history')}
           </Button>
         </div>
       </div>
@@ -453,7 +456,7 @@ export const StoryScript = forwardRef<StoryScriptHandle, Props>(function StorySc
               <button
                 type="button"
                 className="story-script-selection-action"
-                aria-label="针对选段批注"
+                aria-label={copy('针对选段批注', 'Comment on selection')}
                 title={formatEditorSelectionLocation(textSelection.selection)}
                 style={{
                   left: Math.min(
@@ -472,7 +475,7 @@ export const StoryScript = forwardRef<StoryScriptHandle, Props>(function StorySc
                 }}
               >
                 <CommentOutlined />
-                针对选段批注
+                {copy('针对选段批注', 'Comment on selection')}
               </button>,
               document.body
             )
@@ -482,9 +485,7 @@ export const StoryScript = forwardRef<StoryScriptHandle, Props>(function StorySc
           value={localContent}
           onChange={handleContentChange}
           className="script-editor"
-          placeholder={`请输入本集剧本内容，或点击右上角「导入剧本(单集)」
-
-提示:若为全集/多集内容,请按集拆分后分别创建作品导入`}
+          placeholder={copy('请输入本集剧本内容，或导入单集剧本。多集内容请先拆分。', 'Write or import the script for this episode. Split multi-episode scripts before importing.')}
           minHeight="500px"
           maxLength={scriptMaxLength}
           countPureTextOnly
@@ -518,7 +519,7 @@ export const StoryScript = forwardRef<StoryScriptHandle, Props>(function StorySc
         title={
           <div className="drawer-title">
             <HistoryOutlined />
-            <span>历史版本</span>
+            <span>{copy('历史版本', 'Version history')}</span>
           </div>
         }
       >
@@ -527,7 +528,7 @@ export const StoryScript = forwardRef<StoryScriptHandle, Props>(function StorySc
         ) : historyVersions.length === 0 ? (
           <div className="empty-history">
             <FileTextOutlined className="empty-icon" />
-            <p>暂无历史记录</p>
+            <p>{copy('暂无历史记录', 'No saved versions')}</p>
           </div>
         ) : (
           <div className="history-list">
@@ -560,7 +561,7 @@ export const StoryScript = forwardRef<StoryScriptHandle, Props>(function StorySc
                             void restoreVersion(version)
                           }}
                         >
-                          恢复此版本
+                          {copy('恢复此版本', 'Restore version')}
                         </Button>
                         <Button
                           size="small"
@@ -571,11 +572,11 @@ export const StoryScript = forwardRef<StoryScriptHandle, Props>(function StorySc
                             void deleteVersion(version)
                           }}
                         >
-                          删除
+                          {copy('删除', 'Delete')}
                         </Button>
                       </>
                     ) : (
-                      <span className="history-readonly">只读</span>
+                      <span className="history-readonly">{copy('只读', 'Read only')}</span>
                     )}
                   </div>
                 </div>
@@ -587,7 +588,7 @@ export const StoryScript = forwardRef<StoryScriptHandle, Props>(function StorySc
                 loading={historyLoadingMore}
                 onClick={() => void loadHistory(historyPage + 1, true)}
               >
-                加载更多
+                {copy('加载更多', 'Load more')}
               </Button>
             )}
           </div>

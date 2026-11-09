@@ -62,6 +62,7 @@ import { waitInfiniteScrollAppendDelay } from '~/utils/infiniteScrollDelay'
 import { uploadImageToOssWithToast } from '~/utils/ossUpload'
 import { isMergedAssetUserOwned } from '~/utils/mergedAssetSource'
 import { openImagePreviewModal } from '~/utils/openImagePreviewModal'
+import { useCreatorLocale } from '~/hooks/useCreatorLocale'
 import './AssetsLibraryPanel.css'
 
 const deleteWhite = assetUrl(deleteWhiteSvg)
@@ -92,6 +93,61 @@ const emotionNor = assetUrl(emotionNorSvg)
 const emotionSel = assetUrl(emotionSelSvg)
 const emojiNor = assetUrl(emojiNorSvg)
 const emojiSel = assetUrl(emojiSelSvg)
+
+const assetEnglish: Record<string, string> = {
+  "未命名资产": "Untitled asset",
+  "未知类型": "Unknown type",
+  "全部": "All",
+  "查询资产列表失败，请稍后重试": "Could not load assets. Try again.",
+  "加载更多资产失败，请稍后重试": "Could not load more assets. Try again.",
+  "查询资产类型失败，请稍后重试": "Could not load asset types. Try again.",
+  "该资产暂无图片可预览": "No image available.",
+  "官方素材不可编辑": "Official assets cannot be edited.",
+  "资产ID无效，无法编辑": "Invalid asset ID.",
+  "加载资产详情失败": "Could not load asset details.",
+  "只能上传图片文件": "Choose an image file.",
+  "图片大小不能超过 10MB": "Image must be smaller than 10 MB.",
+  "图片正在上传，请稍候": "Wait for the image to upload.",
+  "请上传资产图片": "Upload an image.",
+  "请选择资产类型": "Select an asset type.",
+  "请填写资产名称": "Enter an asset name.",
+  "创建成功": "Asset created.",
+  "缺少资产ID": "Missing asset ID.",
+  "修改成功": "Changes saved.",
+  "创建失败": "Could not create asset.",
+  "修改失败": "Could not save changes.",
+  "官方素材不可删除": "Official assets cannot be deleted.",
+  "删除资产": "Delete asset",
+  "删除": "Delete",
+  "取消": "Cancel",
+  "删除成功": "Asset deleted.",
+  "删除失败": "Could not delete asset.",
+  "分类与搜索": "Categories and search",
+  "搜索资产...": "Search assets…",
+  "编辑": "Edit",
+  "正在加载更多资产…": "Loading more assets…",
+  "正在加载资产…": "Loading assets…",
+  "新增资产": "Add asset",
+  "编辑资产": "Edit asset",
+  "资产图片": "Asset image",
+  "资产图片为必填项，": "Image required. ",
+  "资产类型": "Asset type",
+  "类型": "Type",
+  "资产名称": "Asset name",
+  "请输入": "Enter text",
+  "特征描述": "Description",
+  "提示词": "Prompt",
+  "备注": "Notes",
+  "确定": "Create",
+  "保存修改": "Save changes",
+  "资产库": "Assets",
+  "暂无资产": "No assets yet.",
+  "上传中…": "Uploading…",
+  "上传图片": "Upload image",
+  "支持 JPG、PNG，最大 10MB": "JPG or PNG · under 10 MB",
+  "移除图片": "Remove image",
+  "已加载全部": "All assets loaded"
+}
 
 const ASSET_PAGE_SIZE = 30
 const ASSET_SCROLL_LOAD_THRESHOLD_PX = 180
@@ -148,15 +204,15 @@ function iconPairForType(code: string): { iconNor: string; iconSel: string } {
   return { iconNor: recordingNor, iconSel: recordingSel }
 }
 
-function mapRowToAssetItem(row: MergedAssetVO, typeNameMap: Map<string, string>): AssetItem {
+function mapRowToAssetItem(row: MergedAssetVO, typeNameMap: Map<string, string>, t: (value: string) => string): AssetItem {
   const thumb = row.imageUrl?.trim() || ''
   const hasCover = !!thumb
 
   return {
     id: String(row.id),
-    name: row.assetName || '未命名资产',
+    name: row.assetName || t('未命名资产'),
     type: row.assetType || '',
-    typeName: typeNameMap.get(row.assetType || '') || row.assetType || '未知类型',
+    typeName: typeNameMap.get(row.assetType || '') || row.assetType || t('未知类型'),
     thumbnail: hasCover ? thumb : PLACEHOLDER_THUMB,
     hasCover,
     createdAt: row.createTime || '',
@@ -169,13 +225,16 @@ function isUserOwnedAsset(asset: AssetItem): boolean {
   return isMergedAssetUserOwned(asset.sourceFlag)
 }
 
-const formatDate = (dateString: string) => {
+const formatDate = (dateString: string, locale: string) => {
   if (!dateString) return '--'
   const date = new Date(dateString)
-  return date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
+  return date.toLocaleDateString(locale, { year: 'numeric', month: '2-digit', day: '2-digit' })
 }
 
 export function AssetsLibraryPanel() {
+  const { locale } = useCreatorLocale()
+  const isChinese = locale === 'zh' || locale === 'zh-hant'
+  const t = useCallback((value: string) => isChinese ? value : assetEnglish[value] || value, [isChinese])
   const [activeTab, setActiveTab] = useState<string>('all')
   const [hoveredAssetTab, setHoveredAssetTab] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -197,7 +256,7 @@ export function AssetsLibraryPanel() {
   })
 
   const [assetTabs, setAssetTabs] = useState<AssetTab[]>([
-    { label: '全部', value: 'all', iconNor: sceneNor, iconSel: sceneSel }
+    { label: t('全部'), value: 'all', iconNor: sceneNor, iconSel: sceneSel }
   ])
 
   const [assetTypes, setAssetTypes] = useState<UserAssetCustomTypeItem[]>([])
@@ -262,7 +321,7 @@ export function AssetsLibraryPanel() {
       if (fetchToken !== latestFetchTokenRef.current) return
       const typeNameMap = new Map<string, string>()
       for (const t of assetTypesRef.current) typeNameMap.set(t.code, t.name || t.code)
-      const mapped = list.map((row) => mapRowToAssetItem(row, typeNameMap))
+      const mapped = list.map((row) => mapRowToAssetItem(row, typeNameMap, t))
       myAssetsRef.current = mapped
       setMyAssets(mapped)
       assetListPageRef.current = 1
@@ -279,14 +338,14 @@ export function AssetsLibraryPanel() {
       assetListHasMoreRef.current = false
       setAssetListHasMore(false)
       setAssetListInitialLoaded(true)
-      message.error('查询资产列表失败，请稍后重试')
+      message.error(t('查询资产列表失败，请稍后重试'))
     } finally {
       if (fetchToken === latestFetchTokenRef.current) {
         assetListLoadingRef.current = false
         setAssetListLoading(false)
       }
     }
-  }, [])
+  }, [t])
 
   const fetchMoreAssets = useCallback(async () => {
     if (
@@ -317,7 +376,7 @@ export function AssetsLibraryPanel() {
       for (const t of assetTypesRef.current) typeNameMap.set(t.code, t.name || t.code)
       const existingIds = new Set(myAssetsRef.current.map((asset) => asset.id))
       const appended = list
-        .map((row) => mapRowToAssetItem(row, typeNameMap))
+        .map((row) => mapRowToAssetItem(row, typeNameMap, t))
         .filter((asset) => !existingIds.has(asset.id))
       const nextAssets = [...myAssetsRef.current, ...appended]
       myAssetsRef.current = nextAssets
@@ -329,14 +388,14 @@ export function AssetsLibraryPanel() {
       setAssetListHasMore(hasMore)
     } catch {
       if (fetchToken !== latestFetchTokenRef.current) return
-      message.error('加载更多资产失败，请稍后重试')
+      message.error(t('加载更多资产失败，请稍后重试'))
     } finally {
       if (fetchToken === latestFetchTokenRef.current) {
         assetListLoadingMoreRef.current = false
         setAssetListLoadingMore(false)
       }
     }
-  }, [])
+  }, [t])
 
   const onAssetListScroll = useCallback(
     (event: ReactUIEvent<HTMLDivElement>) => {
@@ -359,7 +418,7 @@ export function AssetsLibraryPanel() {
       const types = await userAssetCustomTypeList()
       assetTypesRef.current = types
       setAssetTypes(types)
-      const tabs = [{ label: '全部', value: 'all', iconNor: assetAllNor, iconSel: assetAllSel }]
+      const tabs = [{ label: t('全部'), value: 'all', iconNor: assetAllNor, iconSel: assetAllSel }]
       for (const t of types) {
         const ico = iconPairForType(t.code)
         tabs.push({ label: t.name || t.code, value: t.code, iconNor: ico.iconNor, iconSel: ico.iconSel })
@@ -370,12 +429,12 @@ export function AssetsLibraryPanel() {
         setActiveTab('all')
       }
     } catch {
-      message.error('查询资产类型失败，请稍后重试')
+      message.error(t('查询资产类型失败，请稍后重试'))
     } finally {
       await fetchAssetList()
       assetsBootstrappedRef.current = true
     }
-  }, [fetchAssetList])
+  }, [fetchAssetList, t])
 
   useEffect(() => {
     void loadAssetTypesAndList()
@@ -413,7 +472,7 @@ export function AssetsLibraryPanel() {
   function openAssetPreview(asset: AssetItem) {
     const imageUrl = asset.raw.imageUrl?.trim() || (asset.hasCover ? asset.thumbnail : '')
     if (!imageUrl) {
-      message.info('该资产暂无图片可预览')
+      message.info(t('该资产暂无图片可预览'))
       return
     }
     openImagePreviewModal({
@@ -443,12 +502,12 @@ export function AssetsLibraryPanel() {
 
   async function openEditModal(asset: AssetItem) {
     if (!isUserOwnedAsset(asset)) {
-      message.info('官方素材不可编辑')
+      message.info(t('官方素材不可编辑'))
       return
     }
     const idNum = Number(asset.id)
     if (!Number.isFinite(idNum) || idNum <= 0) {
-      message.error('资产ID无效，无法编辑')
+      message.error(t('资产ID无效，无法编辑'))
       return
     }
     try {
@@ -467,7 +526,7 @@ export function AssetsLibraryPanel() {
       if (assetCoverInputRef.current) assetCoverInputRef.current.value = ''
       setAssetFormOpen(true)
     } catch (err: any) {
-      message.error(err?.msg || err?.message || '加载资产详情失败')
+      message.error(err?.msg || err?.message || t('加载资产详情失败'))
     }
   }
 
@@ -494,11 +553,11 @@ export function AssetsLibraryPanel() {
     if (!file) return
 
     if (!file.type.startsWith('image/')) {
-      message.warning('只能上传图片文件')
+      message.warning(t('只能上传图片文件'))
       return
     }
     if (file.size / 1024 / 1024 >= 10) {
-      message.warning('图片大小不能超过 10MB')
+      message.warning(t('图片大小不能超过 10MB'))
       return
     }
 
@@ -512,10 +571,10 @@ export function AssetsLibraryPanel() {
   }
 
   function validateAssetForm(): string | null {
-    if (assetCoverUploading) return '图片正在上传，请稍候'
-    if (assetFormMode === 'create' && !assetForm.imageUrl.trim()) return '请上传资产图片'
-    if (!assetForm.assetType.trim()) return '请选择资产类型'
-    if (!assetForm.assetName.trim()) return '请填写资产名称'
+    if (assetCoverUploading) return t('图片正在上传，请稍候')
+    if (assetFormMode === 'create' && !assetForm.imageUrl.trim()) return t('请上传资产图片')
+    if (!assetForm.assetType.trim()) return t('请选择资产类型')
+    if (!assetForm.assetName.trim()) return t('请填写资产名称')
     return null
   }
 
@@ -537,9 +596,9 @@ export function AssetsLibraryPanel() {
       }
       if (assetFormMode === 'create') {
         await userAssetCustomCreate(payload)
-        message.success('创建成功')
+        message.success(t('创建成功'))
       } else {
-        if (!editingAssetIdRef.current) throw new Error('缺少资产ID')
+        if (!editingAssetIdRef.current) throw new Error(t('缺少资产ID'))
         await userAssetCustomUpdate({
           id: editingAssetIdRef.current,
           assetName: payload.assetName,
@@ -548,12 +607,12 @@ export function AssetsLibraryPanel() {
           imageUrl: payload.imageUrl,
           remark: payload.remark
         })
-        message.success('修改成功')
+        message.success(t('修改成功'))
       }
       setAssetFormOpen(false)
       await fetchAssetList({ preserveItems: true })
     } catch (err: any) {
-      message.error(err?.msg || err?.message || (assetFormMode === 'create' ? '创建失败' : '修改失败'))
+      message.error(err?.msg || err?.message || (assetFormMode === 'create' ? t('创建失败') : t('修改失败')))
     } finally {
       setAssetSubmitting(false)
     }
@@ -561,25 +620,25 @@ export function AssetsLibraryPanel() {
 
   function removeAsset(asset: AssetItem) {
     if (!isUserOwnedAsset(asset)) {
-      message.info('官方素材不可删除')
+      message.info(t('官方素材不可删除'))
       return
     }
     Modal.confirm({
       className: 'home-confirm-modal',
       wrapClassName: 'create-flow-modal home-confirm-wrap',
       centered: true,
-      title: '删除资产',
-      content: `确认删除「${asset.name}」吗？`,
-      okText: '删除',
-      cancelText: '取消',
+      title: t('删除资产'),
+      content: isChinese ? `确认删除「${asset.name}」吗？` : `Delete “${asset.name}”?`,
+      okText: t('删除'),
+      cancelText: t('取消'),
       okType: 'danger',
       async onOk() {
         try {
           await userAssetCustomDelete({ id: Number(asset.id) })
-          message.success('删除成功')
+          message.success(t('删除成功'))
           await fetchAssetList({ preserveItems: true })
         } catch (err: any) {
-          message.error(err?.msg || err?.message || '删除失败')
+          message.error(err?.msg || err?.message || t('删除失败'))
         }
       }
     })
@@ -589,10 +648,10 @@ export function AssetsLibraryPanel() {
     <div className="assets-page home-new-sub-page assets-library-figma">
       <div className="page-content assets-library-figma__inner">
         <header className="works-lib-header">
-          <h1 className="works-lib-header__title">资产库</h1>
-          <button type="button" className="assets-lib-upload" onClick={openCreateModal}>新增资产</button>
+          <h1 className="works-lib-header__title">{t('资产库')}</h1>
+          <button type="button" className="assets-lib-upload" onClick={openCreateModal}>{t('新增资产')}</button>
         </header>
-        <section className="works-lib-toolbar assets-lib-toolbar" aria-label="分类与搜索">
+        <section className="works-lib-toolbar assets-lib-toolbar" aria-label={t('分类与搜索')}>
           <div className="works-lib-type-tabs" role="tablist">
             {assetTabs.map((tab) => (
               <button
@@ -630,7 +689,7 @@ export function AssetsLibraryPanel() {
               onChange={(e) => setSearchQuery(e.target.value)}
               type="search"
               className="works-lib-search__input"
-              placeholder="搜索资产..."
+              placeholder={t('搜索资产...')}
               autoComplete="off"
             />
           </div>
@@ -688,7 +747,7 @@ export function AssetsLibraryPanel() {
                     <button
                       type="button"
                       className="works-lib-card__cover-btn"
-                      aria-label="删除"
+                      aria-label={t('删除')}
                       onClick={(e) => {
                         e.stopPropagation()
                         removeAsset(asset)
@@ -701,7 +760,7 @@ export function AssetsLibraryPanel() {
                     <button
                       type="button"
                       className="works-lib-card__cover-btn"
-                      aria-label="编辑"
+                      aria-label={t('编辑')}
                       onClick={(e) => {
                         e.stopPropagation()
                         void openEditModal(asset)
@@ -717,9 +776,9 @@ export function AssetsLibraryPanel() {
                   <span>{asset.name}</span>
                 </h3>
                 <div className="works-lib-card__row works-lib-card__row--asset">
-                  <span className="works-lib-card__from">类型: {asset.typeName}</span>
+                  <span className="works-lib-card__from">{t('类型')}: {asset.typeName}</span>
                   <div className="works-lib-card__row-trailing">
-                    <span className="works-lib-card__updated">{formatDate(asset.createdAt)}</span>
+                    <span className="works-lib-card__updated">{formatDate(asset.createdAt, isChinese ? 'zh-CN' : 'en-US')}</span>
                   </div>
                 </div>
               </div>
@@ -733,7 +792,7 @@ export function AssetsLibraryPanel() {
                 src={assetsEmptyIconUrl}
                 alt=""
               />
-              <h3 className="works-lib-empty__title">暂无资产</h3>
+              <h3 className="works-lib-empty__title">{t('暂无资产')}</h3>
             </div>
           ) : null}
 
@@ -743,7 +802,8 @@ export function AssetsLibraryPanel() {
                 loading={(assetListLoading && myAssets.length === 0) || assetListLoadingMore}
                 hasMore={assetListHasMore}
                 hasItems={myAssets.length > 0}
-                loadingText={assetListLoadingMore ? '正在加载更多资产…' : '正在加载资产…'}
+                endText={t('已加载全部')}
+                loadingText={assetListLoadingMore ? t('正在加载更多资产…') : t('正在加载资产…')}
               />
             </div>
           ) : null}
@@ -758,7 +818,7 @@ export function AssetsLibraryPanel() {
         onCancel={closeAssetFormModal}
         title={
           <ModalTitleWatermark
-            title={assetFormMode === 'create' ? '新增资产' : '编辑资产'}
+            title={assetFormMode === 'create' ? t('新增资产') : t('编辑资产')}
             watermark="ASSET"
           />
         }
@@ -788,7 +848,7 @@ export function AssetsLibraryPanel() {
                   {assetForm.imageUrl ? (
                     <ShimmerImage
                       src={assetForm.imageUrl}
-                      alt="资产图片"
+                      alt={t('资产图片')}
                       wrapperClass="style-cover-upload__preview"
                       imgClass="style-cover-upload__img"
                       objectFit="cover"
@@ -796,7 +856,7 @@ export function AssetsLibraryPanel() {
                       minShimmerMs={280}
                     />
                   ) : assetCoverUploading ? (
-                    <span className="style-cover-upload__hint">上传中…</span>
+                    <span className="style-cover-upload__hint">{t('上传中…')}</span>
                   ) : (
                     <span className="style-cover-upload__placeholder">
                       <PlusOutlined className="style-cover-upload__icon" />
@@ -806,15 +866,15 @@ export function AssetsLibraryPanel() {
                             *
                           </span>
                         ) : null}
-                        上传图片
+                        {t('上传图片')}
                       </span>
                     </span>
                   )}
                 </button>
                 <div className="style-cover-upload__meta">
                   <p className="style-cover-upload__tip">
-                    {assetFormMode === 'create' ? '资产图片为必填项，' : ''}
-                    支持 JPG、PNG，最大 10MB
+                    {assetFormMode === 'create' ? t('资产图片为必填项，') : ''}
+                    {t('支持 JPG、PNG，最大 10MB')}
                   </p>
                   {assetForm.imageUrl ? (
                     <a
@@ -824,23 +884,23 @@ export function AssetsLibraryPanel() {
                         clearAssetCover()
                       }}
                     >
-                      移除图片
+                      {t('移除图片')}
                     </a>
                   ) : null}
                 </div>
               </div>
             </Form.Item>
-            <Form.Item label="资产类型" required className="asset-form-item asset-form-item--half">
+            <Form.Item label={t('资产类型')} required className="asset-form-item asset-form-item--half">
               <Select
                 value={assetForm.assetType || undefined}
                 disabled={assetFormMode === 'edit'}
-                placeholder="类型"
+                placeholder={t('类型')}
                 options={assetTypeSelectOptions}
                 classNames={{ popup: { root: 'asset-form-select-dropdown creator-asset-select-dropdown' } }}
                 onChange={(v: string) => setAssetForm((f) => ({ ...f, assetType: v }))}
               />
             </Form.Item>
-            <Form.Item label="资产名称" required className="asset-form-item asset-form-item--half">
+            <Form.Item label={t('资产名称')} required className="asset-form-item asset-form-item--half">
               <Input
                 value={assetForm.assetName}
                 onChange={(e) => {
@@ -848,10 +908,10 @@ export function AssetsLibraryPanel() {
                   setAssetForm((f) => ({ ...f, assetName: v }))
                 }}
                 maxLength={100}
-                placeholder="请输入"
+                placeholder={t('请输入')}
               />
             </Form.Item>
-            <Form.Item label="特征描述" className="asset-form-item asset-form-item--full">
+            <Form.Item label={t('特征描述')} className="asset-form-item asset-form-item--full">
               <Input.TextArea
                 value={assetForm.personalityDesc}
                 onChange={(e) => {
@@ -860,10 +920,10 @@ export function AssetsLibraryPanel() {
                 }}
                 rows={4}
                 maxLength={500}
-                placeholder="请输入"
+                placeholder={t('请输入')}
               />
             </Form.Item>
-            <Form.Item label="提示词" className="asset-form-item asset-form-item--full">
+            <Form.Item label={t('提示词')} className="asset-form-item asset-form-item--full">
               <Input.TextArea
                 value={assetForm.promptText}
                 onChange={(e) => {
@@ -872,10 +932,10 @@ export function AssetsLibraryPanel() {
                 }}
                 rows={4}
                 maxLength={3000}
-                placeholder="请输入"
+                placeholder={t('请输入')}
               />
             </Form.Item>
-            <Form.Item label="备注" className="asset-form-item asset-form-item--full">
+            <Form.Item label={t('备注')} className="asset-form-item asset-form-item--full">
               <Input
                 value={assetForm.remark}
                 onChange={(e) => {
@@ -883,14 +943,14 @@ export function AssetsLibraryPanel() {
                   setAssetForm((f) => ({ ...f, remark: v }))
                 }}
                 maxLength={500}
-                placeholder="请输入"
+                placeholder={t('请输入')}
               />
             </Form.Item>
           </Form>
 
           <div className="asset-form-modal__footer">
             <Button onClick={closeAssetFormModal}>
-              <div className="text-gradient">取消</div>
+              <div className="text-gradient">{t('取消')}</div>
             </Button>
             <Button
               type="primary"
@@ -898,7 +958,7 @@ export function AssetsLibraryPanel() {
               disabled={assetCoverUploading}
               onClick={() => void submitAssetForm()}
             >
-              {assetFormMode === 'create' ? '确定' : '保存修改'}
+              {assetFormMode === 'create' ? t('确定') : t('保存修改')}
             </Button>
           </div>
         </div>

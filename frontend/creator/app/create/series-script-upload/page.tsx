@@ -1,5 +1,7 @@
 'use client'
 
+import { useCreateCopy } from '~/components/create/useCreateCopy'
+
 /**
  * 原 pages/create/series-script-upload.vue（definePageMeta layout: 'create'）。
  *
@@ -53,6 +55,7 @@ function readFileAsText(file: File): Promise<string> {
 }
 
 function SeriesScriptUploadClient() {
+  const copy = useCreateCopy()
   const router = useRouter()
   const route = useRouteLike()
 
@@ -331,9 +334,9 @@ function SeriesScriptUploadClient() {
           <div className="series-script-upload__icon" aria-hidden="true">
             <CloudUploadOutlined />
           </div>
-          <h1 className="series-script-upload__title">导入分集剧本</h1>
+          <h1 className="series-script-upload__title">{copy('导入分集剧本', 'Import series script')}</h1>
           <p className="series-script-upload__hint">
-            仅支持 .txt 纯文本格式，剧本字数不超过10万字，可拖拽至此处上传
+            {copy('仅支持 .txt 纯文本格式，剧本字数不超过10万字，可拖拽至此处上传', 'Drop a .txt script here. Up to 100,000 characters.')}
           </p>
           <input
             ref={fileInputRef}
@@ -344,10 +347,10 @@ function SeriesScriptUploadClient() {
           />
           <button type="button" className="series-script-upload__btn" onClick={openPicker}>
             <CloudUploadOutlined className="series-script-upload__btn-ico" />
-            <span className="series-script-upload__btn-text">上传剧本</span>
+            <span className="series-script-upload__btn-text">{copy('上传剧本', 'Upload script')}</span>
           </button>
           <button type="button" className="series-script-upload__skip" onClick={goEpisodeListSkip}>
-            暂不上传，直接进入剧集列表
+            {copy('暂不上传，直接进入剧集列表', 'Skip to episodes')}
           </button>
         </div>
       ) : !previewData ? (
@@ -364,7 +367,7 @@ function SeriesScriptUploadClient() {
             <button
               type="button"
               className="series-script-upload__close"
-              aria-label="移除文件"
+              aria-label={copy('移除文件', 'Remove file')}
               onClick={removeFile}
             >
               <CloseOutlined />
@@ -372,19 +375,19 @@ function SeriesScriptUploadClient() {
           </div>
 
           <label className="series-script-upload__keyword">
-            <span className="series-script-upload__keyword-label">分集词样例</span>
+            <span className="series-script-upload__keyword-label">{copy('分集词样例', 'Episode separator')}</span>
             <input
               value={episodeKeyword}
               onChange={(e) => setEpisodeKeyword(e.target.value)}
               type="text"
               className="series-script-upload__keyword-input"
-              placeholder="默认：第一集"
+              placeholder={copy('默认：第一集', 'Default: 第一集')}
               maxLength={50}
             />
           </label>
 
           <p className="series-script-upload__guide">
-            点击按钮预览自动分集结果（只解析不入库），确认后再创建各集剧本。
+            {copy('点击按钮预览自动分集结果（只解析不入库），确认后再创建各集剧本。', 'Preview the episodes before creating them.')}
           </p>
 
           <button
@@ -395,9 +398,9 @@ function SeriesScriptUploadClient() {
           >
             <img src={starBlackIconUrl} alt="" className="series-script-upload__parse-ico" />
             {parsing ? (
-              <span className="series-script-upload__parse-loading">解析中…</span>
+              <span className="series-script-upload__parse-loading">{copy('解析中…', 'Parsing…')}</span>
             ) : (
-              <span>解析剧本</span>
+              <span>{copy('解析剧本', 'Preview episodes')}</span>
             )}
           </button>
         </div>
@@ -405,7 +408,7 @@ function SeriesScriptUploadClient() {
         /* 分集预览确认 */
         <div className="series-script-upload__preview">
           <div className="series-script-upload__preview-head">
-            <h2 className="series-script-upload__preview-title">分集预览</h2>
+            <h2 className="series-script-upload__preview-title">{copy('分集预览', 'Episode preview')}</h2>
             <p className="series-script-upload__preview-meta">
               共 {previewData.totalEpisodes} 集
               {previewData.totalCharCount != null ? <> · {previewData.totalCharCount} 字</> : null}
@@ -434,7 +437,7 @@ function SeriesScriptUploadClient() {
               disabled={confirming}
               onClick={backToFile}
             >
-              重新选择
+              {copy('重新选择', 'Choose another file')}
             </button>
             <button
               type="button"
@@ -443,9 +446,9 @@ function SeriesScriptUploadClient() {
               onClick={() => void onConfirmSplit()}
             >
               {confirming ? (
-                <span className="series-script-upload__parse-loading">入库中…</span>
+                <span className="series-script-upload__parse-loading">{copy('入库中…', 'Creating episodes…')}</span>
               ) : (
-                <span>确认分集并入库</span>
+                <span>{copy('确认分集并入库', 'Create episodes')}</span>
               )}
             </button>
           </div>

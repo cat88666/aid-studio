@@ -208,3 +208,22 @@
 - [x] 验证页面、资源、API鉴权及AID现有入口，记录回顾和教训。
 
 回顾：网关进程正常，HTTPS缺少网关路由，旧/playground落到AID、新/gateway返回404。新增共享gateway-paths.conf，恢复/playground跳转、新/gateway/和/v1/代理，并补齐.fun健康路由。public_base_url从HTTP IP改为https://thdrhdf.fun以避免新媒体跨源；网关已重启、Nginx验证并reload。公网页面200、旧地址跳转200、匿名API401、浏览器健康按钮200、AID三个入口200。浏览器现有密钥返回invalid API key，未验证真实模型生成；上游视频轮询日志另有502，未将入口恢复等同于模型上游可用。备份/etc/aid-studio/before-gateway.BuAntb40。部署预检追加网关页面/health/鉴权检查；本次修复单独提交并推送；其他已有工作区改动不包含在此提交。
+
+
+## 2026-11-10 Creator换肤实现与部署
+用户已授权按Claude更新的V2文档一次实现并部署，计划确认无需重复。
+- [x] 完成六导航、英文默认、会员合并、真实创作台。
+- [x] 统一项目工作台及公共页面视觉，保留原有业务与真实状态。
+- [x] 类型、既有测试、静态构建与浏览器验证（范围见回顾）。
+- [x] 备份并仅发布Creator，公网验证及记录回滚。
+范围：新分支codex/creator-reskin-20261110，仅frontend/creator业务改动；保留现有脏树，不提交已有后端迁移，不触发收费生成。
+
+
+### 回顾：2026-11-10 Creator 换肤发布
+- 发布：仅 `/opt/aid-studio/current/creator-public`，原子目录交换；保留上一版 immutable chunks。没有重启后端、修改 Nginx 或部署作者 Web/Admin。未提交或 push 原有迁移工作区。
+- 回滚备份：`/opt/aid-studio/backups/creator-before-reskin-20261110-0026`。可在同服务器用 Linux renameat2(RENAME_EXCHANGE) 与 live Creator 目录原子交换；备份是完整上一版。
+- 发布包 SHA256：`39de27fd4393b9e68e9607ab85fd3be46feed245c5d602858f74c204b29f569e`，本地与远端一致；公网首页与本地生成文件 hash 一致。
+- 验证：437/437 既有测试通过；生产 TypeScript 和构建通过，44/44 静态页；Creator diff check通过。测试日志有 jsdom 网络 AggregateError 输出，但没有失败测试。
+- 公网浏览器：六导航、项目弹窗、真实空项目状态、完整创建参数弹窗、资产类型、积分套餐/余额/冻结/订单、邀请信息、会员旧链接保留query跳转均走读；390px 手机创作台截图无溢出；英文创作台正常。
+- 共享服务：作者 Web/Admin 首页 hash 与发布前一致；服务 active、nginx -t 通过；gateway/playground、health 200，v1/models 未认证401保持。
+- 边界：英文覆盖主入口与主要表单，深层业务提示仍部分中文；当前验收账号无已有项目，因此未完成真实项目七步/六步浏览器通关。未收费生成、未支付、未导出完整样片。后台支付开关当前关闭，UI正确显示不可支付；不能以本次换肤验收宣称商业收款闭环已完成。

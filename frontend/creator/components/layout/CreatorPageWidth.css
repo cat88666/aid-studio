@@ -1,0 +1,28 @@
+/* Public pages share the landing page edges, including short pages and dialogs. */
+html:has(.creator-home-shell) {
+  --creator-page-max: 1320px;
+  --creator-page-gutters: 48px;
+  --creator-page-width: min(var(--creator-page-max), calc(100% - var(--creator-page-gutters)));
+  scrollbar-gutter: stable;
+}
+.creator-public-info :is(.showcase-hero, .showcase-content),
+.creator-public-info .dashboard-nav > .creator-container,
+.creator-public-info .assets-page .assets-library-figma__inner,
+.creator-public-info .creator-membership,
+.creator-public-info .credit-workspace,
+.creator-public-info .invite-page .invite-page__inner,
+.creator-public-info .showcase-footer > div,
+.creator-public-info .dashboard-projects {
+  width: var(--creator-page-width);
+  max-width: none;
+  margin-inline: auto;
+  padding-inline: 0;
+  box-sizing: border-box;
+}
+/* Legacy subpage shells otherwise add a second set of horizontal gutters. */
+.creator-public-info :is(.assets-page, .invite-page, .credit-workspace > .billing-page, .showcase-footer) {
+  padding-inline: 0;
+}
+@media (max-width: 767px) {
+  html:has(.creator-home-shell) { --creator-page-gutters: 32px; }
+}

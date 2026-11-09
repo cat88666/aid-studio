@@ -2,6 +2,9 @@
 
 import { AID_ANTD_THEME } from '@/config/antdTheme'
 import { App, ConfigProvider } from 'antd'
+import enUS from 'antd/locale/en_US'
+import zhCN from 'antd/locale/zh_CN'
+import { useCreatorLocale } from '~/hooks/useCreatorLocale'
 import { type ReactNode } from 'react'
 import { getAidPortalRoot } from '~/utils/portalRoot'
 
@@ -17,6 +20,7 @@ export function resolveAidPopupContainer(triggerNode?: HTMLElement): HTMLElement
 export function renderAidAntdStaticHolder(children: ReactNode) {
   return (
     <ConfigProvider
+      locale={enUS}
       theme={AID_ANTD_THEME}
       wave={{ disabled: true }}
       getPopupContainer={resolveAidPopupContainer}
@@ -41,8 +45,10 @@ export function installAidAntdStaticTheme(): void {
 }
 
 export function AntdThemeProvider({ children }: { children: ReactNode }) {
+  const { locale } = useCreatorLocale()
   return (
     <ConfigProvider
+      locale={locale === 'zh' || locale === 'zh-hant' ? zhCN : enUS}
       theme={AID_ANTD_THEME}
       wave={{ disabled: true }}
       getPopupContainer={resolveAidPopupContainer}

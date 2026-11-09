@@ -57,8 +57,8 @@ describe('billing display scenarios', () => {
   })
 
   it('does not expose multiplier instructions in the billing subtitle', () => {
-    // 原断言目标 BillingPanel.vue 的 {{ creditUnit }}，迁移后为 JSX 插值
-    expect(billingPanelSource).toContain('单位：{creditUnit}')
+    // 单位标签随语言切换，实际计费单位仍取自接口。
+    expect(billingPanelSource).toContain("{t('单位：')}{creditUnit}")
     expect(billingPanelSource).not.toContain('无需再乘任何倍率')
   })
 

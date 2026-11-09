@@ -23,9 +23,8 @@ export function PublicSiteHead() {
   const language = creatorLanguage(locale)
   useEffect(() => {
     if (route !== '/' && landing) rememberCreatorLocale(landing.code)
-    const localized = landing || ['/start', '/login', '/forgot-password', '/mobile'].includes(route)
-    document.documentElement.lang = localized ? language.tag : 'zh-CN'
-    document.documentElement.dir = localized && locale === 'ar' ? 'rtl' : 'ltr'
+    document.documentElement.lang = language.tag
+    document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr'
   }, [landing, language, locale, route])
   const [registered, setRegistered] = useState<{ route: string; value: PublicSeoMeta | null } | null>(null)
   useEffect(() => {

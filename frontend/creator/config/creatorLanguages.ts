@@ -20,7 +20,7 @@ export const creatorLanguages = [
 export type CreatorLocale = typeof creatorLanguages[number]['code']
 
 export function languageFromPath(path: string) {
-  if (!path.replace(/\/+$/, '')) return creatorLanguage('ja')
+  if (!path.replace(/\/+$/, '')) return creatorLanguage('en')
   return creatorLanguages.find(language => language.path === (path.replace(/\/+$/, '') + '/'))
 }
 

@@ -6,7 +6,7 @@ import { PageLoadingOverlay } from '~/components/common/PageLoadingOverlay'
 import { useRouteNavigation } from '~/hooks/useRouteNavigation'
 import { Modal,message } from 'antd'
 import { usePathname,useRouter } from 'next/navigation'
-import { useEffect,useRef,useState,type ReactNode } from 'react'
+import { Suspense,useEffect,useRef,useState,type ReactNode } from 'react'
 import RechargeModal from '~/components/common/RechargeModal'
 import UserMenuDropdown,{ type FloatingPanelHandle } from '~/components/common/UserMenuDropdown'
 import HomeNewSidebar,{ type HomeNewSidebarHandle } from '~/components/layout/HomeNewSidebar'
@@ -19,6 +19,8 @@ import { logoutToPublicHome, requireLogin } from '~/utils/authLoginNavigation'
 import { openAccountSettings } from '~/stores/accountSettings'
 import CreatorPublicHeader from './CreatorPublicHeader'
 import './HomeNewShell.css'
+import './CreatorPageWidth.css'
+import './CreatorReskin.css'
 
 /**
  * home-new 壳层（原 layouts/home-new.vue）：
@@ -227,7 +229,7 @@ export function HomeNewShell({ children }: { children: ReactNode }) {
       <HtmlShellClass classes={publicShell ? "creator-public-shell" : "home-page-shell app-shell-create layout-home-new"} />
       {publicShell ? (
         <div className="creator-public-info">
-          <div className="creator-landing creator-public-masthead"><CreatorPublicHeader onAccount={toggleUserMenu} /></div>
+          <div className="creator-landing creator-public-masthead"><Suspense fallback={null}><CreatorPublicHeader onAccount={toggleUserMenu} /></Suspense></div>
           {children}
         </div>
       ) : (

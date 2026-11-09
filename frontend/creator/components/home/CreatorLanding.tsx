@@ -34,17 +34,13 @@ export default function CreatorLanding() {
   }
 
   return <main className="creator-showcase">
-    <section className="showcase-hero" aria-labelledby="showcase-title">
+    <section className="showcase-hero" aria-label={t.headline}>
       <LandingHeroMedia playLabel={t.watch} pauseLabel={t.pause} />
       <div className="showcase-hero-copy">
-        <p className="showcase-eyebrow">{t.kicker}</p>
-        <h1 id="showcase-title">{t.headline}</h1>
-        <p className="showcase-intro">{t.intro}</p>
         <div className="showcase-hero-actions">
           <button type="button" onClick={startCreating}>{t.create}<ArrowRightOutlined /></button>
           <a href="#samples"><CaretRightFilled />{t.watch}</a>
         </div>
-        <p className="showcase-hero-note">{t.note}</p>
         <a href="#workflow" className="showcase-hero-guide"><span>{t.formats}</span><span>{t.guide}<ArrowDownOutlined /></span></a>
       </div>
     </section>

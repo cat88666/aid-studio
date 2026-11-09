@@ -1,5 +1,7 @@
 'use client'
 
+import { useCreateCopy } from '~/components/create/useCreateCopy'
+
 import { useEffect, useRef, useState } from 'react'
 import { Tooltip } from 'antd'
 import GlobalSetting from '~/components/steps/GlobalSetting'
@@ -169,6 +171,7 @@ export function CreateFirstStepFormBody({
   onCreationModeChange,
   onModelValueChange
 }: CreateFirstStepFormBodyProps) {
+  const copy = useCreateCopy()
   // 事件回调 / async 流程读最新 props（等价于 Vue props 响应式引用）
   const propsRef = useRef({ open, projectType, flowEditMode, pageLayout, syncProjectTypeFromParent })
   propsRef.current = { open, projectType, flowEditMode, pageLayout, syncProjectTypeFromParent }
@@ -493,7 +496,7 @@ export function CreateFirstStepFormBody({
       <div className="left-panel">
         <div className="head_box">
           <img src={unionLeftIcon} alt="" />
-          <h4 className="block-title">基本信息</h4>
+          <h4 className="block-title">{copy('基本信息', 'Project settings')}</h4>
         </div>
         <div className="content_box">
           {contentConfigLocked && (
@@ -504,7 +507,7 @@ export function CreateFirstStepFormBody({
             </p>
           )}
           <div className="field-group inline-options">
-            <label className="field-label">作品类型</label>
+            <label className="field-label">{copy('作品类型', 'Project type')}</label>
             <div className="chip-group">
               {projectTypeOptions.map((opt) => (
                 <button
@@ -514,21 +517,21 @@ export function CreateFirstStepFormBody({
                   aria-disabled={projectTypeLocked}
                   onClick={() => !projectTypeLocked && pickProjectType(opt.value)}
                 >
-                  {opt.label}
+                  {copy(opt.label, ({ series: 'Series', movie: 'Film', plot: 'Story', monologue: 'Narration', economy: 'Economy', performance: 'Quality', i2v: 'Image to video', multi: 'Multiple references', pro: 'Pro', auto_grid: 'Auto grid' } as Record<string, string>)[opt.value] || opt.label)}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="field-group">
-            <label className="field-label">作品名称</label>
+            <label className="field-label">{copy('作品名称', 'Project name')}</label>
             <div className="name-input-wrap">
               <input
                 value={title}
                 type="text"
                 maxLength={25}
                 className="name-input"
-                placeholder="请输入作品名称"
+                placeholder={copy('请输入作品名称', 'Name your project')}
                 onChange={(e) => emitRef.current.onTitleChange(e.target.value)}
               />
               <span className="count-text">{title.length}/25</span>
@@ -536,7 +539,7 @@ export function CreateFirstStepFormBody({
           </div>
 
           <div className="field-group">
-            <label className="field-label">视频比例</label>
+            <label className="field-label">{copy('视频比例', 'Aspect ratio')}</label>
             <div className="ratio-grid">
               {ratioOptions.map((ratio) => (
                 <button
@@ -558,11 +561,11 @@ export function CreateFirstStepFormBody({
           </div>
 
           <div className="field-group inline-options">
-            <label className="field-label">剧本类型</label>
+            <label className="field-label">{copy('剧本类型', 'Script type')}</label>
             {!enumOptionsLoaded ? (
-              <p className="dict-placeholder">加载中…</p>
+              <p className="dict-placeholder">{copy('加载中…', 'Loading…')}</p>
             ) : !scriptTypeOptions.length ? (
-              <p className="dict-placeholder">暂无数据</p>
+              <p className="dict-placeholder">{copy('暂无数据', 'No options available')}</p>
             ) : (
               <div className="chip-group">
                 {scriptTypeOptions.map((opt) =>
@@ -581,7 +584,7 @@ export function CreateFirstStepFormBody({
                           className={`chip is-disabled${displayScriptType === opt.value ? ' active' : ''}`}
                           disabled
                         >
-                          {opt.label}
+                          {copy(opt.label, ({ series: 'Series', movie: 'Film', plot: 'Story', monologue: 'Narration', economy: 'Economy', performance: 'Quality', i2v: 'Image to video', multi: 'Multiple references', pro: 'Pro', auto_grid: 'Auto grid' } as Record<string, string>)[opt.value] || opt.label)}
                         </button>
                       </span>
                     </Tooltip>
@@ -592,7 +595,7 @@ export function CreateFirstStepFormBody({
                       className={`chip${displayScriptType === opt.value ? ' active' : ''}`}
                       onClick={() => pickScriptType(opt.value)}
                     >
-                      {opt.label}
+                      {copy(opt.label, ({ series: 'Series', movie: 'Film', plot: 'Story', monologue: 'Narration', economy: 'Economy', performance: 'Quality', i2v: 'Image to video', multi: 'Multiple references', pro: 'Pro', auto_grid: 'Auto grid' } as Record<string, string>)[opt.value] || opt.label)}
                     </button>
                   )
                 )}
@@ -601,11 +604,11 @@ export function CreateFirstStepFormBody({
           </div>
 
           <div className="field-group inline-options">
-            <label className="field-label">模型策略</label>
+            <label className="field-label">{copy('模型策略', 'Model strategy')}</label>
             {!enumOptionsLoaded ? (
-              <p className="dict-placeholder">加载中…</p>
+              <p className="dict-placeholder">{copy('加载中…', 'Loading…')}</p>
             ) : !modelStrategyOptions.length ? (
-              <p className="dict-placeholder">暂无数据</p>
+              <p className="dict-placeholder">{copy('暂无数据', 'No options available')}</p>
             ) : (
               <div className="chip-group">
                 {modelStrategyOptions.map((opt) => (
@@ -616,7 +619,7 @@ export function CreateFirstStepFormBody({
                     disabled={contentConfigLocked}
                     onClick={() => !contentConfigLocked && pickModelStrategy(opt.value)}
                   >
-                    {opt.label}
+                    {copy(opt.label, ({ series: 'Series', movie: 'Film', plot: 'Story', monologue: 'Narration', economy: 'Economy', performance: 'Quality', i2v: 'Image to video', multi: 'Multiple references', pro: 'Pro', auto_grid: 'Auto grid' } as Record<string, string>)[opt.value] || opt.label)}
                   </button>
                 ))}
               </div>
@@ -624,11 +627,11 @@ export function CreateFirstStepFormBody({
           </div>
 
           <div className="field-group inline-options">
-            <label className="field-label">创作模式</label>
+            <label className="field-label">{copy('创作模式', 'Creation mode')}</label>
             {!enumOptionsLoaded ? (
-              <p className="dict-placeholder">加载中…</p>
+              <p className="dict-placeholder">{copy('加载中…', 'Loading…')}</p>
             ) : !creationModeOptions.length ? (
-              <p className="dict-placeholder">暂无数据</p>
+              <p className="dict-placeholder">{copy('暂无数据', 'No options available')}</p>
             ) : (
               <div className="chip-group">
                 {creationModeOptions.map((opt) =>
@@ -647,7 +650,7 @@ export function CreateFirstStepFormBody({
                           className={`chip is-disabled${displayCreationMode === opt.value ? ' active' : ''}`}
                           disabled
                         >
-                          {opt.label}
+                          {copy(opt.label, ({ series: 'Series', movie: 'Film', plot: 'Story', monologue: 'Narration', economy: 'Economy', performance: 'Quality', i2v: 'Image to video', multi: 'Multiple references', pro: 'Pro', auto_grid: 'Auto grid' } as Record<string, string>)[opt.value] || opt.label)}
                         </button>
                       </span>
                     </Tooltip>
@@ -659,7 +662,7 @@ export function CreateFirstStepFormBody({
                           className={`chip${displayCreationMode === opt.value ? ' active' : ''}`}
                           onClick={() => pickCreationMode(opt.value)}
                         >
-                          {opt.label}
+                          {copy(opt.label, ({ series: 'Series', movie: 'Film', plot: 'Story', monologue: 'Narration', economy: 'Economy', performance: 'Quality', i2v: 'Image to video', multi: 'Multiple references', pro: 'Pro', auto_grid: 'Auto grid' } as Record<string, string>)[opt.value] || opt.label)}
                         </button>
                       </span>
                     </Tooltip>
@@ -670,7 +673,7 @@ export function CreateFirstStepFormBody({
                       className={`chip${displayCreationMode === opt.value ? ' active' : ''}`}
                       onClick={() => pickCreationMode(opt.value)}
                     >
-                      {opt.label}
+                      {copy(opt.label, ({ series: 'Series', movie: 'Film', plot: 'Story', monologue: 'Narration', economy: 'Economy', performance: 'Quality', i2v: 'Image to video', multi: 'Multiple references', pro: 'Pro', auto_grid: 'Auto grid' } as Record<string, string>)[opt.value] || opt.label)}
                     </button>
                   )
                 )}
@@ -683,7 +686,7 @@ export function CreateFirstStepFormBody({
       <div className="right-panel">
         <div className="head_box">
           <img src={unionRightIcon} alt="" />
-          <h4 className="block-title">我的风格库</h4>
+          <h4 className="block-title">{copy('我的风格库', 'Style library')}</h4>
         </div>
         {contentReady && (
           <GlobalSetting

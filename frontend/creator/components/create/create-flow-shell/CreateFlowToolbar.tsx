@@ -8,6 +8,7 @@
 import { lazy, Suspense, type CSSProperties, type RefObject } from 'react'
 import { Button, Dropdown, Input, Tooltip } from 'antd'
 import { DeploymentUnitOutlined, LeftOutlined } from '@ant-design/icons'
+import { useCreateCopy } from '../useCreateCopy'
 import { useCreationStore } from '~/stores/creation'
 import type { BillingQuoteRequest, UserTaskRow } from '~/types/business-api'
 
@@ -70,6 +71,7 @@ function WorkTitleInput(props: {
   syncTitleInputWidth: () => void
   onSeriesWorkTitleBlur: () => void
 }) {
+  const copy = useCreateCopy()
   const workTitle = useCreationStore((s) => s.workTitle)
   return (
     <div className="toolbar-title-block">
@@ -83,7 +85,7 @@ function WorkTitleInput(props: {
         </span>
         <Input
           value={workTitle}
-          placeholder="作品名称"
+          placeholder={copy('作品名称', 'Project name')}
           className="title-input"
           size="large"
           variant="borderless"
@@ -100,6 +102,7 @@ function WorkTitleInput(props: {
 }
 
 export function CreateFlowToolbar(props: CreateFlowToolbarProps) {
+  const copy = useCreateCopy()
   const titleInputProps = {
     titleMeasureRef: props.titleMeasureRef,
     titleMeasureText: props.titleMeasureText,
@@ -112,7 +115,7 @@ export function CreateFlowToolbar(props: CreateFlowToolbarProps) {
     return (
       <div className="toolbar toolbar--series-upload">
         <div className="toolbar-left">
-          <button type="button" className="back-btn" onClick={props.goBack}>
+          <button type="button" className="back-btn" aria-label={copy('返回', 'Back')} onClick={props.goBack}>
             <LeftOutlined />
           </button>
           <WorkTitleInput {...titleInputProps} />
@@ -125,16 +128,16 @@ export function CreateFlowToolbar(props: CreateFlowToolbarProps) {
     return (
       <div className="toolbar toolbar--series-upload toolbar--series-episode-list">
         <div className="toolbar-left toolbar-left--wrap">
-          <button type="button" className="back-btn" onClick={props.goBack}>
+          <button type="button" className="back-btn" aria-label={copy('返回', 'Back')} onClick={props.goBack}>
             <LeftOutlined />
           </button>
           <WorkTitleInput {...titleInputProps} />
-          <span className="toolbar-series-episode-count">共{props.seriesEpisodeCountLabel}集</span>
+          <span className="toolbar-series-episode-count">{props.seriesEpisodeCountLabel} {copy('集', 'episodes')}</span>
         </div>
         <div className="toolbar-right">
           {props.activeProjectId ? (
-            <Button size="large" className="toolbar-btn-draft" icon={<DeploymentUnitOutlined />} aria-label="流程画布" onClick={props.onOpenFlowCanvas}>
-              <div className="text-gradient">流程画布</div>
+            <Button size="large" className="toolbar-btn-draft" icon={<DeploymentUnitOutlined />} aria-label={copy('流程画布', 'Canvas')} onClick={props.onOpenFlowCanvas}>
+              <div className="text-gradient">{copy('流程画布', 'Canvas')}</div>
             </Button>
           ) : null}
           <Button
@@ -144,7 +147,7 @@ export function CreateFlowToolbar(props: CreateFlowToolbarProps) {
             disabled={props.seriesProjectConfigChecking}
             onClick={props.onSeriesProjectConfigClick}
           >
-            <div className="text-gradient">项目配置</div>
+            <div className="text-gradient">{copy('项目配置', 'Project settings')}</div>
           </Button>
         </div>
       </div>
@@ -154,15 +157,15 @@ export function CreateFlowToolbar(props: CreateFlowToolbarProps) {
   return (
     <div className="toolbar">
       <div className="toolbar-left">
-        <button type="button" className="back-btn" onClick={props.goBack}>
+        <button type="button" className="back-btn" aria-label={copy('返回', 'Back')} onClick={props.goBack}>
           <LeftOutlined />
         </button>
         <WorkTitleInput {...titleInputProps} />
       </div>
       <div className="toolbar-right">
         {props.activeProjectId ? (
-          <Button size="large" className="toolbar-btn-draft" icon={<DeploymentUnitOutlined />} aria-label="流程画布" onClick={props.onOpenFlowCanvas}>
-            <div className="text-gradient">流程画布</div>
+          <Button size="large" className="toolbar-btn-draft" icon={<DeploymentUnitOutlined />} aria-label={copy('流程画布', 'Canvas')} onClick={props.onOpenFlowCanvas}>
+            <div className="text-gradient">{copy('流程画布', 'Canvas')}</div>
           </Button>
         ) : null}
         <Suspense fallback={null}>
@@ -181,7 +184,7 @@ export function CreateFlowToolbar(props: CreateFlowToolbarProps) {
             className="toolbar-btn-draft"
             onClick={props.openProjectGenConfig}
           >
-            <div className="text-gradient">生成配置</div>
+            <div className="text-gradient">{copy('生成配置', 'Generation settings')}</div>
           </Button>
         ) : null}
         {props.flowStepIndex === 0 ? (
@@ -191,7 +194,7 @@ export function CreateFlowToolbar(props: CreateFlowToolbarProps) {
             loading={props.globalSettingConfirmLoading}
             onClick={props.onGlobalSettingSave}
           >
-            <div className="text-gradient">保存</div>
+            <div className="text-gradient">{copy('保存', 'Save')}</div>
           </Button>
         ) : null}
         {props.flowStepIndex === 1 ? (
@@ -202,7 +205,7 @@ export function CreateFlowToolbar(props: CreateFlowToolbarProps) {
             disabled={props.saveDraftSubmitting || props.toolbarPrimaryLoading}
             onClick={props.saveDraft}
           >
-            <div className="text-gradient">存草稿</div>
+            <div className="text-gradient">{copy('存草稿', 'Save draft')}</div>
           </Button>
         ) : null}
         {props.isPreviewStep ? (
@@ -213,8 +216,8 @@ export function CreateFlowToolbar(props: CreateFlowToolbarProps) {
             classNames={{ root: 'preview-export-dropdown-overlay' }}
             onOpenChange={props.onExportMenuOpenChange}
             popupRender={() => (
-              <div className="preview-export-menu" role="menu" aria-label="选择导出为">
-                <div className="preview-export-menu__title">选择导出为</div>
+              <div className="preview-export-menu" role="menu" aria-label={copy('选择导出为', 'Export')}>
+                <div className="preview-export-menu__title">{copy('选择导出为', 'Export')}</div>
                 <button
                   type="button"
                   className="preview-export-menu__btn"
@@ -222,7 +225,7 @@ export function CreateFlowToolbar(props: CreateFlowToolbarProps) {
                   disabled={props.previewExportBusy}
                   onClick={props.onExportFullVideo}
                 >
-                  <span className="text-gradient">导出完整视频</span>
+                  <span className="text-gradient">{copy('导出完整视频', 'Full video')}</span>
                 </button>
                 <button
                   type="button"
@@ -231,7 +234,7 @@ export function CreateFlowToolbar(props: CreateFlowToolbarProps) {
                   disabled={props.previewExportBusy}
                   onClick={props.onExportSegments}
                 >
-                  <span className="preview-export-menu__btn-text">导出分段素材</span>
+                  <span className="preview-export-menu__btn-text">{copy('导出分段素材', 'Individual clips')}</span>
                 </button>
                 {props.publishToCasePlazaDisabled ? (
                   <Tooltip
@@ -242,7 +245,7 @@ export function CreateFlowToolbar(props: CreateFlowToolbarProps) {
                   >
                     <span className="preview-export-menu__btn-wrap">
                       <button type="button" className="preview-export-menu__btn" role="menuitem" disabled>
-                        <span className="preview-export-menu__btn-text">发布至案例广场</span>
+                        <span className="preview-export-menu__btn-text">{copy('发布至案例广场', 'Publish to gallery')}</span>
                       </button>
                     </span>
                   </Tooltip>
@@ -254,7 +257,7 @@ export function CreateFlowToolbar(props: CreateFlowToolbarProps) {
                     disabled={props.previewExportBusy}
                     onClick={props.onPublishToCasePlaza}
                   >
-                    <span className="preview-export-menu__btn-text">发布至案例广场</span>
+                    <span className="preview-export-menu__btn-text">{copy('发布至案例广场', 'Publish to gallery')}</span>
                   </button>
                 )}
               </div>
@@ -267,7 +270,7 @@ export function CreateFlowToolbar(props: CreateFlowToolbarProps) {
               disabled={props.previewExportBusy}
               loading={props.previewExportBusy}
             >
-              导出/发布
+              {copy('导出/发布', 'Export / Publish')}
             </Button>
           </Dropdown>
         ) : (
@@ -280,7 +283,7 @@ export function CreateFlowToolbar(props: CreateFlowToolbarProps) {
                 loading={props.toolbarPrimaryLoading}
                 onClick={props.onNextStepWithDelay}
               >
-                {props.toolbarPrimaryLabel}
+                {copy(props.toolbarPrimaryLabel, props.toolbarPrimaryLabel === '提交审核' ? 'Submit for review' : 'Next step')}
               </Button>
             </span>
           </Tooltip>

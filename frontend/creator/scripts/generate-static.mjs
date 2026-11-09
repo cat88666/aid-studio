@@ -70,14 +70,14 @@ cpSync(exportDir, publicDir, { recursive: true })
 // with the same language and direction as its rendered landing page before first paint.
 const locales = readdirSync(join(projectRoot, 'config/home-locales')).filter(file => file.endsWith('.json')).map(file => file.slice(0, -5))
 for (const route of ['', ...locales]) {
-  const locale = route || 'ja'
+  const locale = route || 'en'
   const htmlPath = join(publicDir, route, 'index.html')
   const html = readFileSync(htmlPath, 'utf8')
   const landing = html.match(/class="creator-landing" lang="([^"]+)" dir="(rtl|ltr)"/)
   if (!landing || landing[1].toLowerCase().split('-')[0] !== locale.split('-')[0]) {
     throw new Error('Incorrect prerendered language for ' + htmlPath)
   }
-  writeFileSync(htmlPath, html.replace(/<html lang="ja">/, '<html lang="' + landing[1] + '" dir="' + landing[2] + '">'))
+  writeFileSync(htmlPath, html.replace(/<html lang="en">/, '<html lang="' + landing[1] + '" dir="' + landing[2] + '">'))
 }
 
 const notFoundPath = join(publicDir, '404.html')

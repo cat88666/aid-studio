@@ -5,8 +5,8 @@ import { readCreatorPreference } from './useCreatorLocale'
 afterEach(() => vi.unstubAllGlobals())
 
 describe('creator language selection', () => {
-  it('serves Japanese at the root and keeps each explicit language link distinct', () => {
-    expect(languageFromPath('/')?.code).toBe('ja')
+  it('serves English at the root and keeps each explicit language link distinct', () => {
+    expect(languageFromPath('/')?.code).toBe('en')
     expect(languageFromPath('/en')?.code).toBe('en')
     expect(languageFromPath('/ja/')?.code).toBe('ja')
     for (const language of creatorLanguages) {
@@ -15,10 +15,10 @@ describe('creator language selection', () => {
     expect(languageFromPath('/works/')).toBeUndefined()
   })
 
-  it.each([null, 'unknown'])('defaults to Japanese with preference %s in an English browser', saved => {
+  it.each([null, 'unknown'])('defaults to English with preference %s in an English browser', saved => {
     vi.stubGlobal('navigator', { language: 'en-US', languages: ['en-US'] })
     vi.stubGlobal('localStorage', { getItem: () => saved })
-    expect(readCreatorPreference()).toBe('ja')
+    expect(readCreatorPreference()).toBe('en')
   })
 
   it('keeps a previously selected language on workspace pages', () => {

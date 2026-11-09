@@ -11,6 +11,7 @@ import { userInviteInfo,userInviteUsers } from '~/utils/businessApi'
 import { copyPlainText } from '~/utils/clipboard'
 import { noDataIconUrl } from '~/utils/emptyImageIcon'
 import './InvitePanel.css'
+import { useCreateCopy } from '~/components/create/useCreateCopy'
 
 const defaultAvatar = assetUrl(groupAvtorUrl)
 
@@ -37,16 +38,17 @@ function formatRegisterTime(raw?: string): string {
   return `${y}/${m}/${day}`
 }
 
-async function copyText(text: string, okMsg: string) {
+async function copyText(text: string, okMsg: string, failure: string) {
   const copied = await copyPlainText(text)
   if (copied) {
     message.success(okMsg)
     return
   }
-  message.error('复制失败，请手动复制')
+  message.error(failure)
 }
 
 export default function InvitePanel() {
+  const t = useCreateCopy()
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState('')
   const [info, setInfo] = useState<InviteInfoVO | null>(null)
@@ -83,7 +85,7 @@ export default function InvitePanel() {
       return data
     } catch (e: unknown) {
       const err = e as { msg?: string; message?: string }
-      setLoadError(err?.msg || err?.message || '加载失败')
+      setLoadError(err?.msg || err?.message || t('加载失败', 'Unable to load'))
       return null
     } finally {
       setLoading(false)
@@ -104,7 +106,7 @@ export default function InvitePanel() {
       setUsers((prev) => (reset ? res.data : [...prev, ...res.data]))
     } catch (e: unknown) {
       const err = e as { msg?: string; message?: string }
-      message.error(err?.msg || err?.message || '加载邀请用户失败')
+      message.error(err?.msg || err?.message || t('加载邀请用户失败', 'Unable to load referrals'))
     } finally {
       usersLoadingRef.current = false
       setUsersLoading(false)
@@ -119,14 +121,14 @@ export default function InvitePanel() {
   function copyInvite() {
     const code = String(info?.inviteCode || '').trim()
     if (!code) return
-    void copyText(code, '邀请码已复制')
+    void copyText(code, t('邀请码已复制', 'Code copied'), t('复制失败，请手动复制', 'Copy failed. Please copy manually.'))
   }
 
   function copyInviteLink() {
     const code = String(info?.inviteCode || '').trim()
     if (!code) return
     const origin = typeof window !== 'undefined' ? window.location.origin : ''
-    void copyText(`${origin}${withAppBasePath('/login')}?invite=${encodeURIComponent(code)}`, '邀请链接已复制')
+    void copyText(`${origin}${withAppBasePath('/login')}?invite=${encodeURIComponent(code)}`, t('邀请链接已复制', 'Link copied'), t('复制失败，请手动复制', 'Copy failed. Please copy manually.'))
   }
 
   useEffect(() => {
@@ -145,23 +147,23 @@ export default function InvitePanel() {
         <section className="invite-page__top">
           <div className="invite-page__top-main">
             <header className="invite-page__header">
-              <h1 className="invite-page__title">邀请好友</h1>
+              <h1 className="invite-page__title">{t('邀请好友', 'Invite friends')}</h1>
               <p className="invite-page__subtitle">
-                {rebateRatioText === null ? '分享专属邀请码，查看好友注册与积分奖励记录。' : `分享专属邀请码，好友充值后可获得 ${rebateRatioText}% 的积分返利。`}
+                {rebateRatioText === null ? t('邀请好友，赚取积分。', 'Invite friends. Earn credits.') : t(`好友充值，获得 ${rebateRatioText}% 积分返利。`, `Earn ${rebateRatioText}% in credits when friends top up.`)}
               </p>
             </header>
 
             {loading && !info ? (
-              <div className="invite-page__card invite-page__card--state">加载中…</div>
+              <div className="invite-page__card invite-page__card--state">{t('加载中…', 'Loading…')}</div>
             ) : loadError ? (
               <div className="invite-page__card invite-page__card--state invite-page__card--error">
                 {loadError}
               </div>
             ) : info && !info.enabled ? (
-              <div className="invite-page__card invite-page__card--state">邀请活动暂未开启</div>
+              <div className="invite-page__card invite-page__card--state">{t('邀请活动暂未开启', 'Referrals are currently unavailable')}</div>
             ) : info ? (
-              <div className="invite-page__card" aria-label="我的邀请码">
-                <div className="invite-page__card-label">我的邀请码</div>
+              <div className="invite-page__card" aria-label={t('我的邀请码', 'Your code')}>
+                <div className="invite-page__card-label">{t('我的邀请码', 'Your code')}</div>
                 <div className="invite-page__code-row">
                   <div className="invite-page__code-box">
                     <span className="invite-page__code">{info.inviteCode || '—'}</span>
@@ -169,7 +171,7 @@ export default function InvitePanel() {
                       type="button"
                       className="invite-page__code-copy"
                       disabled={!info.inviteCode}
-                      aria-label="复制邀请码"
+                      aria-label={t('复制邀请码', 'Copy code')}
                       onClick={copyInvite}
                     >
                       <CopyOutlined />
@@ -181,19 +183,19 @@ export default function InvitePanel() {
                     disabled={!info.inviteCode}
                     onClick={copyInviteLink}
                   >
-                    <span className="invite-page__link-btn-text">复制邀请链接</span>
+                    <span className="invite-page__link-btn-text">{t('复制邀请链接', 'Copy invite link')}</span>
                   </button>
                 </div>
                 <div className="invite-page__stats">
                   <div className="invite-page__stat">
-                    <span className="invite-page__stat-label">已邀请</span>
+                    <span className="invite-page__stat-label">{t('已邀请', 'Invited')}</span>
                     <span className="invite-page__stat-num">{info.invitedCount ?? 0}</span>
-                    <span className="invite-page__stat-unit">人</span>
+                    <span className="invite-page__stat-unit">{t('人', 'people')}</span>
                   </div>
                   <div className="invite-page__stat">
-                    <span className="invite-page__stat-label">已获返利</span>
+                    <span className="invite-page__stat-label">{t('已获返利', 'Rewards')}</span>
                     <span className="invite-page__stat-num">{formatCredits(info.totalRebate)}</span>
-                    <span className="invite-page__stat-unit">积分</span>
+                    <span className="invite-page__stat-unit">{t('积分', 'credits')}</span>
                   </div>
                 </div>
               </div>
@@ -203,22 +205,22 @@ export default function InvitePanel() {
         </section>
 
         {info?.enabled && (
-          <section className="invite-page__records" aria-label="邀请记录">
+          <section className="invite-page__records" aria-label={t('邀请记录', 'Referrals')}>
             <div className="invite-page__records-head">
-              <h2 className="invite-page__records-title">邀请记录</h2>
-              <span className="invite-page__records-meta">本月已邀请 {monthInvitedCount} 人</span>
+              <h2 className="invite-page__records-title">{t('邀请记录', 'Referrals')}</h2>
+              <span className="invite-page__records-meta">{t(`本月 ${monthInvitedCount} 人`, `${monthInvitedCount} this month`)}</span>
             </div>
 
-            <div className="invite-page__table" role="table" aria-label="邀请用户列表">
+            <div className="invite-page__table" role="table" aria-label={t('邀请用户列表', 'Referral list')}>
               <div className="invite-page__thead" role="row">
-                <span className="invite-page__th invite-page__col-index" role="columnheader">序号</span>
-                <span className="invite-page__th invite-page__col-user" role="columnheader">用户</span>
-                <span className="invite-page__th invite-page__col-time" role="columnheader">注册时间</span>
-                <span className="invite-page__th invite-page__col-points" role="columnheader">获得积分</span>
+                <span className="invite-page__th invite-page__col-index" role="columnheader">{t('序号', '#')}</span>
+                <span className="invite-page__th invite-page__col-user" role="columnheader">{t('用户', 'User')}</span>
+                <span className="invite-page__th invite-page__col-time" role="columnheader">{t('注册时间', 'Joined')}</span>
+                <span className="invite-page__th invite-page__col-points" role="columnheader">{t('获得积分', 'Credits earned')}</span>
               </div>
 
               {usersLoading && !users.length ? (
-                <div className="invite-page__state invite-page__state--table">加载中…</div>
+                <div className="invite-page__state invite-page__state--table">{t('加载中…', 'Loading…')}</div>
               ) : users.length ? (
                 <>
                   {users.map((u, i) => (
@@ -238,7 +240,7 @@ export default function InvitePanel() {
                           width={24}
                           height={24}
                         />
-                        <span className="invite-page__user-name">{u.nickName || '用户'}</span>
+                        <span className="invite-page__user-name">{u.nickName || t('用户', 'User')}</span>
                       </span>
                       <span className="invite-page__td invite-page__col-time" role="cell">
                         {formatRegisterTime(u.registerTime)}
@@ -251,7 +253,7 @@ export default function InvitePanel() {
                   {usersTotal > users.length && (
                     <div className="invite-page__more">
                       <Button size="small" loading={usersLoading} onClick={loadMoreUsers}>
-                        加载更多
+                        {t('加载更多', 'Load more')}
                       </Button>
                     </div>
                   )}
@@ -263,7 +265,7 @@ export default function InvitePanel() {
                     src={assetUrl(noDataIconUrl)}
                     alt=""
                   />
-                  <p className="invite-page__empty-text">暂无记录</p>
+                  <p className="invite-page__empty-text">{t('暂无记录', 'No referrals yet')}</p>
                 </div>
               )}
             </div>

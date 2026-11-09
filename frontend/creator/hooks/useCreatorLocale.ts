@@ -16,7 +16,7 @@ export function readCreatorPreference(): CreatorLocale {
   if (unsavedPreference) return unsavedPreference
   const preference = creatorLanguages.find(language => language.code === saved)
   if (preference) return preference.code
-  return 'ja'
+  return 'en'
 }
 
 export function rememberCreatorLocale(locale: CreatorLocale) {
@@ -42,7 +42,7 @@ function subscribe(callback: () => void) {
   }
 }
 
-const initialLocale = (): CreatorLocale => 'ja'
+const initialLocale = (): CreatorLocale => 'en'
 export function useCreatorLocale() {
   const pathname = usePathname() || '/'
   const preference = useSyncExternalStore(subscribe, readCreatorPreference, initialLocale)

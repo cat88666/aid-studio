@@ -1,5 +1,7 @@
 'use client'
 
+import { useCreateCopy } from '~/components/create/useCreateCopy'
+
 /**
  * 原 pages/create/series-episode-list.vue（definePageMeta layout: 'create'）。
  *
@@ -92,6 +94,7 @@ function formatDateTime(raw?: string | null): string {
 }
 
 function SeriesEpisodeListClient() {
+  const copy = useCreateCopy()
   const router = useRouter()
   const route = useRouteLike()
   const currentProjectId = useCreationStore((s) => s.currentProjectId)
@@ -449,7 +452,7 @@ function SeriesEpisodeListClient() {
                 aria-selected={activeTab === tab.key}
                 onClick={() => onTabClick(tab.key)}
               >
-                {tab.label}
+                {copy(tab.label, ({ episodes: 'Episodes', characters: 'Characters', props: 'Props', scenes: 'Scenes' })[tab.key])}
               </button>
             ))}
           </div>
@@ -462,7 +465,7 @@ function SeriesEpisodeListClient() {
             onClick={onAddEpisode}
           >
             <PlusOutlined />
-            新增一集
+            {copy('新增一集', 'Add episode')}
           </button>
         ) : null}
       </div>
@@ -470,37 +473,37 @@ function SeriesEpisodeListClient() {
       {activeTab === 'episodes' ? (
         <div className="series-ep-list__body" ref={episodeScrollRootRef}>
           {loading ? (
-            <div className="series-ep-list__loading">加载中…</div>
+            <div className="series-ep-list__loading">{copy('加载中…', 'Loading…')}</div>
           ) : episodesLoadError && episodes.length === 0 ? (
             <div className="series-ep-list__empty">
-              加载分集失败，<button type="button" onClick={() => void loadEpisodes({ force: true })}>点击重试</button>
+              加载分集失败，<button type="button" onClick={() => void loadEpisodes({ force: true })}>{copy('点击重试', 'Retry')}</button>
             </div>
           ) : sortedEpisodes.length === 0 ? (
-            <div className="series-ep-list__empty">暂无分集，点击「新增一集」开始</div>
+            <div className="series-ep-list__empty">{copy('暂无分集，点击「新增一集」开始', 'Add an episode to get started.')}</div>
           ) : (
             <div
               className="series-ep-list__table"
               role="table"
-              aria-label="剧集列表"
+              aria-label={copy('剧集列表', 'Episodes')}
             >
               <div className="series-ep-list__thead" role="row">
                 <span
                   role="columnheader"
                   className="series-ep-list__th-col series-ep-list__th-col--episode"
                 >
-                  集数
+                  {copy('集数', 'Episode')}
                 </span>
                 <span
                   role="columnheader"
                   className="series-ep-list__th-col series-ep-list__th-col--time"
                 >
-                  创建时间
+                  {copy('创建时间', 'Created')}
                 </span>
                 <span
                   role="columnheader"
                   className="series-ep-list__th-col series-ep-list__th-col--actions"
                 >
-                  操作
+                  {copy('操作', 'Actions')}
                 </span>
               </div>
               {sortedEpisodes.map((ep, index) => (
@@ -528,7 +531,7 @@ function SeriesEpisodeListClient() {
                       disabled={generatingEpisodeId !== null || deletingEpisodeId !== null}
                       onClick={() => void generateEpisode(ep)}
                     >
-                      {generatingEpisodeId === ep.id ? '进入中…' : '生成剧集'}
+                      {generatingEpisodeId === ep.id ? copy('进入中…', 'Opening…') : copy('生成剧集', 'Open episode')}
                     </button>
                     <button
                       type="button"
@@ -536,21 +539,21 @@ function SeriesEpisodeListClient() {
                       disabled={deletingEpisodeId !== null || generatingEpisodeId !== null}
                       onClick={() => deleteEpisode(ep)}
                     >
-                      {deletingEpisodeId === ep.id ? '删除中…' : '删除剧集'}
+                      {deletingEpisodeId === ep.id ? copy('删除中…', 'Deleting…') : copy('删除剧集', 'Delete episode')}
                     </button>
                   </div>
                 </div>
               ))}
               <div ref={setEpisodeLoadMoreTrigger} className="series-ep-list__footer">
                 {episodesLoadError && episodesHasMore ? (
-                  <button type="button" onClick={() => void loadNextEpisodePage()}>加载失败，点击重试</button>
+                  <button type="button" onClick={() => void loadNextEpisodePage()}>{copy('加载失败，点击重试', 'Could not load. Retry')}</button>
                 ) : (
                   <InfiniteScrollLoadFooter
                     loading={episodesLoadingMore}
                     hasMore={episodesHasMore}
                     hasItems
-                    loadingText="正在加载更多剧集…"
-                    endText="已加载全部剧集"
+                    loadingText={copy('正在加载更多剧集…', 'Loading episodes…')}
+                    endText={copy('已加载全部剧集', 'All episodes loaded')}
                   />
                 )}
               </div>
@@ -560,7 +563,7 @@ function SeriesEpisodeListClient() {
       ) : activeTab === 'characters' || activeTab === 'props' || activeTab === 'scenes' ? (
         <div className="series-ep-list__asset-body">
           {projectAssetsLoading ? (
-            <div className="series-ep-list__loading">加载资产中…</div>
+            <div className="series-ep-list__loading">{copy('加载资产中…', 'Loading assets…')}</div>
           ) : sortedProjectAssets.length > 0 ? (
             <div className="series-ep-list__asset-grid-wrap assets-library-figma">
               <div className="works-lib-grid series-ep-list__works-grid">

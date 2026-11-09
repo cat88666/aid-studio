@@ -1,0 +1,33 @@
+/* Public Creator surfaces only. Media editors and the original Web stay independent. */
+html.creator-public-shell {
+  --creator-ink: #18191d;
+  --creator-muted: #73757e;
+  --creator-surface: #f8f8fa;
+  --creator-border: #e9e9ed;
+}
+.creator-public-info { background: var(--creator-surface); color: var(--creator-ink); }
+.creator-public-info .creator-nav { background: #fff; border-bottom: 1px solid var(--creator-border); }
+.creator-public-info .dashboard-nav > .creator-container { height: 68px; gap: 24px; }
+.creator-public-info .creator-links a { padding: 9px 12px; border-radius: 8px; color: #686a73; font-weight: 500; }
+.creator-public-info .creator-links a[aria-current] { color: #6953d4; background: #f0edf9; }
+.creator-public-info .creator-nav-account { background: #18191d; border-color: #18191d; color: #fff; border-radius: 8px; }
+.creator-public-info :is(.assets-page, .invite-page) { background: var(--creator-surface); }
+.creator-public-info :is(.assets-page, .invite-page) h1 { font-weight: 650; letter-spacing: -.04em; }
+.creator-public-info .dashboard-projects { border: 1px solid var(--creator-border); border-radius: 16px; background: #fff; }
+.creator-public-info .dashboard-projects__sheet > header { background: #fff; border-bottom: 1px solid var(--creator-border); }
+.creator-public-info .dashboard-projects__card { border-radius: 10px; box-shadow: none; }
+.creator-public-info .dashboard-projects__card:focus-visible,
+.creator-public-info .creator-links a:focus-visible { outline: 2px solid #6953d4; outline-offset: 3px; }
+.creator-public-info .showcase-content { background: transparent; }
+@media (max-width: 940px) {
+  .creator-public-info .dashboard-nav > .creator-container { height: auto; min-height: 64px; flex-wrap: wrap; gap: 12px; padding-block: 12px; }
+  .creator-public-info .dashboard-nav .creator-menu { display: none; }
+  .creator-public-info .dashboard-nav .creator-links,
+  .creator-public-info .dashboard-nav .creator-links.is-open {
+    display: flex; position: static; order: 5; flex: 0 0 100%; overflow-x: auto;
+    flex-wrap: nowrap; margin: 0; padding: 0 0 3px; border: 0; border-radius: 0;
+    scrollbar-width: thin; gap: 3px;
+  }
+  .creator-public-info .creator-links a { flex: 0 0 auto; white-space: nowrap; padding: 8px 10px; }
+  .creator-public-info .creator-language { margin-inline-start: auto; }
+}

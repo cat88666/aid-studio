@@ -11,7 +11,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { message } from 'antd'
 import { suspendAllTaskSseFollows } from '~/composables/useTaskSseFollow'
 import { useRouteLike, useRouteLikeNavigator } from '~/composables/useRouteLike'
-import HomeNewSidebar from '~/components/layout/HomeNewSidebar'
+import CreateWorkspaceNav from './CreateWorkspaceNav'
+import { useCreateCopy } from './useCreateCopy'
 import { CREATE_FLOW_STEP_ORDER, isSeriesEpisodeListPath, isSeriesFlowChromePath, isSeriesScriptUploadPath, routePathToCreationStep } from '~/utils/createFlowRoutes'
 import { createFlowPageKey } from '~/utils/createFlowNavSerialize'
 import { getCreateFlowDisplaySteps } from '~/utils/createFlowStepMeta'
@@ -649,11 +650,13 @@ export function CreateFlowShell({ children }: { children: ReactNode }) {
     />
   )
 
+  const copy = useCreateCopy()
+
   const mainView = (
     <div className="main-layout">
-      <HomeNewSidebar
+      <CreateWorkspaceNav
         onBrand={goHomeFromCreate}
-        onGallery={goHomeFromCreate}
+        onBilling={openBilling}
         onWorks={openWorksPanel}
         onAssets={openAssetsPanel}
         onTutorial={() => void openTutorial()}
@@ -714,7 +717,7 @@ export function CreateFlowShell({ children }: { children: ReactNode }) {
           <div className="preview_bg_box">
             {previewAuditFailureReason ? (
               <div className="preview-audit-failure" role="alert">
-                <span className="preview-audit-failure__title">审核失败</span>
+                <span className="preview-audit-failure__title">{copy('审核失败', 'Review failed')}</span>
                 <span className="preview-audit-failure__reason">{previewAuditFailureReason}</span>
               </div>
             ) : null}
@@ -746,7 +749,7 @@ export function CreateFlowShell({ children }: { children: ReactNode }) {
                 aria-busy={stepNavigation.pendingStep != null}
               >
                 {stepNavigation.pendingStep ? (
-                  <CreateFlowStepLoading label={`正在打开${pendingStepTitle ?? '流程页面'}…`} />
+                  <CreateFlowStepLoading label={copy(`正在打开${pendingStepTitle ?? '流程页面'}…`, 'Opening step…')} />
                 ) : null}
                 {children}
               </div>
@@ -759,7 +762,7 @@ export function CreateFlowShell({ children }: { children: ReactNode }) {
 
   return (
     <createFlowShellContext.Provider value={shellContextValue}>
-      {navigationPending && <PageLoadingOverlay label="正在进入流程画布…" />}
+      {navigationPending && <PageLoadingOverlay label={copy('正在进入流程画布…', 'Opening canvas…')} />}
       <div className={`create-page${isSeriesFlowChrome ? ' create-page--series-upload' : ''}`}>
         {!pageReady ? skeletonView : mainView}
 
@@ -817,7 +820,7 @@ export function CreateFlowShell({ children }: { children: ReactNode }) {
           userMenu={{
             ref: userMenuDropdownRef,
             open: showUserMenuCard,
-            floatingStyle: userMenuCardStyle,
+            floatingStyle: { ...userMenuCardStyle, left: 'auto', right: '16px', transform: 'none', maxHeight: 'calc(100dvh - 80px)', overflowY: 'auto' },
             onFaq: openFaq,
             onBilling: openBilling,
             onRecharge: openRechargeFromMenu,

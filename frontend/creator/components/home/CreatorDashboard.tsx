@@ -1,62 +1,87 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
-import { PaperClipOutlined, CaretRightFilled } from '@ant-design/icons'
+import { PaperClipOutlined, ArrowRightOutlined, VideoCameraOutlined } from '@ant-design/icons'
 import { useCreatorLocale } from '~/hooks/useCreatorLocale'
 import { useHomeShellCreateModal } from '~/hooks/useHomeShellCreateModal'
-import { homeCopy } from '~/config/home-locales'
-import type { CreatorLocale } from '~/config/creatorLanguages'
+import { useOpenLibraryProject } from '~/hooks/useOpenLibraryProject'
 import { useLoginModalStore } from '~/stores/loginModal'
 import { useUserStore } from '~/stores/user'
+import type { UserProjectRow } from '~/types/business-api'
+import { userProjectList } from '~/utils/business/project'
 import { requireLogin } from '~/utils/authLoginNavigation'
-import { withAppBasePath } from '~/utils/appBasePath'
-import { landingSamples } from '~/utils/landingSamples'
 import { assertScriptPlainTextFile, SCRIPT_UPLOAD_ACCEPT, validateScriptUploadFile } from '~/utils/scriptFileUpload'
 import './CreatorDashboard.css'
 
 const MAX_CHARACTERS = 100_000
-const copy: Record<CreatorLocale, [string, string, string, string, string, string]> = {
-  zh: ['导入剧本','空白项目','粘贴你的剧本，或上传剧本文件…','项目名称','上传文件','请使用不超过 10 万字的 TXT 纯文本文件。'],
-  'zh-hant': ['匯入劇本','空白專案','貼上你的劇本，或上傳劇本檔案…','專案名稱','上傳檔案','請使用不超過 10 萬字的 TXT 純文字檔。'],
-  ja: ['脚本を読み込む','新規プロジェクト','脚本を貼り付けるか、ファイルをアップロード…','プロジェクト名','ファイルを選択','10万文字以内の TXT ファイルを選択してください。'],
-  en: ['Import script','Blank project','Paste your script or upload a text file…','Project title','Upload file','Choose a plain TXT file of up to 100,000 characters.'],
-  ko: ['대본 가져오기','빈 프로젝트','대본을 붙여 넣거나 파일을 업로드하세요…','프로젝트 이름','파일 업로드','10만 자 이내의 TXT 파일을 선택하세요.'],
-  fr: ['Importer un scénario','Projet vierge','Collez votre scénario ou importez un fichier…','Titre du projet','Importer un fichier','Choisissez un fichier TXT de 100 000 caractères maximum.'],
-  de: ['Drehbuch importieren','Leeres Projekt','Drehbuch einfügen oder Textdatei hochladen…','Projekttitel','Datei hochladen','TXT-Datei mit höchstens 100.000 Zeichen wählen.'],
-  it: ['Importa copione','Progetto vuoto','Incolla il copione o carica un file di testo…','Titolo del progetto','Carica file','Scegli un file TXT fino a 100.000 caratteri.'],
-  es: ['Importar guion','Proyecto vacío','Pega tu guion o sube un archivo de texto…','Título del proyecto','Subir archivo','Elige un archivo TXT de hasta 100.000 caracteres.'],
-  pt: ['Importar roteiro','Projeto em branco','Cole seu roteiro ou envie um arquivo…','Título do projeto','Enviar arquivo','Escolha um TXT com até 100.000 caracteres.'],
-  id: ['Impor naskah','Proyek kosong','Tempel naskah atau unggah berkas teks…','Judul proyek','Unggah berkas','Pilih berkas TXT hingga 100.000 karakter.'],
-  ru: ['Импорт сценария','Пустой проект','Вставьте сценарий или загрузите текстовый файл…','Название проекта','Загрузить файл','Выберите TXT-файл длиной до 100 000 символов.'],
-  tr: ['Senaryo aktar','Boş proje','Senaryoyu yapıştırın veya metin dosyası yükleyin…','Proje adı','Dosya yükle','En fazla 100.000 karakterlik bir TXT dosyası seçin.'],
-  nl: ['Script importeren','Leeg project','Plak je script of upload een tekstbestand…','Projecttitel','Bestand uploaden','Kies een TXT-bestand met maximaal 100.000 tekens.'],
-  uk: ['Імпорт сценарію','Порожній проєкт','Вставте сценарій або завантажте текстовий файл…','Назва проєкту','Завантажити файл','Виберіть TXT-файл довжиною до 100 000 символів.'],
-  ar: ['استيراد نص','مشروع فارغ','الصق النص أو ارفع ملفًا نصيًا…','اسم المشروع','رفع ملف','اختر ملف TXT لا يتجاوز ١٠٠٬٠٠٠ حرف.']
+const copy = {
+  en: {
+    title: 'Studio', create: 'New project', movie: 'Film / short', series: 'Series', import: 'Import script',
+    name: 'Project name', untitled: 'Untitled project', prompt: 'Paste your script…', upload: 'Upload TXT',
+    hint: 'TXT · up to 100,000 characters', invalid: 'Choose a non-empty TXT file under 15 MB and 100,000 characters.',
+    next: 'Continue', recent: 'Recent projects', login: 'Sign in', loginHint: 'Sign in to continue your projects.',
+    empty: 'No projects yet.', loading: 'Loading projects…', failure: 'Could not load projects.', retry: 'Retry',
+    resume: 'Continue project', opening: 'Opening…', episodes: 'Episodes', draft: 'Draft',
+    steps: ['Project setup', 'Script', 'Characters & scenes', 'Storyboard', 'Video', 'Voiceover', 'Preview'],
+  },
+  zh: {
+    title: '创作台', create: '新建作品', movie: '电影 / 短片', series: '连续剧', import: '导入剧本',
+    name: '作品名称', untitled: '未命名作品', prompt: '粘贴剧本…', upload: '上传 TXT',
+    hint: 'TXT · 最多 10 万字', invalid: '请选择非空 TXT 文件，不超过 15 MB 和 10 万字。',
+    next: '继续', recent: '最近项目', login: '登录', loginHint: '登录后继续你的项目。',
+    empty: '暂无项目', loading: '正在加载项目…', failure: '项目加载失败', retry: '重试',
+    resume: '继续创作', opening: '正在打开…', episodes: '分集', draft: '草稿',
+    steps: ['项目配置', '剧本', '角色与场景', '分镜', '视频', '配音', '预览'],
+  },
+  'zh-hant': {
+    title: '創作台', create: '新建作品', movie: '電影 / 短片', series: '連續劇', import: '匯入劇本',
+    name: '作品名稱', untitled: '未命名作品', prompt: '貼上劇本…', upload: '上傳 TXT',
+    hint: 'TXT · 最多 10 萬字', invalid: '請選擇非空 TXT 檔案，不超過 15 MB 和 10 萬字。',
+    next: '繼續', recent: '最近專案', login: '登入', loginHint: '登入後繼續你的專案。',
+    empty: '暫無專案', loading: '正在載入專案…', failure: '專案載入失敗', retry: '重試',
+    resume: '繼續創作', opening: '正在開啟…', episodes: '分集', draft: '草稿',
+    steps: ['專案設定', '劇本', '角色與場景', '分鏡', '影片', '配音', '預覽'],
+  },
 }
+
+type ProjectResult = { owner: string; attempt: number; rows: UserProjectRow[]; error: boolean }
 
 export default function CreatorDashboard() {
   const { locale } = useCreatorLocale()
-  const t = homeCopy[locale]
-  const [importMode, blankMode, prompt, projectTitle, upload, fileHint] = copy[locale]
-  const [mode, setMode] = useState<'script' | 'blank'>('script')
+  const text = copy[locale === 'zh' || locale === 'zh-hant' ? locale : 'en']
+  const [mode, setMode] = useState<'movie' | 'series' | 'import'>('movie')
   const [script, setScript] = useState('')
   const [name, setName] = useState('')
   const [filename, setFilename] = useState('')
   const [reading, setReading] = useState(false)
   const [fileError, setFileError] = useState(false)
-  const [preview, setPreview] = useState('')
+  const [attempt, setAttempt] = useState(0)
+  const [result, setResult] = useState<ProjectResult | null>(null)
+  const [opening, setOpening] = useState<number | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
   const create = useHomeShellCreateModal()
+  const openProject = useOpenLibraryProject()
   const token = useUserStore(state => state.token)
   const loginOpen = useLoginModalStore(state => state.open)
   const resumeCreate = useRef<(() => void) | null>(null)
+  const current = result?.owner === token && result.attempt === attempt ? result : null
+
   useEffect(() => {
     if (loginOpen || !resumeCreate.current) return
     const resume = resumeCreate.current
     resumeCreate.current = null
     if (token) resume()
   }, [loginOpen, token])
+
+  useEffect(() => {
+    if (!token) return
+    let active = true
+    void userProjectList({ pageNum: 1, pageSize: 6 }).then(
+      data => { if (active) setResult({ owner: token, attempt, rows: data.rows, error: false }) },
+      () => { if (active) setResult({ owner: token, attempt, rows: [], error: true }) },
+    )
+    return () => { active = false }
+  }, [token, attempt])
 
   async function importFile(file?: File) {
     if (!file) return
@@ -65,9 +90,9 @@ export default function CreatorDashboard() {
     try {
       if (validateScriptUploadFile(file) || file.size > 15 * 1024 * 1024) throw new Error()
       await assertScriptPlainTextFile(file)
-      const text = await file.text()
-      if (!text.trim() || text.length > MAX_CHARACTERS) throw new Error()
-      setScript(text)
+      const contents = await file.text()
+      if (!contents.trim() || contents.length > MAX_CHARACTERS) throw new Error()
+      setScript(contents)
       setFilename(file.name)
     } catch {
       setFileError(true)
@@ -76,71 +101,100 @@ export default function CreatorDashboard() {
     }
   }
 
-  function openProject() {
-    if (mode === 'blank') {
-      create.openCreateModal()
-      if (name.trim()) create.setCreationTitleDraft(name.trim())
-      return
+  function configureProject() {
+    if (mode === 'import') {
+      if (!script.trim()) return
+      const file = new File([script], filename || 'script.txt', { type: 'text/plain' })
+      create.openCreateModal({ worksTab: 'series', scriptFile: file })
+    } else {
+      create.openCreateModal({ worksTab: mode === 'movie' ? 'film' : 'series' })
     }
-    if (!script.trim()) return
-    const file = new File([script], filename || 'script.txt', { type: 'text/plain' })
-    create.openCreateModal({ worksTab: 'series', scriptFile: file })
-    if (filename) create.setCreationTitleDraft(filename.replace(/\.txt$/i, '').slice(0, 50))
+    const importedName = mode === 'import' ? filename.replace(/\.txt$/i, '') : ''
+    create.setCreationTitleDraft((name.trim() || importedName || text.untitled).slice(0, 25))
   }
 
   function start() {
-    if (token) return openProject()
-    resumeCreate.current = openProject
+    if (token) return configureProject()
+    resumeCreate.current = configureProject
     requireLogin({ redirect: null, leaveAuthRoute: false })
   }
 
-  return <main className="creator-desk" lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
-    <header className="creator-desk-hero"><h1>{t.headline}</h1><p>{t.intro}</p></header>
-    <section className="creator-desk-compose" aria-label={t.create}>
-      <div className="creator-desk-modes" role="group" aria-label={t.create}>
-        <button type="button" aria-pressed={mode === 'script'} onClick={() => setMode('script')}>{importMode}</button>
-        <button type="button" aria-pressed={mode === 'blank'} onClick={() => setMode('blank')}>{blankMode}</button>
-      </div>
-      <form className="creator-desk-input" onSubmit={event => { event.preventDefault(); start() }}>
-        {mode === 'script'
-          ? <textarea aria-label={importMode} placeholder={prompt} value={script} maxLength={MAX_CHARACTERS} disabled={reading}
-              onChange={event => { setScript(event.target.value); setFileError(false) }} rows={4} />
-          : <input type="text" aria-label={projectTitle} placeholder={projectTitle} maxLength={50} value={name} onChange={event => setName(event.target.value)} />}
-        <div className="creator-desk-toolbar">
-          {mode === 'script' && <>
+  async function resume(project: UserProjectRow) {
+    if (opening !== null) return
+    setOpening(project.id)
+    try { await openProject(project.id, project.projectType) }
+    finally { setOpening(null) }
+  }
+
+  function stepLabel(project: UserProjectRow) {
+    if (project.projectType === 'series') return text.episodes
+    const step = Number(project.currentStep)
+    return Number.isInteger(step) && step >= 1 && step <= text.steps.length ? text.steps[step - 1] : text.draft
+  }
+
+  return <main className="creator-desk" lang={locale === 'zh' || locale === 'zh-hant' ? locale : 'en'} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+    <h1>{text.title}</h1>
+    <div className="creator-desk-layout">
+      <section className="creator-desk-compose" aria-labelledby="creator-new-project">
+        <h2 id="creator-new-project">{text.create}</h2>
+        <div className="creator-desk-modes" role="group" aria-label={text.create}>
+          {(['movie', 'series', 'import'] as const).map(value => <button type="button" key={value}
+            aria-pressed={mode === value} onClick={() => setMode(value)}>{text[value]}</button>)}
+        </div>
+        <form onSubmit={event => { event.preventDefault(); start() }}>
+          <label className="creator-desk-field">{text.name}
+            <input type="text" placeholder={text.untitled} maxLength={25} value={name} onChange={event => setName(event.target.value)} />
+          </label>
+          {mode === 'import' && <div className="creator-desk-import">
+            <label className="creator-desk-field">{text.import}
+              <textarea placeholder={text.prompt} value={script} maxLength={MAX_CHARACTERS} disabled={reading}
+                onChange={event => { setScript(event.target.value); setFileError(false) }} rows={6} />
+            </label>
             <input type="file" ref={fileInput} accept={SCRIPT_UPLOAD_ACCEPT} hidden onChange={event => {
               const file = event.target.files?.[0]
               event.target.value = ''
               void importFile(file)
             }} />
-            <button className="creator-desk-upload" type="button" disabled={reading} onClick={() => fileInput.current?.click()}>
-              <PaperClipOutlined />{upload}
+            <div className="creator-desk-toolbar">
+              <button className="creator-desk-upload" type="button" disabled={reading} onClick={() => fileInput.current?.click()}>
+                <PaperClipOutlined aria-hidden="true" />{text.upload}
+              </button>
+              {filename && <span className="creator-desk-file" title={filename}>{filename}</span>}
+            </div>
+            <p className={fileError ? 'creator-desk-note has-error' : 'creator-desk-note'} role={fileError ? 'alert' : undefined}>
+              {fileError ? text.invalid : text.hint}
+            </p>
+          </div>}
+          <button type="submit" className="creator-desk-start" disabled={reading || (mode === 'import' && !script.trim())}>
+            {text.next}<ArrowRightOutlined aria-hidden="true" />
+          </button>
+        </form>
+      </section>
+      <section className="creator-desk-recent" aria-labelledby="creator-recent-projects">
+        <h2 id="creator-recent-projects">{text.recent}</h2>
+        {!token ? <div className="creator-desk-empty"><p>{text.loginHint}</p><button type="button"
+          onClick={() => requireLogin({ redirect: null, leaveAuthRoute: false })}>{text.login}</button></div>
+          : !current ? <p className="creator-desk-empty" role="status">{text.loading}</p>
+          : current.error ? <div className="creator-desk-empty" role="alert"><p>{text.failure}</p>
+            <button type="button" onClick={() => setAttempt(value => value + 1)}>{text.retry}</button></div>
+          : !current.rows.length ? <p className="creator-desk-empty">{text.empty}</p>
+          : <div className="creator-desk-projects">{current.rows.map(project => {
+            const updated = project.updateTime || project.createTime
+            return <button type="button" className="creator-desk-project" key={project.id} disabled={opening !== null}
+              aria-label={`${opening === project.id ? text.opening : text.resume}: ${project.projectName}`}
+              onClick={() => void resume(project)}>
+              <span className="creator-desk-cover" aria-hidden="true">
+                <VideoCameraOutlined />
+                {project.coverUrl && <img src={project.coverUrl} alt="" loading="lazy" onError={event => { event.currentTarget.hidden = true }} />}
+              </span>
+              <span className="creator-desk-project-info"><strong>{project.projectName}</strong>
+                <small>{project.projectType === 'series' ? text.series : text.movie} · {stepLabel(project)}</small>
+                {updated && <time dateTime={updated}>{updated.slice(0, 16).replace('T', ' ')}</time>}
+              </span>
+              <ArrowRightOutlined aria-hidden="true" />
             </button>
-            {filename && <span className="creator-desk-file" title={filename}>{filename}</span>}
-          </>}
-          <button type="submit" className="creator-desk-start" disabled={reading || (mode === 'script' && !script.trim())}>{t.create}</button>
-        </div>
-      </form>
-      {mode === 'script' && <p className={fileError ? 'creator-desk-note has-error' : 'creator-desk-note'} role={fileError ? 'alert' : undefined}>{fileHint}</p>}
-    </section>
-    <section className="creator-desk-examples">
-      <div className="creator-desk-examples-head"><h2>{t.examples}</h2><Link href="/gallery/">{t.gallery} <span aria-hidden="true">→</span></Link></div>
-      <div className="creator-desk-grid">
-        {landingSamples.map((sample, index) => <Link key={sample.id} href={'/case?sample=' + sample.id} className="creator-desk-card"
-          onPointerEnter={event => {
-            if (event.pointerType === 'mouse' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) setPreview(sample.id)
-          }}
-          onPointerLeave={() => setPreview('')}>
-          <div className="creator-desk-cover">
-            <img src={withAppBasePath(sample.poster)} alt="" loading={index < 5 ? 'eager' : 'lazy'} />
-            {preview === sample.id && <video autoPlay muted loop playsInline aria-hidden="true" poster={withAppBasePath(sample.poster)}
-              src={withAppBasePath(sample.video)} onError={() => setPreview('')} />}
-            <span className="creator-desk-preview"><CaretRightFilled />{t.watch}</span>
-          </div>
-          <div className="creator-desk-caption"><h3>{t.films[index][0]}</h3><p>{t.films[index][1]}</p></div>
-        </Link>)}
-      </div>
-    </section>
-    <footer className="creator-desk-footer"><Link href="/guide/">{t.guide}</Link><Link href="/faq/">{t.helpCenter}</Link></footer>
+          })}</div>}
+      </section>
+    </div>
   </main>
 }

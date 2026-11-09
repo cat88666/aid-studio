@@ -1,5 +1,7 @@
 'use client'
 
+import { useCreateCopy } from '~/components/create/useCreateCopy'
+
 import { LoadingOutlined } from '@ant-design/icons'
 import { Modal } from 'antd'
 import CreateFirstStepFormBody from '~/components/steps/CreateFirstStepFormBody'
@@ -63,9 +65,10 @@ export function CreateFirstStepModal({
   onModelValueChange,
   onConfirm
 }: CreateFirstStepModalProps) {
-  const confirmButtonLabel = flowEditMode ? '保存' : '创建作品'
-  const confirmLoadingLabel = flowEditMode ? '保存中…' : '创建中…'
-  const modalTitleText = flowEditMode ? '项目配置' : '新建项目'
+  const copy = useCreateCopy()
+  const confirmButtonLabel = flowEditMode ? copy('保存', 'Save') : copy('创建作品', 'Create project')
+  const confirmLoadingLabel = flowEditMode ? copy('保存中…', 'Saving…') : copy('创建中…', 'Creating…')
+  const modalTitleText = flowEditMode ? copy('项目配置', 'Project settings') : copy('新建项目', 'New project')
 
   function onConfirmClick() {
     if (confirmLoading) return
@@ -118,7 +121,7 @@ export function CreateFirstStepModal({
             disabled={confirmLoading}
             onClick={() => !confirmLoading && onOpenChange(false)}
           >
-            取消
+            {copy('取消', 'Cancel')}
           </button>
           <button
             type="button"

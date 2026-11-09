@@ -1,12 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import navLabels from '~/config/dashboardNav.json'
 import { useEffect, useRef, useState } from 'react'
 import { GlobalOutlined, MenuOutlined } from '@ant-design/icons'
 import { creatorBrandName, CREATOR_BRAND_ICON } from '~/config/creatorBrand'
-import { creatorLanguage, creatorLanguages, languageFromPath } from '~/config/creatorLanguages'
+import { creatorLanguage, creatorLanguages } from '~/config/creatorLanguages'
 import { homeCopy } from '~/config/home-locales'
 import { useCreatorLocale } from '~/hooks/useCreatorLocale'
 import { useUserStore } from '~/stores/user'
@@ -23,8 +23,11 @@ export default function CreatorPublicHeader({ onAccount }: { onAccount: () => vo
   const token = useUserStore(state => state.token)
   const pathname = usePathname()?.replace(/\/$/, '') || '/'
   const home = language.path
-  const destinations = [home, home + '?projects=1', '/assets/', '/membership/', '/billing/', '/referral/']
-  const current = destinations.findIndex(href => href.replace(/\/$/, '') === pathname)
+  const projectsOpen = useSearchParams().get('projects') === '1'
+  const studioLabel = locale === 'zh' ? '创作台' : locale === 'zh-hant' ? '創作台' : 'Studio'
+  const destinations = [home, '/start/', home + '?projects=1', '/assets/', '/billing/', '/referral/']
+  const labels = [navLabels[locale][0], studioLabel, navLabels[locale][1], navLabels[locale][2], navLabels[locale][4], navLabels[locale][5]]
+  const current = projectsOpen ? 2 : pathname === '/start' ? 1 : pathname === '/assets' ? 3 : pathname === '/billing' || pathname === '/membership' ? 4 : pathname === '/referral' || pathname === '/invite' ? 5 : pathname === '/' || pathname === home.replace(/\/$/, '') ? 0 : -1
 
   useEffect(() => {
     const dismissOutside = (event: PointerEvent) => {
@@ -49,7 +52,6 @@ export default function CreatorPublicHeader({ onAccount }: { onAccount: () => vo
 
   return (
     <>
-      {languageFromPath(pathname) && <div className="showcase-announcement"><span>{t.formats}</span><a href="#workflow">{t.workflowTitle}<span aria-hidden="true"> →</span></a></div>}
       <header className="creator-nav dashboard-nav">
       <div className="creator-container">
         <Link href={language.path} aria-label={creatorBrandName(locale) + ' ' + t.home} className="creator-brand">
@@ -57,8 +59,8 @@ export default function CreatorPublicHeader({ onAccount }: { onAccount: () => vo
         </Link>
         <nav className={menuOpen ? 'creator-links is-open' : 'creator-links'} aria-label={t.nav}>
           {destinations.map((href, index) => (
-            <Link key={href} href={href} prefetch={false} aria-current={index === current || (index === 0 && (pathname === '/' || pathname === language.path.slice(0, -1))) ? 'page' : undefined}
-              onClick={() => setMenuOpen(false)}>{navLabels[locale][index]}</Link>
+            <Link key={href} href={href} prefetch={false} aria-current={index === current ? 'page' : undefined}
+              onClick={() => setMenuOpen(false)}>{labels[index]}</Link>
           ))}
         </nav>
         <details className="creator-language" ref={languageMenu}>
