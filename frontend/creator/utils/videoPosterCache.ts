@@ -1,6 +1,6 @@
 /** 视频首帧海报缓存：内存即时命中 + IndexedDB 跨刷新复用 */
 
-const DB_NAME = 'aid-video-poster-cache'
+const DB_NAME = 'sakura-video-poster-cache'
 const DB_VERSION = 1
 const STORE = 'posters'
 const MEMORY_MAX = 80

@@ -1,6 +1,7 @@
 // 用户相关类型（基础字段 + /api/user/profile 扩展信息）
 export interface User {
   id: string
+  identityVersion?: 'public-snowflake-v1'
   username: string
   email: string
   avatar?: string

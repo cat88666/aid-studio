@@ -5,7 +5,7 @@ import { useUserStore } from '@/stores/user'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import {
-  AID_LEAVE_AUTH_ROUTE_EVENT,
+  SAKURA_LEAVE_AUTH_ROUTE_EVENT,
   requireLogin
 } from '~/utils/authLoginNavigation'
 import { isAuthRequiredPath } from '~/utils/authRequiredPath'
@@ -35,8 +35,8 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
     const onLeaveAuthRoute = () => {
       router.replace('/')
     }
-    window.addEventListener(AID_LEAVE_AUTH_ROUTE_EVENT, onLeaveAuthRoute)
-    return () => window.removeEventListener(AID_LEAVE_AUTH_ROUTE_EVENT, onLeaveAuthRoute)
+    window.addEventListener(SAKURA_LEAVE_AUTH_ROUTE_EVENT, onLeaveAuthRoute)
+    return () => window.removeEventListener(SAKURA_LEAVE_AUTH_ROUTE_EVENT, onLeaveAuthRoute)
   }, [router])
 
   useEffect(() => {

@@ -18,7 +18,7 @@ type CSSProperties
 } from 'react'
 import { createPortal } from 'react-dom'
 import groupAvtorUrl from '~/assets/img/home/Group-avtor.svg'
-import { getAidPortalRoot } from '~/utils/portalRoot'
+import { getSakuraPortalRoot } from '~/utils/portalRoot'
 import { useAuthPublicConfig } from '~/composables/useAuthPublicConfig'
 import { useWechatNotifyPreference } from '~/composables/useWechatNotifyPreference'
 import { useUserStore } from '~/stores/user'
@@ -140,26 +140,11 @@ const UserMenuDropdown = forwardRef<FloatingPanelHandle, UserMenuDropdownProps>(
       const name = user?.nickName?.trim()
       if (name) return name
       if (user?.email?.trim()) return user.email.trim()
-      if (user?.id) return `ID${user.id}`
       return '用户'
     })()
 
-    const menuCardUserSub = (() => {
-      if (!user?.id) return ''
-      if (user.username?.trim()) return `ID:${user.id}`
-      return ''
-    })()
-
-    const menuCardUserTitle = (() => {
-      if (!user) return ''
-      const parts = [user.username, user.id ? `ID${user.id}` : '', user.email].filter(
-        Boolean
-      ) as string[]
-      return parts.join(' · ')
-    })()
-
     if (!rendered || typeof document === 'undefined') return null
-    const portalRoot = getAidPortalRoot()
+    const portalRoot = getSakuraPortalRoot()
     if (!portalRoot) return null
 
     return createPortal(
@@ -175,12 +160,9 @@ const UserMenuDropdown = forwardRef<FloatingPanelHandle, UserMenuDropdownProps>(
             <img src={userAvatarUrl} alt="" width={44} height={44} />
           </div>
           <div className="user-menu-dropdown__meta">
-            <span className="user-menu-dropdown__name" title={menuCardUserTitle}>
+            <span className="user-menu-dropdown__name">
               {menuCardUserName}
             </span>
-            {menuCardUserSub ? (
-              <span className="user-menu-dropdown__sub">{menuCardUserSub}</span>
-            ) : null}
           </div>
         </div>
         {showWechatNotifyRow ? (

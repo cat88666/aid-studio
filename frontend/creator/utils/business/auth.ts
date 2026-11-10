@@ -192,24 +192,25 @@ export async function realAuthStatus(): Promise<RealAuthStatusData> {
   return unwrap(res)
 }
 
-let userProfileInflight: Promise<UserInfoFromApi> | null = null
+let userProfileInflight: { token: string | null; promise: Promise<UserInfoFromApi> } | null = null
 
 /**
  * 查询个人信息 POST /api/user/profile。
  * 刷新时多个入口（auth-sync 插件、页面守卫、余额组件）会并发拉取，
- * in-flight 合并保证同一时刻只有一个请求；不做 TTL 缓存，余额等实时字段始终以最新响应为准。
+ * in-flight 仅合并同一登录会话的请求；不做 TTL 缓存，余额等实时字段始终以最新响应为准。
  */
 export function userProfile(): Promise<UserInfoFromApi> {
-  if (userProfileInflight) return userProfileInflight
+  const token = typeof window === 'undefined' ? null : localStorage.getItem('token')
+  if (userProfileInflight?.token === token) return userProfileInflight.promise
   const promise = request
     .post<ApiEnvelope<UserInfoFromApi>>('/api/user/profile', {})
     .then((res) => unwrap(res))
     .finally(() => {
-      if (userProfileInflight === promise) {
+      if (userProfileInflight?.promise === promise) {
         userProfileInflight = null
       }
     })
-  userProfileInflight = promise
+  userProfileInflight = { token, promise }
   return promise
 }
 

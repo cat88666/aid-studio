@@ -33,7 +33,7 @@ import '@/assets/css/shimmer-image.css'
 import '@/assets/css/video-play-btn.css'
 import '@/assets/css/asset-card-cancel-hint.css'
 import '@/assets/css/empty-image-icon.css'
-import '@/assets/css/aid-portal-root.css'
+import '@/assets/css/sakura-portal-root.css'
 import '@/assets/font/font.css'
 
 const baiduSiteVerification = process.env.NEXT_PUBLIC_BAIDU_SITE_VERIFICATION?.trim()
@@ -71,7 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <AppShellOverlay />
           </AntdThemeProvider>
         </AntdRegistry>
-        <div id="aid-portal-root" />
+        <div id="sakura-portal-root" />
       </body>
     </html>
   )

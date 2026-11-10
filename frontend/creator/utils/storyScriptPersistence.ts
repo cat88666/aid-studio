@@ -47,7 +47,7 @@ export interface CoordinatorDependencies {
   now: () => number
 }
 
-const LOCAL_SNAPSHOT_PREFIX = 'aid:story-script:unsynced:'
+const LOCAL_SNAPSHOT_PREFIX = 'sakura:story-script:unsynced:'
 const baselines = new Map<string, StoryScriptBaseline>()
 const coordinators = new Map<string, StoryScriptAutoSaveCoordinator>()
 

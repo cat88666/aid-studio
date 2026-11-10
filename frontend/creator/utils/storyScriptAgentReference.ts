@@ -1,13 +1,14 @@
 import type { EditorTextSelection } from '~/utils/quill/editorTextSelection'
+import { normalizeSakuraProtocol } from './sakuraProtocol'
 
-const LEGACY_REFERENCE_START = '[[AID_SCRIPT_SELECTION_V1]]'
-const LEGACY_REFERENCE_END = '[[/AID_SCRIPT_SELECTION_V1]]'
-const REFERENCES_START = '[[AID_SCRIPT_SELECTIONS_V2]]'
-const REFERENCES_END = '[[/AID_SCRIPT_SELECTIONS_V2]]'
-const INSTRUCTION_START = '[[AID_SCRIPT_COMMENT_V1]]'
-const INSTRUCTION_END = '[[/AID_SCRIPT_COMMENT_V1]]'
-const REPLACEMENTS_START = '[[AID_SCRIPT_REPLACEMENTS_V1]]'
-const REPLACEMENTS_END = '[[/AID_SCRIPT_REPLACEMENTS_V1]]'
+const LEGACY_REFERENCE_START = '[[SAKURA_SCRIPT_SELECTION_V1]]'
+const LEGACY_REFERENCE_END = '[[/SAKURA_SCRIPT_SELECTION_V1]]'
+const REFERENCES_START = '[[SAKURA_SCRIPT_SELECTIONS_V2]]'
+const REFERENCES_END = '[[/SAKURA_SCRIPT_SELECTIONS_V2]]'
+const INSTRUCTION_START = '[[SAKURA_SCRIPT_COMMENT_V1]]'
+const INSTRUCTION_END = '[[/SAKURA_SCRIPT_COMMENT_V1]]'
+const REPLACEMENTS_START = '[[SAKURA_SCRIPT_REPLACEMENTS_V1]]'
+const REPLACEMENTS_END = '[[/SAKURA_SCRIPT_REPLACEMENTS_V1]]'
 
 export interface StoryScriptAgentReferencedPrompt {
   instruction: string
@@ -100,6 +101,7 @@ export function buildStoryScriptAgentPrompt(
 }
 
 export function parseStoryScriptAgentPrompt(prompt: string): StoryScriptAgentReferencedPrompt {
+  prompt = normalizeSakuraProtocol(prompt)
   const instructionStart = prompt.indexOf(INSTRUCTION_START)
   const instructionEnd = prompt.indexOf(INSTRUCTION_END)
   const referencesStart = prompt.indexOf(REFERENCES_START)
@@ -157,6 +159,7 @@ export function parseStoryScriptAgentReplacements(
   content: string,
   referenceCount: number
 ): StoryScriptAgentReplacement[] | null {
+  content = normalizeSakuraProtocol(content)
   if (referenceCount <= 0) return null
   const start = content.indexOf(REPLACEMENTS_START)
   const end = content.indexOf(REPLACEMENTS_END)
@@ -200,6 +203,7 @@ export function storyScriptAgentResponseForDisplay(
   content: string,
   references?: readonly EditorTextSelection[] | null
 ): StoryScriptAgentResponseDisplay {
+  content = normalizeSakuraProtocol(content)
   const normalizedReferences = normalizeStoryScriptAgentReferences(references)
   if (normalizedReferences.length === 0) {
     return { text: content, placeholder: false, applicable: true }

@@ -67,7 +67,7 @@ async function enabled(): Promise<boolean> {
 }
 
 function cleanText(value: string): string {
-  if (/^(https?:\/\/|\/(?:aid|url|api)\/)/i.test(value)) {
+  if (/^(https?:\/\/|\/(?:sakura|url|api)\/)/i.test(value)) {
     try {
       const absolute = /^https?:/i.test(value)
       const url = new URL(value, 'https://diagnostics.invalid')
@@ -198,8 +198,8 @@ export async function diagnosticFetch(url: string, init?: RequestInit): Promise<
   const headers = new Headers(init?.headers)
   if (typeof window !== 'undefined') {
     const resolved = new URL(url, window.location.href)
-    if (resolved.origin === window.location.origin && /\/(?:aid\/|url\/)?api\/user\//.test(resolved.pathname)) {
-      headers.set('X-AID-Request-ID', context.requestId)
+    if (resolved.origin === window.location.origin && /\/(?:sakura\/|url\/)?api\/user\//.test(resolved.pathname)) {
+      headers.set('X-SAKURA-Request-ID', context.requestId)
     }
   }
   try {
@@ -222,7 +222,7 @@ export async function diagnosticFetch(url: string, init?: RequestInit): Promise<
             failed ||= payload.code !== undefined && payload.code !== 0 && payload.code !== 200
           } catch { failed = true }
         }
-        if (failed) captureBrowserFailure(context, { status: response.status, ...evidence }, undefined, response.headers.get('X-AID-Request-ID') || undefined)
+        if (failed) captureBrowserFailure(context, { status: response.status, ...evidence }, undefined, response.headers.get('X-SAKURA-Request-ID') || undefined)
       })().catch(() => {})
     }
     return response
@@ -235,5 +235,5 @@ export async function diagnosticFetch(url: string, init?: RequestInit): Promise<
 export function captureStreamFailure(response: Response | undefined, rawEvent: unknown, error?: unknown): void {
   if (!response) return
   captureBrowserFailure(responses.get(response), { status: response.status, stream: true, rawEvent }, error,
-    response.headers.get('X-AID-Request-ID') || undefined)
+    response.headers.get('X-SAKURA-Request-ID') || undefined)
 }

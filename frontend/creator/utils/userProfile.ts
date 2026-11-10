@@ -7,7 +7,8 @@ export function mapUserInfoFromApiToUser(
   options?: { fallbackEmail?: string; role?: User['role'] }
 ): User {
   return {
-    id: String(u.userId),
+    id: u.userId,
+    identityVersion: 'public-snowflake-v1',
     username: u.userName || u.nickName || '用户',
     email: u.email || options?.fallbackEmail || '',
     avatar: u.avatar,

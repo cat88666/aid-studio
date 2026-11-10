@@ -1,8 +1,9 @@
 'use client'
 
+import { migrateSakuraStorage } from '~/utils/sakuraStorageMigration'
 import { bootstrapAuthPublicConfig } from '@/hooks/useAuthPublicConfig'
 import { useUserStore } from '@/stores/user'
-import { installAidAntdStaticTheme } from './AntdThemeProvider'
+import { installSakuraAntdStaticTheme } from './AntdThemeProvider'
 import { message } from 'antd'
 import { useEffect } from 'react'
 import { installAppConfirmModalPatch } from '~/utils/appConfirm'
@@ -16,7 +17,8 @@ import { installAppConfirmModalPatch } from '~/utils/appConfirm'
  */
 export function AppBootstrap() {
   useEffect(() => {
-    installAidAntdStaticTheme()
+    migrateSakuraStorage()
+    installSakuraAntdStaticTheme()
     message.config({ top: 24, duration: 3, maxCount: 1 })
     installAppConfirmModalPatch()
 

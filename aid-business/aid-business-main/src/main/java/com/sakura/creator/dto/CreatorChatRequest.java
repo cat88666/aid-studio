@@ -13,6 +13,7 @@ import java.util.List;
 
 /** Public chat input deliberately excludes internal generation and billing fields. */
 public record CreatorChatRequest(
+        @Size(max = 128) String modelCode,
         @NotEmpty @Size(max = 40) List<@NotNull @Valid Message> messages) {
     @JsonAnySetter
     public void rejectUnknown(String name, Object value) {

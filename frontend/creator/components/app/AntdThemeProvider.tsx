@@ -1,32 +1,32 @@
 'use client'
 
-import { AID_ANTD_THEME } from '@/config/antdTheme'
+import { SAKURA_ANTD_THEME } from '@/config/antdTheme'
 import { App, ConfigProvider } from 'antd'
 import enUS from 'antd/locale/en_US'
 import zhCN from 'antd/locale/zh_CN'
 import { useCreatorLocale } from '~/hooks/useCreatorLocale'
 import { type ReactNode } from 'react'
-import { getAidPortalRoot } from '~/utils/portalRoot'
+import { getSakuraPortalRoot } from '~/utils/portalRoot'
 
-export const AID_ANTD_STATIC_HOLDER_CLASS = 'aid-antd-static-holder'
+export const SAKURA_ANTD_STATIC_HOLDER_CLASS = 'sakura-antd-static-holder'
 
 /** 锚定浮层复用 Portal；无锚点的全局消息必须脱离业务 Portal 的 stacking context。 */
-export function resolveAidPopupContainer(triggerNode?: HTMLElement): HTMLElement {
+export function resolveSakuraPopupContainer(triggerNode?: HTMLElement): HTMLElement {
   if (!triggerNode) return document.body
-  return getAidPortalRoot() ?? triggerNode?.parentElement ?? document.body
+  return getSakuraPortalRoot() ?? triggerNode?.parentElement ?? document.body
 }
 
 /** Static Modal/message/notification APIs render outside the React provider tree. */
-export function renderAidAntdStaticHolder(children: ReactNode) {
+export function renderSakuraAntdStaticHolder(children: ReactNode) {
   return (
     <ConfigProvider
       locale={enUS}
-      theme={AID_ANTD_THEME}
+      theme={SAKURA_ANTD_THEME}
       wave={{ disabled: true }}
-      getPopupContainer={resolveAidPopupContainer}
+      getPopupContainer={resolveSakuraPopupContainer}
     >
       <App component={false}>
-        <div className={AID_ANTD_STATIC_HOLDER_CLASS}>{children}</div>
+        <div className={SAKURA_ANTD_STATIC_HOLDER_CLASS}>{children}</div>
       </App>
     </ConfigProvider>
   )
@@ -35,12 +35,12 @@ export function renderAidAntdStaticHolder(children: ReactNode) {
 let staticThemeInstalled = false
 
 /** Idempotent for React Strict Mode and Fast Refresh. */
-export function installAidAntdStaticTheme(): void {
+export function installSakuraAntdStaticTheme(): void {
   if (staticThemeInstalled) return
   staticThemeInstalled = true
   ConfigProvider.config({
-    theme: AID_ANTD_THEME,
-    holderRender: renderAidAntdStaticHolder
+    theme: SAKURA_ANTD_THEME,
+    holderRender: renderSakuraAntdStaticHolder
   })
 }
 
@@ -49,9 +49,9 @@ export function AntdThemeProvider({ children }: { children: ReactNode }) {
   return (
     <ConfigProvider
       locale={locale === 'zh' || locale === 'zh-hant' ? zhCN : enUS}
-      theme={AID_ANTD_THEME}
+      theme={SAKURA_ANTD_THEME}
       wave={{ disabled: true }}
-      getPopupContainer={resolveAidPopupContainer}
+      getPopupContainer={resolveSakuraPopupContainer}
     >
       <App component={false}>{children}</App>
     </ConfigProvider>

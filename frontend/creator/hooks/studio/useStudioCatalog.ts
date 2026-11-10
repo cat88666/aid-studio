@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { AgentInfoVO, UserModelListItem } from '@/types/business-api'
 import type { StudioMediaKind } from '@/types/studio'
 import type { UserSkillDefinition } from '@/types/user-skill'
-import { aidAgentList, userModelList } from '@/utils/business/model'
+import { sakuraAgentList, userModelList } from '@/utils/business/model'
 import { userSkillRuntimeCatalog } from '@/utils/business/skill'
 
 type CatalogState<T> = { data: T[]; loading: boolean; error: string }
@@ -49,7 +49,7 @@ function loadAgents(): Promise<AgentInfoVO[]> {
   if (process.env.NODE_ENV === 'test') return Promise.resolve([])
   if (agentCache) return Promise.resolve(agentCache)
   if (agentInflight) return agentInflight
-  agentInflight = aidAgentList()
+  agentInflight = sakuraAgentList()
     .then((groups) => {
       agentCache = groups.flatMap((group) => group.agents ?? [])
         .filter((agent) => agent.agentCode && agent.name)

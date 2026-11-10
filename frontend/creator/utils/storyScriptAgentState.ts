@@ -8,8 +8,8 @@ import type {
 import type { EditorTextSelection } from '~/utils/quill/editorTextSelection'
 import { resolveSkillRuntimeModelCode } from '~/utils/storyScriptAgentRuntime'
 
-const STORAGE_PREFIX = 'aid-story-script-agent:v3:'
-const LEGACY_STORAGE_PREFIX = 'aid-story-script-agent:v2:'
+const STORAGE_PREFIX = 'sakura-story-script-agent:v3:'
+const LEGACY_STORAGE_PREFIX = 'sakura-story-script-agent:v2:'
 const MAX_STATE_AGE_MS = 7 * 24 * 60 * 60 * 1000
 
 export interface StoryScriptAgentRuntimeCheckpoint {
@@ -51,8 +51,9 @@ function currentOwnerId(): string {
   try {
     const raw = localStorage.getItem('user-info')
     if (!raw) return ''
-    const user = JSON.parse(raw) as { id?: string | number }
-    return String(user.id ?? '').trim()
+    const user = JSON.parse(raw) as { id?: string; identityVersion?: string }
+    return user.identityVersion === 'public-snowflake-v1' && typeof user.id === 'string'
+      ? user.id.trim() : ''
   } catch {
     return ''
   }
@@ -63,13 +64,26 @@ function clearStorageKey(key: string) {
   localStorage.removeItem(key)
 }
 
-function clearLegacyState(projectId: number, episodeId: number) {
+function preserveStoredState(storage: Storage, key: string, raw: string): void {
+  // No trustworthy mapping exists from an old internal ID to a public Snowflake ID.
+  const prefix = `sakura-story-script-preserved:${key}:`
+  for (let i = 0; i < storage.length; i += 1) {
+    const existing = storage.key(i)
+    if (existing?.startsWith(prefix) && storage.getItem(existing) === raw) return
+  }
+  storage.setItem(`${prefix}${Date.now()}:${Math.random().toString(36).slice(2)}`, raw)
+}
+
+function clearLegacyState() {
   if (typeof window === 'undefined') return
-  clearStorageKey(storageKey(LEGACY_STORAGE_PREFIX, projectId, episodeId))
   for (const storage of [sessionStorage, localStorage]) {
     for (let index = storage.length - 1; index >= 0; index -= 1) {
       const key = storage.key(index)
-      if (key?.startsWith(LEGACY_STORAGE_PREFIX)) storage.removeItem(key)
+      if (key?.startsWith(LEGACY_STORAGE_PREFIX)) {
+        const raw = storage.getItem(key)
+        if (raw !== null) preserveStoredState(storage, key, raw)
+        storage.removeItem(key)
+      }
     }
   }
 }
@@ -102,17 +116,21 @@ export function readStoryScriptAgentState(
     episodeId < 0
   ) return null
   try {
-    clearLegacyState(projectId, episodeId)
+    const ownerId = currentOwnerId()
+    if (!ownerId) return null
+    clearLegacyState()
     const key = storageKey(STORAGE_PREFIX, projectId, episodeId)
     const raw = sessionStorage.getItem(key) || localStorage.getItem(key)
     if (!raw) return null
     const parsed = JSON.parse(raw) as unknown
-    if (!isValidState(parsed, projectId, episodeId) || Date.now() - parsed.updatedAt > MAX_STATE_AGE_MS) {
-      clearStorageKey(key)
+    if (isValidState(parsed, projectId, episodeId) && parsed.ownerId !== ownerId) {
+      for (const storage of [sessionStorage, localStorage]) {
+        const existing = storage.getItem(key)
+        if (existing) preserveStoredState(storage, key, existing)
+      }
       return null
     }
-    const ownerId = currentOwnerId()
-    if (ownerId && parsed.ownerId && parsed.ownerId !== ownerId) {
+    if (!isValidState(parsed, projectId, episodeId) || Date.now() - parsed.updatedAt > MAX_STATE_AGE_MS) {
       clearStorageKey(key)
       return null
     }
@@ -126,13 +144,19 @@ export function readStoryScriptAgentState(
 export function writeStoryScriptAgentState(state: StoryScriptAgentProjectState): boolean {
   if (typeof window === 'undefined') return false
   try {
-    clearLegacyState(state.projectId, state.episodeId)
+    const ownerId = currentOwnerId()
+    if (!ownerId || (state.ownerId && state.ownerId !== ownerId)) return false
+    clearLegacyState()
     const raw = JSON.stringify({
       ...state,
-      ownerId: currentOwnerId() || state.ownerId,
+      ownerId,
       updatedAt: Date.now()
     })
     const key = storageKey(STORAGE_PREFIX, state.projectId, state.episodeId)
+    for (const storage of [sessionStorage, localStorage]) {
+      const existing = storage.getItem(key)
+      if (existing && JSON.parse(existing).ownerId !== ownerId) preserveStoredState(storage, key, existing)
+    }
     sessionStorage.setItem(key, raw)
     localStorage.setItem(key, raw)
     return true

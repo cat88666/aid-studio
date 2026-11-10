@@ -235,8 +235,8 @@ export function StudioTopbar({
       <div className="studio-topbar__left">
         <div className="studio-topbar__project">
           <Dropdown menu={projectMenu} trigger={['click']} placement="bottomLeft" classNames={dropdownClassNames}>
-            <button type="button" className="studio-topbar__aid-trigger" aria-label="作品菜单">
-              <PublicBrandLogo className="studio-topbar__aid-logo" />
+            <button type="button" className="studio-topbar__sakura-trigger" aria-label="作品菜单">
+              <PublicBrandLogo className="studio-topbar__sakura-logo" />
             </button>
           </Dropdown>
           <div className="studio-topbar__title-wrap" style={{ width: `${titleInputWidthPx}px` }}>

@@ -73,22 +73,7 @@ export const UserMenuDropdown = forwardRef<UserMenuDropdownHandle, UserMenuDropd
       const name = u?.nickName?.trim()
       if (name) return name
       if (u?.email?.trim()) return u.email.trim()
-      if (u?.id) return `ID${u.id}`
       return '用户'
-    })()
-
-    const menuCardUserSub = (() => {
-      const u = user
-      if (!u?.id) return ''
-      if (u.username?.trim()) return `ID:${u.id}`
-      return ''
-    })()
-
-    const menuCardUserTitle = (() => {
-      const u = user
-      if (!u) return ''
-      const parts = [u.username, u.id ? `ID${u.id}` : '', u.email].filter(Boolean) as string[]
-      return parts.join(' · ')
     })()
 
     const floatingRootRef = useRef<HTMLDivElement | null>(null)
@@ -114,12 +99,9 @@ export const UserMenuDropdown = forwardRef<UserMenuDropdownHandle, UserMenuDropd
             <img src={userAvatarUrl} alt="" width={44} height={44} />
           </div>
           <div className="user-menu-dropdown__meta">
-            <span className="user-menu-dropdown__name" title={menuCardUserTitle}>
+            <span className="user-menu-dropdown__name">
               {menuCardUserName}
             </span>
-            {menuCardUserSub ? (
-              <span className="user-menu-dropdown__sub">{menuCardUserSub}</span>
-            ) : null}
           </div>
         </div>
         {showWechatNotifyRow ? (

@@ -2,7 +2,7 @@ import { CREATOR_BRAND_NAME } from '~/config/creatorBrand'
 import { DEFAULT_STUDIO_ZONES } from '@/config/studioMeta'
 import type { StudioWorkspaceData } from '@/types/studio'
 
-const STORAGE_PREFIX = 'aid-studio-flow-layout:v1:'
+const STORAGE_PREFIX = 'sakura-studio-flow-layout:v1:'
 
 function getStorage(): Storage | null {
   if (typeof window === 'undefined') return null

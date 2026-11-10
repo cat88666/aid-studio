@@ -26,7 +26,7 @@ import {
   pickFirstNonEmptyModelPool,
   uniqueTrimmedCodes
 } from '~/utils/modelListByFuncBatch'
-import { buildAidAgentListScopeParams } from '~/utils/createFlowProjectContext'
+import { buildSakuraAgentListScopeParams } from '~/utils/createFlowProjectContext'
 import { advanceGenerationToken, replaceRefValue } from '~/utils/generationToken'
 import type { SelectOption } from '~/utils/modelCapability'
 import type { UserModelListItem } from '~/types/business-api'
@@ -294,7 +294,7 @@ export function useStoryboardModalModels(
       AI_MODEL_FUNC_CODE.IMAGE_UPSCALE,
       ...IMAGE_MULTI_GRID_FUNC_CODE_FALLBACKS
     ])
-    const listScope = buildAidAgentListScopeParams(creationStore)
+    const listScope = buildSakuraAgentListScopeParams(creationStore)
     const agentPayloads = [
       {
         bizCategoryCode: STORYBOARD_IMAGE_AGENT_BIZ_CATEGORY,

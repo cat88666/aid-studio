@@ -1,6 +1,6 @@
 /** 棣栭〉妗堜緥骞垮満锛氳繘鍏ヨ鎯呭墠淇濆瓨婊氬姩锛岃繑鍥炲悗鎭㈠鍒扮偣鍑讳綔鍝侀檮杩?*/
 
-export const HOME_GALLERY_SCROLL_STORAGE_KEY = 'aid:home-gallery-scroll:v1'
+export const HOME_GALLERY_SCROLL_STORAGE_KEY = 'sakura:home-gallery-scroll:v1'
 
 export type HomeGalleryScrollSnapshot = {
   scrollTop: number

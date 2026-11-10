@@ -37,7 +37,7 @@ vi.mock('@/stores/user', () => ({
 
 import { closeLoginModal, openLoginModal, useLoginModalStore } from '@/stores/loginModal'
 import {
-  AID_LEAVE_AUTH_ROUTE_EVENT,
+  SAKURA_LEAVE_AUTH_ROUTE_EVENT,
   logoutToPublicHome,
   redirectToLogin,
   requireLogin
@@ -61,11 +61,11 @@ describe('authLoginNavigation', () => {
   it('requireLogin leaves auth routes via event instead of /login', () => {
     window.history.replaceState(null, '', '/works')
     const leave = vi.fn()
-    window.addEventListener(AID_LEAVE_AUTH_ROUTE_EVENT, leave)
+    window.addEventListener(SAKURA_LEAVE_AUTH_ROUTE_EVENT, leave)
     requireLogin({ redirect: '/works' })
     expect(openLoginModal).toHaveBeenCalledWith({ redirect: '/works' })
     expect(leave).toHaveBeenCalledTimes(1)
-    window.removeEventListener(AID_LEAVE_AUTH_ROUTE_EVENT, leave)
+    window.removeEventListener(SAKURA_LEAVE_AUTH_ROUTE_EVENT, leave)
   })
 
   it('requireLogin is a no-op on /login compatibility route', () => {

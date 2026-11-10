@@ -10,7 +10,7 @@ import {
 import type {
   ApiEnvelope,
   UserModelListByFuncRequest,
-  AidAgentListRequest,
+  SakuraAgentListRequest,
   AgentListGroupVO,
   UserModelListItem,
   UserModelListByFuncGroupVO,
@@ -22,8 +22,8 @@ const modelListByFuncBurst: ListBurstSlot<UserModelListByFuncGroupVO[]> = { curr
 const modelListInflight = new Map<string, Promise<UserModelListItem[]>>()
 const modelListBurst: ListBurstSlot<UserModelListItem[]> = { current: null }
 
-const aidAgentListInflight = new Map<string, Promise<AgentListGroupVO[]>>()
-const aidAgentListBurst: ListBurstSlot<AgentListGroupVO[]> = { current: null }
+const sakuraAgentListInflight = new Map<string, Promise<AgentListGroupVO[]>>()
+const sakuraAgentListBurst: ListBurstSlot<AgentListGroupVO[]> = { current: null }
 
 let modelSessionToken: string | undefined
 let modelSessionGeneration = 0
@@ -87,12 +87,12 @@ export async function userModelListByFunc(
   return Array.isArray(hit?.models) ? hit!.models! : []
 }
 
-/** C 端：按业务分类分组查询启用智能体列表 POST /aid/agent/list */
-export async function aidAgentList(body?: AidAgentListRequest): Promise<AgentListGroupVO[]> {
+/** C 端：按业务分类分组查询启用智能体列表 POST /sakura/agent/list */
+export async function sakuraAgentList(body?: SakuraAgentListRequest): Promise<AgentListGroupVO[]> {
   const payload = body ?? {}
   const key = stableRequestKey(payload)
-  return runListDedupe(key, aidAgentListInflight, aidAgentListBurst, async () => {
-    const res = await request.post<ApiEnvelope<AgentListGroupVO[]>>('/aid/agent/list', payload)
+  return runListDedupe(key, sakuraAgentListInflight, sakuraAgentListBurst, async () => {
+    const res = await request.post<ApiEnvelope<AgentListGroupVO[]>>('/sakura/agent/list', payload)
     const data = unwrap(res)
     return Array.isArray(data) ? data : []
   })

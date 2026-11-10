@@ -39,6 +39,7 @@ describe('storyScriptAgentState runtime scope', () => {
   beforeEach(() => {
     sessionStorage.clear()
     localStorage.clear()
+    localStorage.setItem('user-info', JSON.stringify({ id: '9007199254740993123', identityVersion: 'public-snowflake-v1' }))
   })
 
   it('isolates Runtime checkpoints by project and episode', () => {
@@ -53,9 +54,32 @@ describe('storyScriptAgentState runtime scope', () => {
   })
 
   it('removes incompatible v2 session state', () => {
-    localStorage.setItem('aid-story-script-agent:v2:10:0', JSON.stringify({ version: 2 }))
+    localStorage.setItem('sakura-story-script-agent:v2:10:0', JSON.stringify({ version: 2 }))
     expect(readStoryScriptAgentState(10, 0)).toBeNull()
-    expect(localStorage.getItem('aid-story-script-agent:v2:10:0')).toBeNull()
+    expect(localStorage.getItem('sakura-story-script-agent:v2:10:0')).toBeNull()
+  })
+
+  it('preserves old-owner drafts without rebinding them to a new public identity', () => {
+    const old = { ...state(10, 0, 1001), ownerId: '3' }
+    const raw = JSON.stringify(old)
+    const key = 'sakura-story-script-agent:v3:10:0'
+    localStorage.setItem(key, raw)
+    expect(readStoryScriptAgentState(10, 0)).toBeNull()
+    expect(localStorage.getItem(key)).toBe(raw)
+    expect(writeStoryScriptAgentState(old)).toBe(false)
+    expect(writeStoryScriptAgentState(state(10, 0, 2001))).toBe(true)
+    const backups = Object.keys(localStorage).filter((k) => k.startsWith('sakura-story-script-preserved:'))
+    expect(backups.some((k) => localStorage.getItem(k) === raw)).toBe(true)
+    expect(readStoryScriptAgentState(10, 0)?.ownerId).toBe('9007199254740993123')
+  })
+
+  it('does not restore or reassign a draft while only a legacy user cache is available', () => {
+    localStorage.setItem('user-info', JSON.stringify({ id: '3', nickName: 'Sakura_abc123' }))
+    const raw = JSON.stringify({ ...state(10, 0, 1001), ownerId: '3' })
+    localStorage.setItem('sakura-story-script-agent:v3:10:0', raw)
+    expect(readStoryScriptAgentState(10, 0)).toBeNull()
+    expect(writeStoryScriptAgentState(state(10, 0, 2001))).toBe(false)
+    expect(localStorage.getItem('sakura-story-script-agent:v3:10:0')).toBe(raw)
   })
 
   it('keeps a full checkpoint while the invoke response has no known run id', () => {

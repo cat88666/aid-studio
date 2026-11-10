@@ -47,7 +47,8 @@ export interface SocialBindItem {
 }
 
 export interface UserInfoFromApi {
-  userId: number
+  /** Public Snowflake ID, serialized as a JSON string. */
+  userId: string
   userName: string
   nickName?: string
   avatar?: string
@@ -1629,7 +1630,7 @@ export interface StoryboardGenerateImageWithPromptRequest {
   modelCode?: string
   /** 是否覆盖已有 image_prompt，默认 false */
   overwrite?: boolean
-  /** 出图阶段智能体编码，默认 aid_storyboard_image（biz=main_storyboard_image） */
+  /** 出图阶段智能体编码，默认 sakura_storyboard_image（biz=main_storyboard_image） */
   genAgentCode?: string
   /** 出图阶段图片模型编码 */
   genModelName?: string
@@ -1666,7 +1667,7 @@ export interface StoryboardGenerateVideoPromptRequest {
    * 传了 → 仅处理这些分镜且默认覆盖。
    */
   storyboardIds?: number[]
-  /** 智能体编码；默认 aid_visual_director；强校验 biz_category_code=main_storyboard_video_prompt */
+  /** 智能体编码；默认 sakura_visual_director；强校验 biz_category_code=main_storyboard_video_prompt */
   agentCode?: string
   /** 文本模型；走用户传 → 项目配置 → aid_config 三级兜底 */
   modelCode?: string
@@ -1761,7 +1762,7 @@ export interface StoryboardGenerateVideoPromptImageRequest {
   projectId: number
   episodeId: number
   storyboardIds?: number[]
-  /** 默认 aid_visual_director_image；强校验 biz_category_code=main_storyboard_video_prompt_image */
+  /** 默认 sakura_visual_director_image；强校验 biz_category_code=main_storyboard_video_prompt_image */
   agentCode?: string
   /** 文本模型；走用户传 → 项目配置 → aid_config 三级兜底 */
   modelCode?: string
@@ -1779,7 +1780,7 @@ export interface StoryboardGenerateVideoPromptGridRequest {
   projectId: number
   episodeId: number
   storyboardIds?: number[]
-  /** 默认 aid_visual_director_grid；强校验 biz_category_code=main_storyboard_video_prompt_grid */
+  /** 默认 sakura_visual_director_grid；强校验 biz_category_code=main_storyboard_video_prompt_grid */
   agentCode?: string
   modelCode?: string
   overwrite?: boolean
@@ -2885,8 +2886,8 @@ export interface UserAssetExtractEstimateData {
   scenePropTypes?: AssetExtractType[]
 }
 
-/** C 端：POST /aid/agent/list（按 bizCategoryCodes 分组返回） */
-export interface AidAgentListRequest {
+/** C 端：POST /sakura/agent/list（按 bizCategoryCodes 分组返回） */
+export interface SakuraAgentListRequest {
   bizCategoryCodes?: string[]
   /** 传了则按项目创作模式裁剪候选智能体 */
   projectId?: number
@@ -2900,7 +2901,7 @@ export interface AgentInfoVO {
   name?: string
   subTitle?: string
   introduction?: string
-  /** 智能体图标：POST /aid/agent/list */
+  /** 智能体图标：POST /sakura/agent/list */
   iconUrl?: string | null
   /** 智能体图标：gen-config/get 的 agentOptions / 场景级字段 */
   agentIconUrl?: string | null
@@ -2995,7 +2996,7 @@ export interface UserAssetExtractParallelRequest {
   projectId: number
   episodeId?: number
   extractTypes: AssetExtractType[]
-  /** key=extractType，value=agentCode（如 aid_prop_extractor） */
+  /** key=extractType，value=agentCode（如 sakura_prop_extractor） */
   agentCodes: Partial<Record<AssetExtractType, string>> & Record<string, string>
   /** key=extractType，value=modelCode；未传的 type 走后端 3 级兜底（项目配置 → aid_config） */
   modelCodes?: Partial<Record<AssetExtractType, string>> & Record<string, string>

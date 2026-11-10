@@ -25,8 +25,8 @@ export type StorageLike = {
   removeItem(key: string): void
 }
 
-const BASELINE_KEY = 'aid.scriptExtractBaseline.v1'
-const IGNORED_KEY = 'aid.scriptExtractIgnored.v1'
+const BASELINE_KEY = 'sakura.scriptExtractBaseline.v1'
+const IGNORED_KEY = 'sakura.scriptExtractIgnored.v1'
 
 function scopeKey(projectId: number, episodeId: number): string {
   return `${projectId}:${episodeId}`

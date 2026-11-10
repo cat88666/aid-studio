@@ -7,7 +7,7 @@ import { LoginModal } from './LoginModal'
 import { closeLoginModal, useLoginModalStore } from '@/stores/loginModal'
 import { useUserStore } from '@/stores/user'
 import { isAuthRequiredPath, isForgotPasswordPath } from '~/utils/authRequiredPath'
-import { getAidPortalRoot } from '~/utils/portalRoot'
+import { getSakuraPortalRoot } from '~/utils/portalRoot'
 
 const EXIT_MS = 220
 
@@ -77,7 +77,7 @@ export function LoginModalHost() {
   }, [open, pathname, router])
 
   if (!mounted || !rendered) return null
-  const portalRoot = getAidPortalRoot()
+  const portalRoot = getSakuraPortalRoot()
   if (!portalRoot) return null
   return createPortal(<LoginModal visible={visible} />, portalRoot)
 }

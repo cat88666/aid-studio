@@ -5,7 +5,7 @@ AssetExtractType,
 ProjectGenConfigVO
 } from '~/types/business-api'
 import type { AgentOption } from '~/types/modelAgentOptions'
-import { aidAgentList } from '~/utils/businessApi'
+import { sakuraAgentList } from '~/utils/businessApi'
 
 export {
   emptyExtractModelCodes,
@@ -54,14 +54,14 @@ export const STORYBOARD_SCRIPT_MODEL_FUNC_CODE = STORYBOARD_SCRIPT_AGENT_BIZ_CAT
 
 /** 剧情演绎（plot）允许的分镜脚本智能体 */
 export const STORYBOARD_SCRIPT_AGENTS_PLOT = [
-  'aid_storyboard_script_extractor',
-  'aid_storyboard_script_extractor_simple'
+  'sakura_storyboard_script_extractor',
+  'sakura_storyboard_script_extractor_simple'
 ] as const
 
 /** 真人解说（monologue）允许的分镜脚本智能体 */
 export const STORYBOARD_SCRIPT_AGENTS_MONOLOGUE = [
-  'aid_storyboard_script_commentary',
-  'aid_storyboard_script_commentary_simple'
+  'sakura_storyboard_script_commentary',
+  'sakura_storyboard_script_commentary_simple'
 ] as const
 
 export type StoryboardScriptApiScriptType = 'plot' | 'monologue'
@@ -99,9 +99,9 @@ export const STORYBOARD_IMAGE_PROMPT_AGENT_BIZ_CATEGORY = STORYBOARD_STYLIST_MOD
 
 /** 分镜视频提示词（video-prompt），见接口 10.5 */
 export const STORYBOARD_VIDEO_PROMPT_AGENT_BIZ_CATEGORY = 'main_storyboard_video_prompt'
-/** 图生方向分镜视频提示词智能体（aid_visual_director_image） */
+/** 图生方向分镜视频提示词智能体（sakura_visual_director_image） */
 export const STORYBOARD_VIDEO_PROMPT_IMAGE_AGENT_BIZ_CATEGORY = 'main_storyboard_video_prompt_image'
-/** 宫格方向分镜视频提示词智能体（aid_visual_director_grid） */
+/** 宫格方向分镜视频提示词智能体（sakura_visual_director_grid） */
 export const STORYBOARD_VIDEO_PROMPT_GRID_AGENT_BIZ_CATEGORY = 'main_storyboard_video_prompt_grid'
 /** 图生视频出片模型池对应智能体 biz（与 listByFunc main_storyboard_video_image 对齐） */
 export const STORYBOARD_VIDEO_IMAGE_AGENT_BIZ_CATEGORY = 'main_storyboard_video_image'
@@ -119,15 +119,15 @@ export const IMAGE_MULTI_VIEW_AGENT_BIZ_CATEGORY = 'image_multi_view'
 export const IMAGE_MULTI_GRID_AGENT_BIZ_CATEGORY = 'image_multi_grid'
 
 /** 接口文档约定的多机位智能体 agent_code */
-export const IMAGE_MULTI_VIEW_AGENT_CODE = 'aid_multi_camera'
-export const IMAGE_MULTI_GRID_AGENT_CODE = 'aid_multi_camera_grid'
+export const IMAGE_MULTI_VIEW_AGENT_CODE = 'sakura_multi_camera'
+export const IMAGE_MULTI_GRID_AGENT_CODE = 'sakura_multi_camera_grid'
 
 /** 多参 video-prompt 默认智能体 */
-export const STORYBOARD_VIDEO_PROMPT_AGENT_CODE = 'aid_visual_director'
+export const STORYBOARD_VIDEO_PROMPT_AGENT_CODE = 'sakura_visual_director'
 /** 图生 video-prompt-image 默认智能体 */
-export const STORYBOARD_VIDEO_PROMPT_IMAGE_AGENT_CODE = 'aid_visual_director_image'
+export const STORYBOARD_VIDEO_PROMPT_IMAGE_AGENT_CODE = 'sakura_visual_director_image'
 /** 宫格 video-prompt-grid 默认智能体 */
-export const STORYBOARD_VIDEO_PROMPT_GRID_AGENT_CODE = 'aid_visual_director_grid'
+export const STORYBOARD_VIDEO_PROMPT_GRID_AGENT_CODE = 'sakura_visual_director_grid'
 
 export type StoryboardVideoPromptSubmitEndpoint =
   | 'video_prompt'
@@ -312,7 +312,7 @@ export function getAgentDefaultModelCacheKey(
   })
 }
 
-export type AidAgentListScope = { projectId?: number; episodeId?: number }
+export type SakuraAgentListScope = { projectId?: number; episodeId?: number }
 
 /** 拉取指定 biz 分类下某智能体（agentCode）的默认 modelCode */
 export async function fetchAgentDefaultModelCode(payload: {
@@ -336,7 +336,7 @@ export async function fetchAgentDefaultModelCode(payload: {
 
   const pending = (async () => {
     try {
-      const groups = await aidAgentList({
+      const groups = await sakuraAgentList({
         bizCategoryCodes: [bizCategoryCode],
         ...(payload.projectId != null && Number(payload.projectId) > 0
           ? {
@@ -386,7 +386,7 @@ export async function fetchAgentDefaultModelCodes(
   ]
   const scope = uncached.find((p) => p.projectId != null && Number(p.projectId) > 0)
   try {
-    const groups = await aidAgentList({
+    const groups = await sakuraAgentList({
       bizCategoryCodes,
       ...(scope
         ? {

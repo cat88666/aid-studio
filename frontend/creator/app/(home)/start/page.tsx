@@ -1,7 +1,7 @@
 'use client'
 
-import CreatorDashboard from '~/components/home/CreatorDashboard'
+import CreatorStudio from '~/components/home/CreatorStudio'
 
 export default function StartPage() {
-  return <CreatorDashboard />
+  return <CreatorStudio />
 }

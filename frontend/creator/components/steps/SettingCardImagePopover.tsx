@@ -10,9 +10,9 @@ import { BillingQuoteHint } from '~/components/common/BillingQuoteHint'
 import { useBillingQuote } from '~/hooks/useBillingQuote'
 import type { BillingQuoteRequest } from '~/types/business-api'
 import type { AgentOption } from '~/types/modelAgentOptions'
-import { aidAgentList } from '~/utils/businessApi'
+import { sakuraAgentList } from '~/utils/businessApi'
 import { useCreationStore } from '~/stores/creation'
-import { buildAidAgentListScopeParams } from '~/utils/createFlowProjectContext'
+import { buildSakuraAgentListScopeParams } from '~/utils/createFlowProjectContext'
 import {
   CHARACTER_CARD_IMAGE_AGENT_BIZ_CATEGORY,
   agentOptionsFromGroup
@@ -109,9 +109,9 @@ export function SettingCardImagePopover({
   async function loadOptions() {
     setLoading(true)
     try {
-      const groups = await aidAgentList({
+      const groups = await sakuraAgentList({
         bizCategoryCodes: [CHARACTER_CARD_IMAGE_AGENT_BIZ_CATEGORY],
-        ...buildAidAgentListScopeParams(useCreationStore.getState())
+        ...buildSakuraAgentListScopeParams(useCreationStore.getState())
       })
       setAgentOptions(agentOptionsFromGroup(groups, CHARACTER_CARD_IMAGE_AGENT_BIZ_CATEGORY))
     } catch {

@@ -58,7 +58,7 @@ export default function CreatorHomePage() {
       setVoice('')
       return
     }
-    element.src = withAppBasePath('/profile/aid/voice/sample/2026/05/17/' + file + '.mp3')
+    element.src = withAppBasePath('/profile/sakura/voice/sample/2026/05/17/' + file + '.mp3')
     setMediaError('')
     setVoice(file)
     void element.play().catch(() => {
@@ -127,7 +127,7 @@ export default function CreatorHomePage() {
           <p className="creator-lead">{t.voiceLead}</p>
           <div className="creator-voices">
             {voices.map(({ avatar, file }, index) => <button type="button" key={file} aria-label={(voice === file ? t.pause : t.audition) + ' ' + t.voiceNames[index]} onClick={() => playVoice(file)}>
-              <img loading="lazy" src={withAppBasePath('/profile/aid/voice/avatar/2026/05/22/' + avatar + '.jpg')} alt="" />
+              <img loading="lazy" src={withAppBasePath('/profile/sakura/voice/avatar/2026/05/22/' + avatar + '.jpg')} alt="" />
               <span><b>{t.voiceNames[index]}</b><small>{voice === file ? t.playing : t.voiceLanguage}</small></span>
               {voice === file ? <PauseCircleOutlined /> : <SoundOutlined />}
             </button>)}

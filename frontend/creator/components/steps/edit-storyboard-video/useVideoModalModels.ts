@@ -1,8 +1,8 @@
 'use client'
 
 import { AI_MODEL_FUNC_CODE } from '~/utils/aiModelFuncCodes'
-import { aidAgentList,userModelListByFuncCodes } from '~/utils/businessApi'
-import { buildAidAgentListScopeParams } from '~/utils/createFlowProjectContext'
+import { sakuraAgentList,userModelListByFuncCodes } from '~/utils/businessApi'
+import { buildSakuraAgentListScopeParams } from '~/utils/createFlowProjectContext'
 import {
 resolveStoryboardVideoAgentBizCategories,
 resolveStoryboardVideoModelFuncCodes,
@@ -44,11 +44,11 @@ export function useVideoModalModels(ctx: VideoModalCtx): void {
     const funcCodes = resolveStoryboardVideoModelFuncCodes(creationMode)
     const agentBizCodes = resolveStoryboardVideoAgentBizCategories(creationMode)
 
-    const listScope = buildAidAgentListScopeParams(ctx.store())
+    const listScope = buildSakuraAgentListScopeParams(ctx.store())
     const [agentGroups, modelGroups] = await Promise.all([
       agentBizCodes.length
-        ? aidAgentList({ bizCategoryCodes: agentBizCodes, ...listScope })
-        : Promise.resolve([] as Awaited<ReturnType<typeof aidAgentList>>),
+        ? sakuraAgentList({ bizCategoryCodes: agentBizCodes, ...listScope })
+        : Promise.resolve([] as Awaited<ReturnType<typeof sakuraAgentList>>),
       // 专业版：带 projectId，后端将 main_storyboard_video 重映射为 multi_pro
       userModelListByFuncCodes(funcCodes, listScope),
       ctx.ensureDictLoaded()

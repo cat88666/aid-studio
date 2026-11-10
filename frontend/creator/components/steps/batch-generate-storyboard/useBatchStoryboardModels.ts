@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { message } from 'antd'
 import type { ModelOption } from '~/types/modelAgentOptions'
-import { aidAgentList, userModelList, userModelListByFuncCodes } from '~/utils/businessApi'
+import { sakuraAgentList, userModelList, userModelListByFuncCodes } from '~/utils/businessApi'
 import { modelsFromListByFuncGroups, pickFirstNonEmptyModelPool } from '~/utils/modelListByFuncBatch'
 import { waitForCreationStoreHydrated } from '~/composables/useCreationStoreHydration'
 import { useCreationStore } from '~/stores/creation'
-import { buildAidAgentListScopeParams } from '~/utils/createFlowProjectContext'
+import { buildSakuraAgentListScopeParams } from '~/utils/createFlowProjectContext'
 import {
   STORYBOARD_IMAGE_AGENT_BIZ_CATEGORY,
   agentOptionsFromGroup,
@@ -38,7 +38,7 @@ function liveProjectCreationMode(): string {
 }
 
 function modelListScope() {
-  return buildAidAgentListScopeParams(useCreationStore.getState())
+  return buildSakuraAgentListScopeParams(useCreationStore.getState())
 }
 
 /** 批量弹窗底部智能体 / 生图模型 / 生视频模型选择（原组件 script 段平移） */
@@ -175,7 +175,7 @@ export function useBatchStoryboardModels(options: {
     setAgentsLoading(true)
     try {
       const bizCategoryCode = STORYBOARD_IMAGE_AGENT_BIZ_CATEGORY
-      const groups = await aidAgentList({
+      const groups = await sakuraAgentList({
         bizCategoryCodes: [bizCategoryCode],
         ...modelListScope()
       })
@@ -328,7 +328,7 @@ export function useBatchStoryboardModels(options: {
     let agentDefaultCodes: string[] = []
     if (agentBizCodes.length) {
       try {
-        const groups = await aidAgentList({
+        const groups = await sakuraAgentList({
           bizCategoryCodes: agentBizCodes,
           ...modelListScope()
         })

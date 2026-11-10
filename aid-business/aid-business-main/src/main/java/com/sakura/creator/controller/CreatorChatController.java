@@ -2,10 +2,14 @@ package com.sakura.creator.controller;
 
 import com.sakura.common.sakura.crypto.annotation.CryptoIgnore;
 import com.sakura.common.utils.SecurityUtils;
+import com.sakura.common.exception.ServiceException;
 import com.sakura.creator.dto.CreatorChatRequest;
 import com.sakura.media.dto.MediaTextGenerateRequest;
 import com.sakura.media.service.IMediaGenerationService;
 import com.sakura.media.service.MediaTextStreamSink;
+import com.sakura.model.dto.AiModelListRequest;
+import com.sakura.model.service.IAiModelBusinessService;
+import com.sakura.model.vo.AiModelVO;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.HashMap;
@@ -29,12 +33,16 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RestController
 @RequestMapping("/api/user/creator/chat")
 public class CreatorChatController {
+    private static final String DEFAULT_MODEL_CODE = "creator-elysium-chat";
     private final IMediaGenerationService mediaGenerationService;
+    private final IAiModelBusinessService modelBusinessService;
     private final ScheduledExecutorService scheduler;
 
     public CreatorChatController(IMediaGenerationService mediaGenerationService,
+            IAiModelBusinessService modelBusinessService,
             @Qualifier("scheduledExecutorService") ScheduledExecutorService scheduler) {
         this.mediaGenerationService = mediaGenerationService;
+        this.modelBusinessService = modelBusinessService;
         this.scheduler = scheduler;
     }
 
@@ -43,6 +51,10 @@ public class CreatorChatController {
     public ResponseEntity<SseEmitter> stream(@Valid @RequestBody CreatorChatRequest input) {
         Long userId = SecurityUtils.getUserId();
         MediaTextGenerateRequest request = toMediaRequest(input, userId);
+        // Use the same enabled-model/provider and capability filtering as the public picker.
+        // Never let a stale or forged choice silently fall back to another billed model.
+        AiModelVO selected = requireAvailableModel(request.getModelName());
+        request.setCapabilityCode(selected.getCapabilityCode());
         SseEmitter emitter = new SseEmitter(15L * 60L * 1000L);
         ChatSink sink = new ChatSink(emitter, mediaGenerationService, scheduler);
         emitter.onCompletion(sink::close);
@@ -65,7 +77,8 @@ public class CreatorChatController {
     static MediaTextGenerateRequest toMediaRequest(CreatorChatRequest input, Long userId) {
         MediaTextGenerateRequest request = new MediaTextGenerateRequest();
         request.setUserId(userId);
-        request.setModelName("creator-elysium-chat");
+        request.setModelName(input.modelCode() == null || input.modelCode().isBlank()
+                ? DEFAULT_MODEL_CODE : input.modelCode().trim());
         request.setStrictModelSelection(true);
         request.setStream(true);
         request.setReasoningEnabled(false);
@@ -78,6 +91,16 @@ public class CreatorChatController {
             return item;
         }).toList());
         return request;
+    }
+
+    private AiModelVO requireAvailableModel(String modelCode) {
+        AiModelListRequest query = new AiModelListRequest();
+        query.setModelType("text");
+        query.setGenerateMode("text");
+        return modelBusinessService.listAvailableModels(query).stream()
+                .filter(model -> modelCode.equals(model.getModelCode())
+                        && "text".equalsIgnoreCase(model.getModelType()))
+                .findFirst().orElseThrow(() -> new ServiceException("所选模型不可用，请重新选择"));
     }
 
     static final class ChatSink implements MediaTextStreamSink {

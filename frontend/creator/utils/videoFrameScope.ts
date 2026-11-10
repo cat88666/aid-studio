@@ -6,5 +6,5 @@ export function videoFrameScopeKey(projectId: number, episodeId?: number | null)
 }
 
 export function videoFrameStorageKey(scopeKey: string): string {
-  return `aid:video-frames:v1:${scopeKey}`
+  return `sakura:video-frames:v1:${scopeKey}`
 }

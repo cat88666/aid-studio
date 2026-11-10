@@ -1,5 +1,5 @@
 import type { RouteLikeLocation, RouteLikeNavigator } from '~/types/routeLike'
-import type { AidAgentListRequest, UserProjectType } from '~/types/business-api'
+import type { SakuraAgentListRequest, UserProjectType } from '~/types/business-api'
 import type { useCreationStore } from '~/stores/creation'
 import { fetchCreationStepStatusOnce } from '~/utils/creationStepStatusOnce'
 import {
@@ -103,14 +103,14 @@ export async function resolveCreateFlowEntryPath(
   }
 }
 
-/** POST /aid/agent/list：传 projectId（+ episodeId）以按创作模式裁剪智能体池 */
-export function buildAidAgentListScopeParams(
+/** POST /sakura/agent/list：传 projectId（+ episodeId）以按创作模式裁剪智能体池 */
+export function buildSakuraAgentListScopeParams(
   store: Pick<CreationStore, 'currentProjectId' | 'currentEpisodeId' | 'currentProjectType'>
-): Pick<AidAgentListRequest, 'projectId' | 'episodeId'> {
+): Pick<SakuraAgentListRequest, 'projectId' | 'episodeId'> {
   const projectId = Number(store.currentProjectId)
   if (!Number.isFinite(projectId) || projectId <= 0) return {}
 
-  const out: Pick<AidAgentListRequest, 'projectId' | 'episodeId'> = { projectId }
+  const out: Pick<SakuraAgentListRequest, 'projectId' | 'episodeId'> = { projectId }
 
   if (store.currentProjectType === 'movie') {
     out.episodeId = 0

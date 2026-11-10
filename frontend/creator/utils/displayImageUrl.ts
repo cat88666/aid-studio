@@ -12,7 +12,7 @@ function supportsAliyunOssProcess(url: string): boolean {
   return (
     /\.aliyuncs\.com/i.test(url) ||
     /cdn\.continueai\.cn/i.test(url) ||
-    /\/(aid|ai_pet|oss)\//i.test(url)
+    /\/(sakura|ai_pet|oss)\//i.test(url)
   )
 }
 

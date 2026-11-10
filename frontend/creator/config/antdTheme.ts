@@ -9,7 +9,7 @@ const GLOBAL_FEEDBACK_Z_INDEX = 20000
  * palette in tokens makes regular components, portals and status variants use
  * the same dark algorithm instead of patching generated selectors one by one.
  */
-export const AID_ANTD_THEME: ThemeConfig = {
+export const SAKURA_ANTD_THEME: ThemeConfig = {
   algorithm: theme.darkAlgorithm,
   token: {
     colorPrimary: '#00abd8',

@@ -17,7 +17,7 @@ export const landingSamples = [
   {
     id: 'meadow',
     poster: '/creator-home/meadow.webp',
-    video: '/profile/aid/storyboard/img/2026/06/07/环绕.mp4',
+    video: '/profile/sakura/storyboard/img/2026/06/07/环绕.mp4',
   },
   {
     id: 'cinema',

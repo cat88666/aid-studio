@@ -6,8 +6,8 @@ import { useCreationStore } from '~/stores/creation'
 import type { AiModelType } from '~/types/business-api'
 import type { AgentOption } from '~/types/modelAgentOptions'
 import { AI_MODEL_FUNC_CODE } from '~/utils/aiModelFuncCodes'
-import { aidAgentList } from '~/utils/businessApi'
-import { buildAidAgentListScopeParams } from '~/utils/createFlowProjectContext'
+import { sakuraAgentList } from '~/utils/businessApi'
+import { buildSakuraAgentListScopeParams } from '~/utils/createFlowProjectContext'
 import {
 STORYBOARD_SCRIPT_AGENT_BIZ_CATEGORY,
 STORYBOARD_SCRIPT_MODEL_FUNC_CODE,
@@ -108,16 +108,16 @@ export function useStoryboardGenerateAgents(options: {
     }
   }
 
-  function aidAgentListScopeParams() {
-    return buildAidAgentListScopeParams(useCreationStore.getState())
+  function sakuraAgentListScopeParams() {
+    return buildSakuraAgentListScopeParams(useCreationStore.getState())
   }
 
   async function loadScriptAgents(autoPickDefault = false) {
     setScriptAgentsLoading(true)
     try {
-      const groups = await aidAgentList({
+      const groups = await sakuraAgentList({
         bizCategoryCodes: [STORYBOARD_SCRIPT_AGENT_BIZ_CATEGORY],
-        ...aidAgentListScopeParams()
+        ...sakuraAgentListScopeParams()
       })
       setScriptAgentOptions(agentOptionsFromGroup(groups, STORYBOARD_SCRIPT_AGENT_BIZ_CATEGORY))
       applyScriptAgentSelection(autoPickDefault)
@@ -164,9 +164,9 @@ export function useStoryboardGenerateAgents(options: {
   async function loadVideoAgents(autoPickDefault = false) {
     setVideoAgentsLoading(true)
     try {
-      const groups = await aidAgentList({
+      const groups = await sakuraAgentList({
         bizCategoryCodes: [STORYBOARD_VIDEO_PROMPT_AGENT_BIZ_CATEGORY],
-        ...aidAgentListScopeParams()
+        ...sakuraAgentListScopeParams()
       })
       setVideoAgentOptions(
         agentOptionsFromGroup(groups, STORYBOARD_VIDEO_PROMPT_AGENT_BIZ_CATEGORY)

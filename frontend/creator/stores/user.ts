@@ -33,7 +33,10 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     let user: User | null = null
     if (rawUser) {
       try {
-        user = JSON.parse(rawUser) as User
+        const cached = JSON.parse(rawUser) as User
+        // Keep old storage for draft ownership checks, but never render stale identity.
+        user = cached.identityVersion === 'public-snowflake-v1' && typeof cached.id === 'string'
+          ? cached : null
       } catch {
         user = null
       }
@@ -70,10 +73,12 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
   },
 
   async fetchProfile() {
-    if (!get().token) return null
+    const token = get().token
+    if (!token) return null
     set({ profileLoading: true })
     try {
       const info = await userProfile()
+      if (get().token !== token) return null
       const mapped = mapUserInfoFromApiToUser(info, {
         fallbackEmail: get().user?.email,
         role: get().user?.role

@@ -1,3 +1,4 @@
+import { normalizeDomainMediaUrls } from '~/utils/domainMediaUrls'
 import { withAppBasePath } from '~/utils/appBasePath'
 import type {
 AxiosInstance,
@@ -285,7 +286,7 @@ api.interceptors.request.use(
     if (typeof window !== 'undefined' && !isDiagnosticUrl(config.url)) {
       const tracked = config as ApiCryptoRetryConfig
       tracked.__diagnosticRequest ??= createDiagnosticRequest(config.url || '', config.method || 'GET', config.data ?? config.params)
-      config.headers['X-AID-Request-ID'] = tracked.__diagnosticRequest.requestId
+      config.headers['X-SAKURA-Request-ID'] = tracked.__diagnosticRequest.requestId
     }
 
     const isFormData = typeof FormData !== 'undefined' && config.data instanceof FormData
@@ -337,9 +338,10 @@ api.interceptors.response.use(
     } catch (error) {
       captureBrowserFailure((response.config as ApiCryptoRetryConfig).__diagnosticRequest,
         { status: response.status, body: response.data, encrypted: Boolean(aesKey) }, error,
-        String(response.headers['x-aid-request-id'] || ''))
+        String(response.headers['x-sakura-request-id'] || ''))
       throw error
     }
+    data = normalizeDomainMediaUrls(data)
     response.data = data
 
     if (isDiagnosticUrl(response.config.url)) return data as unknown as AxiosResponse
@@ -358,7 +360,7 @@ api.interceptors.response.use(
       if (!ok) {
         captureBrowserFailure((response.config as ApiCryptoRetryConfig).__diagnosticRequest,
           { status: response.status, body: data }, undefined,
-          String(response.headers['x-aid-request-id'] || data.requestId || ''))
+          String(response.headers['x-sakura-request-id'] || data.requestId || ''))
         if (handleLoginRequiredResponse(data)) {
           return Promise.reject(data)
         }
@@ -382,7 +384,7 @@ api.interceptors.response.use(
     captureBrowserFailure((error.config as ApiCryptoRetryConfig | undefined)?.__diagnosticRequest,
       error.response ? { status: error.response.status, body: error.response.data } : undefined,
       { name: error.name, message: error.message, code: error.code },
-      String(error.response?.headers?.['x-aid-request-id'] || ''))
+      String(error.response?.headers?.['x-sakura-request-id'] || ''))
     // 统一处理错误
     if (error.response) {
       // 服务器返回错误

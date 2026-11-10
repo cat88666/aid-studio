@@ -16,7 +16,7 @@ import {
   IMAGE_MULTI_VIEW_AGENT_CODE
 } from '~/utils/extractAgentBiz'
 import { modelsFromListByFuncGroups, uniqueTrimmedCodes } from '~/utils/modelListByFuncBatch'
-import { buildAidAgentListScopeParams } from '~/utils/createFlowProjectContext'
+import { buildSakuraAgentListScopeParams } from '~/utils/createFlowProjectContext'
 import { userModelListByFuncCodes } from '~/utils/businessApi'
 import type { UserModelListItem } from '~/types/business-api'
 import type { SelectOption } from '~/utils/modelCapability'
@@ -155,7 +155,7 @@ export function useSceneModalModels(ctx: EditSceneImageModalCtx): SceneModalMode
       AI_MODEL_FUNC_CODE.IMAGE_MULTI_VIEW,
       AI_MODEL_FUNC_CODE.IMAGE_UPSCALE
     ])
-    const listScope = buildAidAgentListScopeParams(ctx.store())
+    const listScope = buildSakuraAgentListScopeParams(ctx.store())
     const agentPayloads = [
       { bizCategoryCode: formImageBiz, agentCode, ...listScope },
       {

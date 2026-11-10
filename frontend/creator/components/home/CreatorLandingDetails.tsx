@@ -59,7 +59,7 @@ export function CreatorLandingDetails({ locale, onCreate }: {
     }
     if (voice !== index) {
       setVoice(index)
-      element.src = withAppBasePath('/profile/aid/voice/sample/2026/05/17/' + voices[index].file + '.mp3')
+      element.src = withAppBasePath('/profile/sakura/voice/sample/2026/05/17/' + voices[index].file + '.mp3')
     }
     void element.play().catch((error: unknown) => {
       if (error instanceof DOMException && error.name === 'AbortError') return
@@ -93,7 +93,7 @@ export function CreatorLandingDetails({ locale, onCreate }: {
         {videoFailed ? <p role="alert">{t.videoError}</p> : <video key={camera} controls muted playsInline preload="none"
           autoPlay={cameraStarted} poster={withAppBasePath('/creator-home/meadow.webp')}
           aria-label={cameraLabels[locale][camera]}
-          src={withAppBasePath('/profile/aid/storyboard/img/2026/06/07/' + encodeURIComponent(cameraFiles[camera]) + '.mp4')}
+          src={withAppBasePath('/profile/sakura/storyboard/img/2026/06/07/' + encodeURIComponent(cameraFiles[camera]) + '.mp4')}
           onError={() => setVideoFailed(true)} />}
       </div>
     </section>
@@ -103,7 +103,7 @@ export function CreatorLandingDetails({ locale, onCreate }: {
       <div className="cld-voice-grid">
         {voices.map((item, index) => <button type="button" key={item.file} aria-pressed={voice === index && playing}
           aria-label={(voice === index && playing ? t.pause : t.audition) + ' ' + t.voiceNames[index]} onClick={() => playVoice(index)}>
-          <img loading="lazy" src={withAppBasePath('/profile/aid/voice/avatar/2026/05/22/' + encodeURIComponent(item.avatar) + '.jpg')} alt="" />
+          <img loading="lazy" src={withAppBasePath('/profile/sakura/voice/avatar/2026/05/22/' + encodeURIComponent(item.avatar) + '.jpg')} alt="" />
           <span><strong>{t.voiceNames[index]}</strong><small>{voice === index && playing ? t.playing : t.voiceLanguage}</small></span>
           <span className="cld-voice-control">{voice === index && playing ? <PauseOutlined /> : <SoundOutlined />}</span>
         </button>)}

@@ -58,7 +58,7 @@ describe('resolveStoryScriptAgentDocumentView', () => {
 
   it('blocks incomplete multi-selection envelopes from copy and apply actions', () => {
     const display = storyScriptAgentResponseForDisplay(
-      '[[AID_SCRIPT_REPLACEMENTS_V1]][{"referenceIndex":0,"replacement":"片段一"}',
+      '[[SAKURA_SCRIPT_REPLACEMENTS_V1]][{"referenceIndex":0,"replacement":"片段一"}',
       [selection(0, '原文一'), selection(10, '原文二')]
     )
     const view = resolveStoryScriptAgentDocumentView({

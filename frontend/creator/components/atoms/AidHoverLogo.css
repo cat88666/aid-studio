@@ -1,22 +1,22 @@
-.aid-hover-logo {
-  --aid-logo-color: #fff;
-  --aid-draw-duration: 680ms;
+.sakura-hover-logo {
+  --sakura-logo-color: #fff;
+  --sakura-draw-duration: 680ms;
   display: block;
   width: 54px;
   min-width: 54px;
-  color: var(--aid-logo-color);
+  color: var(--sakura-logo-color);
   overflow: visible;
   flex-shrink: 0;
 }
 
-.aid-hover-logo__svg {
+.sakura-hover-logo__svg {
   display: block;
   width: 100%;
   height: auto;
   overflow: visible;
 }
 
-.aid-hover-logo__path {
+.sakura-hover-logo__path {
   fill: transparent;
   stroke: currentColor;
   stroke-width: 1.35;
@@ -27,8 +27,8 @@
   vector-effect: non-scaling-stroke;
 }
 
-.aid-hover-logo__group.is-reduced .aid-hover-logo__path,
-.aid-hover-logo__group.is-complete .aid-hover-logo__path {
+.sakura-hover-logo__group.is-reduced .sakura-hover-logo__path,
+.sakura-hover-logo__group.is-complete .sakura-hover-logo__path {
   fill: currentColor;
   stroke: transparent;
   stroke-dashoffset: 0;
@@ -36,22 +36,22 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .aid-hover-logo__group.is-drawing .aid-hover-logo__path {
+  .sakura-hover-logo__group.is-drawing .sakura-hover-logo__path {
     animation:
-      aid-logo-draw var(--aid-draw-duration) cubic-bezier(0.4, 0, 0.2, 1) forwards,
-      aid-logo-fill 200ms cubic-bezier(0, 0, 0.2, 1) forwards;
-    animation-delay: var(--draw-delay), calc(var(--draw-delay) + var(--aid-draw-duration) - 40ms);
+      sakura-logo-draw var(--sakura-draw-duration) cubic-bezier(0.4, 0, 0.2, 1) forwards,
+      sakura-logo-fill 200ms cubic-bezier(0, 0, 0.2, 1) forwards;
+    animation-delay: var(--draw-delay), calc(var(--draw-delay) + var(--sakura-draw-duration) - 40ms);
   }
 
-  .aid-hover-logo__group.is-drawing.is-hover-draw {
-    --aid-draw-duration: 400ms;
+  .sakura-hover-logo__group.is-drawing.is-hover-draw {
+    --sakura-draw-duration: 400ms;
   }
 }
 
-@keyframes aid-logo-draw {
+@keyframes sakura-logo-draw {
   to { stroke-dashoffset: 0; }
 }
 
-@keyframes aid-logo-fill {
+@keyframes sakura-logo-fill {
   to { fill: currentColor; stroke: transparent; }
 }

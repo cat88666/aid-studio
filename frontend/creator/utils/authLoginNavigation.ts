@@ -3,7 +3,7 @@ import { openLoginModal, closeLoginModal, useLoginModalStore } from '@/stores/lo
 import { isAuthRequiredPath, sanitizeLoginRedirect } from '~/utils/authRequiredPath'
 
 /** 离开需登录路由（由 RouteGuard / AppBootstrap 监听并 soft replace 到首页） */
-export const AID_LEAVE_AUTH_ROUTE_EVENT = 'aid:leave-auth-route'
+export const SAKURA_LEAVE_AUTH_ROUTE_EVENT = 'sakura:leave-auth-route'
 
 export type RequireLoginOptions = {
   /**
@@ -72,7 +72,7 @@ export function requireLogin(options?: RequireLoginOptions): void {
 
   const leave = options?.leaveAuthRoute !== false
   if (leave && isAuthRequiredPath(pathname)) {
-    window.dispatchEvent(new CustomEvent(AID_LEAVE_AUTH_ROUTE_EVENT))
+    window.dispatchEvent(new CustomEvent(SAKURA_LEAVE_AUTH_ROUTE_EVENT))
   }
 }
 

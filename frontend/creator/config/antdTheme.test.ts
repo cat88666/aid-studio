@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs'
 import providerSource from '../components/app/AntdThemeProvider.tsx?raw'
 import layoutSource from '../app/layout.tsx?raw'
 import exportProgressSource from '../components/steps/video-preview/exportOps.tsx?raw'
-import { AID_ANTD_THEME } from './antdTheme'
+import { SAKURA_ANTD_THEME } from './antdTheme'
 
 const exportProgressCss = readFileSync(
   new URL('../components/steps/video-preview/video-preview-global.css', import.meta.url),
@@ -15,10 +15,10 @@ const exportProgressCss = readFileSync(
 
 describe('Ant Design application theme', () => {
   it('uses the dark algorithm and dark semantic surfaces for every component state', () => {
-    const tokens = theme.getDesignToken(AID_ANTD_THEME)
+    const tokens = theme.getDesignToken(SAKURA_ANTD_THEME)
 
-    expect(AID_ANTD_THEME.algorithm).toBe(theme.darkAlgorithm)
-    expect(AID_ANTD_THEME.token).toMatchObject({
+    expect(SAKURA_ANTD_THEME.algorithm).toBe(theme.darkAlgorithm)
+    expect(SAKURA_ANTD_THEME.token).toMatchObject({
       colorBgBase: '#060a12',
       colorBgContainer: '#191a1d',
       colorBgElevated: '#191a1d',
@@ -31,7 +31,7 @@ describe('Ant Design application theme', () => {
   })
 
   it('covers form controls, pickers and all elevated overlay families with tokens', () => {
-    expect(Object.keys(AID_ANTD_THEME.components ?? {})).toEqual(
+    expect(Object.keys(SAKURA_ANTD_THEME.components ?? {})).toEqual(
       expect.arrayContaining([
         'Modal',
         'Message',
@@ -45,11 +45,11 @@ describe('Ant Design application theme', () => {
         'Tooltip'
       ])
     )
-    expect(AID_ANTD_THEME.components?.Select).toMatchObject({
+    expect(SAKURA_ANTD_THEME.components?.Select).toMatchObject({
       selectorBg: 'rgba(28, 38, 54, 0.92)',
       activeBorderColor: '#00abd8'
     })
-    expect(AID_ANTD_THEME.components?.Message).toMatchObject({ contentBg: '#191a1d' })
+    expect(SAKURA_ANTD_THEME.components?.Message).toMatchObject({ contentBg: '#191a1d' })
   })
 
   it('targets the AntD v6 message notice surface for video export progress', () => {
@@ -63,8 +63,8 @@ describe('Ant Design application theme', () => {
   it('themes both the React tree and static API portal holders', () => {
     expect(layoutSource).toContain('<AntdThemeProvider>')
     expect(providerSource).toContain('ConfigProvider.config({')
-    expect(providerSource).toContain('holderRender: renderAidAntdStaticHolder')
-    expect(providerSource).toContain("'aid-antd-static-holder'")
+    expect(providerSource).toContain('holderRender: renderSakuraAntdStaticHolder')
+    expect(providerSource).toContain("'sakura-antd-static-holder'")
     expect(providerSource).toContain('if (staticThemeInstalled) return')
   })
 })

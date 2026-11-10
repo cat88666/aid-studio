@@ -6,5 +6,5 @@ Disallow: /create
 Disallow: /forgot-password
 Disallow: /login
 Disallow: /user
-Disallow: /aid
+Disallow: /sakura
 Disallow: /url

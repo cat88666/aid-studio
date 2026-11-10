@@ -13,7 +13,8 @@ import {
   accountPasswordChange,
   accountRebind,
   accountSecurity,
-  userBalance
+  userBalance,
+  userProfile
 } from './auth'
 
 describe('account security API wrappers', () => {
@@ -86,6 +87,29 @@ it('only shares in-flight balances within the same session', async () => {
     expect(userBalance()).toBe(second)
     resolvers[1]({ data: { balance: 22 } })
     await expect(second).resolves.toEqual({ balance: 22 })
+    expect(resolvers).toHaveLength(2)
+  } finally {
+    vi.unstubAllGlobals()
+  }
+})
+
+it('does not share public user identities across login sessions', async () => {
+  const resolvers: Array<(response: { data: { userId: string } }) => void> = []
+  requestMock.post.mockImplementation(() => new Promise(resolve => resolvers.push(resolve)))
+  let token = 'first'
+  vi.stubGlobal('window', {})
+  vi.stubGlobal('localStorage', { getItem: () => token })
+  try {
+    const first = userProfile()
+    expect(userProfile()).toBe(first)
+    token = 'second'
+    const second = userProfile()
+    expect(second).not.toBe(first)
+    resolvers[0]({ data: { userId: '9007199254740993123' } })
+    await expect(first).resolves.toEqual({ userId: '9007199254740993123' })
+    expect(userProfile()).toBe(second)
+    resolvers[1]({ data: { userId: '9007199254740993124' } })
+    await expect(second).resolves.toEqual({ userId: '9007199254740993124' })
     expect(resolvers).toHaveLength(2)
   } finally {
     vi.unstubAllGlobals()

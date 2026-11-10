@@ -126,25 +126,14 @@ export function RechargeModal({ open, onOpenChange, onPaid }: RechargeModalProps
 
   const rechargeProfileLoggedIn = !!token
 
-  /** 主标题：优先展示 username（与 localStorage user-info 一致） */
+  /** 仅展示用户昵称，不暴露内部登录名或单独的 ID。 */
   const rechargeProfileNameLine = (() => {
     if (!rechargeProfileLoggedIn) return '未登录'
     if (!user) return '用户'
     const name = user.nickName?.trim()
     if (name) return name
     if (user.email?.trim()) return user.email.trim()
-    if (user.id) return `ID${user.id}`
     return '用户'
-  })()
-
-  /** 悬停完整信息：便于区分同名或核对账号 */
-  const rechargeProfileTooltip = (() => {
-    if (!user) return ''
-    const parts: string[] = []
-    if (user.username?.trim()) parts.push(user.username.trim())
-    if (user.id) parts.push(`ID${user.id}`)
-    if (user.email?.trim()) parts.push(user.email.trim())
-    return parts.join(' · ')
   })()
 
   const selectedPackage = packages.find((p) => p.id === selectedPackageId) ?? null
@@ -706,7 +695,7 @@ export function RechargeModal({ open, onOpenChange, onPaid }: RechargeModalProps
               <img src={assetUrl(groupAvatar)} alt="" width={48} height={48} />
             </div>
             <div className="recharge-modal__profile-text">
-              <div className="recharge-modal__profile-name" title={rechargeProfileTooltip}>
+              <div className="recharge-modal__profile-name">
                 {rechargeProfileNameLine}
               </div>
               <p className="recharge-modal__profile-desc">购买credits，解锁更多创作能力</p>

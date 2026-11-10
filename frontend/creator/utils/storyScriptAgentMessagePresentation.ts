@@ -1,3 +1,4 @@
+import { normalizeSakuraProtocol } from './sakuraProtocol'
 import type { UserSkillRuntimeResponseMode } from '~/types/user-skill'
 
 export type StoryScriptAgentMessagePresentation = 'chat' | 'document'
@@ -20,7 +21,7 @@ export interface StoryScriptAgentPresentationInput {
 const CHAT_CONTENT_SLOTS = new Set(['prompt', 'chat', 'reply', 'assistant'])
 
 function presentationText(content: string): string {
-  return String(content || '').trim()
+  return normalizeSakuraProtocol(String(content || '')).trim()
 }
 
 export function resolveAssistantPrimaryContentSlot(
@@ -50,7 +51,7 @@ export function isConversationalUserPrompt(prompt: string): boolean {
 export function looksLikeScreenplayContent(content: string): boolean {
   const text = presentationText(content)
   if (!text) return false
-  if (/^\[AID_MODE:SCREENPLAY\]/i.test(text)) return true
+  if (/^\[SAKURA_MODE:SCREENPLAY\]/i.test(text)) return true
   if (/^(INT\.|EXT\.|内景|外景)/m.test(text)) return true
   if (/^第\s*[0-9一二三四五六七八九十百千]+\s*场/m.test(text)) return true
   if (/^场次\s*[0-9一二三四五六七八九十百千]+/m.test(text)) return true
