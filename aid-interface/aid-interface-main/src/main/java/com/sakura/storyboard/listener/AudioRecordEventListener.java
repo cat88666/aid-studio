@@ -1,0 +1,539 @@
+package com.sakura.storyboard.listener;
+
+import java.util.Date;
+import java.util.Objects;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.sakura.sakura.domain.SakuraAiVoiceLibrary;
+import com.sakura.sakura.domain.SakuraAudioAsset;
+import com.sakura.sakura.domain.SakuraAudioRecord;
+import com.sakura.sakura.domain.media.SakuraMediaResult;
+import com.sakura.sakura.domain.media.SakuraMediaTask;
+import com.sakura.sakura.mapper.SakuraMediaResultMapper;
+import com.sakura.sakura.mapper.SakuraMediaTaskMapper;
+import com.sakura.media.dto.MediaAudioGenerateRequest;
+import com.sakura.sakura.service.ISakuraAiVoiceLibraryService;
+import com.sakura.sakura.service.ISakuraAudioAssetService;
+import com.sakura.sakura.service.ISakuraAudioRecordService;
+import com.sakura.common.sakura.oss.util.MediaUrlResolver;
+import com.sakura.common.utils.DateUtils;
+import com.sakura.media.enums.MediaTaskStatus;
+import com.sakura.media.enums.MediaType;
+import com.sakura.media.event.MediaTaskCompletedEvent;
+import com.sakura.media.event.MediaTaskOssPersistedEvent;
+import com.sakura.media.util.AudioDurationProber;
+import com.sakura.rps.queue.BatchParentSubmissionGuard;
+import com.sakura.rps.queue.BatchTaskExecutionRejectedException;
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+/**
+ * 配音业务记录事件监听：把 sakura_media_task 的终态回填到 sakura_audio_record，并同步写入音频资产。
+ *
+ * @author 视觉AID
+ */
+@Slf4j
+@Component
+public class AudioRecordEventListener {
+
+    /** 业务任务类型标识：与 StoryboardWorkbenchServiceImpl 提交 media_task 时的 bizTaskType 保持一致 */
+    private static final String BIZ_TASK_TYPE_AUDIO = "audio_record";
+    /** 失败短文案（≤6 字），与前端错误展示规范一致 */
+    private static final String ERR_MSG_FAILED = "配音失败";
+    /** 资产标题默认截断长度 */
+    private static final int ASSET_TITLE_MAX_LEN = 80;
+    /** 资产来源：AI 生成 */
+    private static final int ASSET_SOURCE_AI = 1;
+    /** 秒→毫秒换算 */
+    private static final int MS_PER_SECOND = 1000;
+
+    @Resource
+    private SakuraMediaTaskMapper sakuraMediaTaskMapper;
+
+    @Resource
+    private SakuraMediaResultMapper sakuraMediaResultMapper;
+
+    @Resource
+    private ISakuraAudioRecordService sakuraAudioRecordService;
+
+    @Resource
+    private ISakuraAudioAssetService sakuraAudioAssetService;
+
+    @Resource
+    private ISakuraAiVoiceLibraryService sakuraAiVoiceLibraryService;
+
+    @Resource
+    private MediaUrlResolver mediaUrlResolver;
+
+    @Resource
+    private BatchParentSubmissionGuard batchParentSubmissionGuard;
+
+    /**
+     * 媒体任务终态事件：
+     *
+     *   - SUCCEEDED 且 ossUrl 就绪 → 回填 audio_url + status=SUCCEEDED + 写资产
+     *   - SUCCEEDED 但 ossUrl 未就绪 → 仅同步 ttsMediaTaskId，保持 PROCESSING 等 OSS 事件
+     *   - FAILED → 回填 status=FAILED + 短文案（不写资产）
+     *
+     */
+    @EventListener
+    @Order(200)
+    public void onMediaTaskCompleted(MediaTaskCompletedEvent event) {
+        if (Objects.isNull(event) || Objects.isNull(event.getTaskId())) {
+            return;
+        }
+        SakuraMediaTask mediaTask = sakuraMediaTaskMapper.selectById(event.getTaskId());
+        if (!isAudioBizTask(mediaTask)) {
+            return;
+        }
+
+        SakuraAudioRecord audioRecord = sakuraAudioRecordService.getById(mediaTask.getBizTaskId());
+        if (Objects.isNull(audioRecord)) {
+            log.warn("AudioRecordEventListener 业务音频记录缺失, audioRecordId={}", mediaTask.getBizTaskId());
+            return;
+        }
+        executeBusinessEventGuard(mediaTask, audioRecord,
+                () -> handleMediaTaskCompleted(mediaTask, audioRecord.getId()));
+    }
+
+    private void handleMediaTaskCompleted(SakuraMediaTask mediaTask, Long audioRecordId) {
+        SakuraAudioRecord audioRecord = sakuraAudioRecordService.getById(audioRecordId);
+        if (Objects.isNull(audioRecord)) {
+            return;
+        }
+        if (isCancelledComposeVoiceover(audioRecord)) {
+            log.info("已取消一键配音忽略迟到媒体终态, audioRecordId={}, mediaTaskId={}",
+                    audioRecord.getId(), mediaTask.getId());
+            return;
+        }
+
+        LambdaUpdateWrapper<SakuraAudioRecord> update = new LambdaUpdateWrapper<>();
+        update.eq(SakuraAudioRecord::getId, audioRecord.getId());
+        excludePersistedComposeCancellation(update, audioRecord);
+        update.set(SakuraAudioRecord::getUpdateTime, DateUtils.getNowDate());
+        update.set(SakuraAudioRecord::getTtsMediaTaskId, mediaTask.getId());
+
+        if (MediaTaskStatus.SUCCEEDED.name().equals(mediaTask.getStatus())) {
+            // 关键：仅当 ossUrl 就绪才推进业务终态，否则保持 PROCESSING，等待 MediaTaskOssPersistedEvent。
+            if (StrUtil.isBlank(mediaTask.getOssUrl())) {
+                log.info("AudioRecordEventListener 媒体任务 SUCCEEDED 但 ossUrl 未就绪, 保持 PROCESSING 等待 OSS 事件, audioRecordId={}, mediaTaskId={}",
+                        audioRecord.getId(), mediaTask.getId());
+                try {
+                    if (!sakuraAudioRecordService.update(update)) {
+                        log.info("已取消一键配音忽略迟到媒体任务ID回填, audioRecordId={}, mediaTaskId={}",
+                                audioRecord.getId(), mediaTask.getId());
+                    }
+                } catch (Exception ex) {
+                    log.error("AudioRecordEventListener 同步 ttsMediaTaskId 异常 audioRecordId={}", audioRecord.getId(), ex);
+                }
+                return;
+            }
+            // ossUrl 已就绪：使用 OSS URL 回填
+            update.set(SakuraAudioRecord::getAudioUrl, mediaTask.getOssUrl());
+            update.set(SakuraAudioRecord::getStatus, MediaTaskStatus.SUCCEEDED.name());
+            update.set(SakuraAudioRecord::getErrorMessage, null);
+            applyDurationMs(update, audioRecord, mediaTask);
+            log.info("AudioRecordEventListener 回填成功(ossUrl) audioRecordId={}, len={}",
+                    audioRecord.getId(), StrUtil.length(mediaTask.getOssUrl()));
+
+            try {
+                if (!sakuraAudioRecordService.update(update)) {
+                    log.info("已取消一键配音忽略迟到成功回填, audioRecordId={}, mediaTaskId={}",
+                            audioRecord.getId(), mediaTask.getId());
+                    return;
+                }
+            } catch (Exception ex) {
+                log.error("AudioRecordEventListener 回填异常 audioRecordId={}", audioRecord.getId(), ex);
+                return;
+            }
+            // 同步写入资产表（幂等）
+            upsertAudioAsset(audioRecord, mediaTask);
+            return;
+        }
+
+        if (MediaTaskStatus.FAILED.name().equals(mediaTask.getStatus())) {
+            update.set(SakuraAudioRecord::getStatus, MediaTaskStatus.FAILED.name());
+            update.set(SakuraAudioRecord::getErrorMessage, ERR_MSG_FAILED);
+            log.info("AudioRecordEventListener 回填失败 audioRecordId={}, mediaStatus={}",
+                    audioRecord.getId(), mediaTask.getStatus());
+            try {
+                sakuraAudioRecordService.update(update);
+            } catch (Exception ex) {
+                log.error("AudioRecordEventListener 回填异常 audioRecordId={}", audioRecord.getId(), ex);
+            }
+        }
+        // 非终态不回填
+    }
+
+    /**
+     * 媒体任务 OSS 持久化完成事件：
+     * 把 audio_url 从空 / 临时值升级为 OSS URL，并推进业务 status=SUCCEEDED，
+     * 同时向资产表幂等写入一条成功记录。
+     */
+    @EventListener
+    @Order(200)
+    public void onMediaTaskOssPersisted(MediaTaskOssPersistedEvent event) {
+        if (Objects.isNull(event) || Objects.isNull(event.getTaskId())) {
+            return;
+        }
+        SakuraMediaTask mediaTask = sakuraMediaTaskMapper.selectById(event.getTaskId());
+        if (!isAudioBizTask(mediaTask)) {
+            return;
+        }
+        if (StrUtil.isBlank(mediaTask.getOssUrl())) {
+            log.warn("AudioRecordEventListener ossPersisted 事件 ossUrl 仍为空, mediaTaskId={}", mediaTask.getId());
+            return;
+        }
+        SakuraAudioRecord audioRecord = sakuraAudioRecordService.getById(mediaTask.getBizTaskId());
+        if (Objects.isNull(audioRecord)) {
+            log.warn("AudioRecordEventListener ossPersisted 业务音频记录缺失, audioRecordId={}", mediaTask.getBizTaskId());
+            return;
+        }
+        executeBusinessEventGuard(mediaTask, audioRecord,
+                () -> handleMediaTaskOssPersisted(mediaTask, audioRecord.getId()));
+    }
+
+    private void handleMediaTaskOssPersisted(SakuraMediaTask mediaTask, Long audioRecordId) {
+        SakuraAudioRecord audioRecord = sakuraAudioRecordService.getById(audioRecordId);
+        if (Objects.isNull(audioRecord)) {
+            return;
+        }
+        if (isCancelledComposeVoiceover(audioRecord)) {
+            log.info("已取消一键配音忽略迟到OSS结果, audioRecordId={}, mediaTaskId={}",
+                    audioRecord.getId(), mediaTask.getId());
+            return;
+        }
+
+        LambdaUpdateWrapper<SakuraAudioRecord> update = new LambdaUpdateWrapper<>();
+        update.eq(SakuraAudioRecord::getId, audioRecord.getId());
+        excludePersistedComposeCancellation(update, audioRecord);
+        update.set(SakuraAudioRecord::getUpdateTime, DateUtils.getNowDate());
+        update.set(SakuraAudioRecord::getTtsMediaTaskId, mediaTask.getId());
+        update.set(SakuraAudioRecord::getAudioUrl, mediaTask.getOssUrl());
+        update.set(SakuraAudioRecord::getStatus, MediaTaskStatus.SUCCEEDED.name());
+        update.set(SakuraAudioRecord::getErrorMessage, null);
+        applyDurationMs(update, audioRecord, mediaTask);
+
+        try {
+            if (!sakuraAudioRecordService.update(update)) {
+                log.info("已取消一键配音忽略迟到OSS回填, audioRecordId={}, mediaTaskId={}",
+                        audioRecord.getId(), mediaTask.getId());
+                return;
+            }
+            log.info("AudioRecordEventListener ossPersisted 回填成功 audioRecordId={}, mediaTaskId={}",
+                    audioRecord.getId(), mediaTask.getId());
+        } catch (Exception ex) {
+            log.error("AudioRecordEventListener ossPersisted 回填异常 audioRecordId={}", audioRecord.getId(), ex);
+            return;
+        }
+        // 资产表幂等写入
+        upsertAudioAsset(audioRecord, mediaTask);
+    }
+
+    private void executeBusinessEventGuard(SakuraMediaTask mediaTask, SakuraAudioRecord audioRecord, Runnable action) {
+        if (StrUtil.startWith(audioRecord.getComposeBatchId(), "cb_")) {
+            batchParentSubmissionGuard.execute("voiceover:" + audioRecord.getComposeBatchId(), () -> {
+                action.run();
+                return null;
+            });
+            return;
+        }
+        if (Objects.isNull(mediaTask.getParentTaskId())) {
+            action.run();
+            return;
+        }
+        String executionTraceId = extractParentExecutionTrace(mediaTask);
+        try {
+            batchParentSubmissionGuard.executeManagedBusinessCommit(
+                    mediaTask.getParentTaskId(), executionTraceId, () -> {
+                        action.run();
+                        return null;
+                    });
+        } catch (BatchTaskExecutionRejectedException rejected) {
+            log.info("配音媒体事件执行周期已变化，跳过业务回写: mediaTaskId={}, parentTaskId={}",
+                    mediaTask.getId(), mediaTask.getParentTaskId());
+        }
+    }
+
+    private String extractParentExecutionTrace(SakuraMediaTask mediaTask) {
+        if (Objects.isNull(mediaTask) || StrUtil.isBlank(mediaTask.getRequestJson())) {
+            return null;
+        }
+        try {
+            cn.hutool.json.JSONObject request = JSONUtil.parseObj(mediaTask.getRequestJson());
+            cn.hutool.json.JSONObject options = request.getJSONObject("options");
+            return Objects.isNull(options) ? null : options.getStr("parentExecutionTraceId");
+        } catch (Exception ex) {
+            log.warn("配音媒体事件解析父执行周期失败: mediaTaskId={}", mediaTask.getId());
+            return null;
+        }
+    }
+
+    private boolean isCancelledComposeVoiceover(SakuraAudioRecord audioRecord) {
+        return StrUtil.startWith(audioRecord.getComposeBatchId(), "cb_")
+                && MediaTaskStatus.FAILED.name().equals(audioRecord.getStatus())
+                && "用户取消".equals(audioRecord.getErrorMessage());
+    }
+
+    /** cb_ 批次的迟到事件不得覆盖持久化的 FAILED + 用户取消。 */
+    private void excludePersistedComposeCancellation(LambdaUpdateWrapper<SakuraAudioRecord> update,
+                                                      SakuraAudioRecord audioRecord) {
+        if (!StrUtil.startWith(audioRecord.getComposeBatchId(), "cb_")) {
+            return;
+        }
+        update.and(wrapper -> wrapper.isNull(SakuraAudioRecord::getStatus)
+                .or().ne(SakuraAudioRecord::getStatus, MediaTaskStatus.FAILED.name())
+                .or().isNull(SakuraAudioRecord::getErrorMessage)
+                .or().ne(SakuraAudioRecord::getErrorMessage, "用户取消"));
+    }
+
+    /**
+     * 向 sakura_audio_asset 写一份资产快照（按 audio_record_id 幂等）。
+     * 入库前提：audio_record 必须已成功（status=SUCCEEDED），mediaTask.ossUrl 必须非空。
+     * 异常只记日志，不影响主流程（业务表已回填成功，资产丢失允许人工或下一轮补偿恢复）。
+     */
+    private void upsertAudioAsset(SakuraAudioRecord audioRecord, SakuraMediaTask mediaTask) {
+        if (Objects.isNull(audioRecord) || Objects.isNull(audioRecord.getId())) {
+            return;
+        }
+        if (StrUtil.isBlank(mediaTask.getOssUrl())) {
+            return;
+        }
+        try {
+            // 幂等：按 audio_record_id 先查后写
+            SakuraAudioAsset existing = sakuraAudioAssetService.selectByAudioRecordId(audioRecord.getId());
+            if (Objects.nonNull(existing)) {
+                log.info("upsertAudioAsset 资产已存在, audioRecordId={}, assetId={}", audioRecord.getId(), existing.getId());
+                return;
+            }
+
+            SakuraAudioAsset asset = new SakuraAudioAsset();
+            asset.setUserId(audioRecord.getUserId());
+            asset.setProjectId(mediaTask.getProjectId());
+            asset.setEpisodeId(mediaTask.getEpisodeId());
+            asset.setStoryboardId(audioRecord.getStoryboardId());
+            asset.setAudioRecordId(audioRecord.getId());
+            asset.setMediaTaskId(mediaTask.getId());
+            asset.setAudioUrl(mediaTask.getOssUrl());
+            asset.setTtsText(audioRecord.getTtsText());
+            asset.setVoiceLibraryId(audioRecord.getVoiceLibraryId());
+            asset.setVoiceModelId(audioRecord.getVoiceModelId());
+            asset.setVoiceCode(audioRecord.getTimbreCode());
+            // 音色名称：若关联音色库，回填展示名便于前端列表直接渲染
+            asset.setVoiceName(resolveVoiceName(audioRecord.getVoiceLibraryId()));
+            asset.setAudioSource(Objects.isNull(audioRecord.getAudioSource()) ? ASSET_SOURCE_AI : audioRecord.getAudioSource());
+            asset.setAssetTitle(buildAssetTitle(audioRecord.getTtsText()));
+            // 生成上下文快照：从 sakura_media_task.request_json 解析（兼容旧数据为空的情况）
+            applyRequestSnapshot(asset, mediaTask);
+            // 文件大小：从 sakura_media_result 读取（persistOssIfNeeded 写入，可能尚未落或缺失）
+            applyResultSnapshot(asset, mediaTask.getId());
+            asset.setDelFlag("0");
+
+            Date now = DateUtils.getNowDate();
+            String operator = Objects.isNull(audioRecord.getUserId()) ? "" : String.valueOf(audioRecord.getUserId());
+            asset.setCreateBy(operator);
+            asset.setCreateTime(now);
+            asset.setUpdateBy(operator);
+            asset.setUpdateTime(now);
+
+            int rows = sakuraAudioAssetService.insertSakuraAudioAsset(asset);
+            log.info("upsertAudioAsset 资产写入完成, audioRecordId={}, assetId={}, rows={}",
+                    audioRecord.getId(), asset.getId(), rows);
+        } catch (Exception ex) {
+            // 唯一键冲突等并发竞争场景按 info 记录；不影响主流程
+            log.info("upsertAudioAsset 写入资产跳过或异常, audioRecordId={}, err={}",
+                    audioRecord.getId(), ex.getMessage());
+        }
+    }
+
+    /**
+     * 从 sakura_media_task.request_json 反序列化原始 {@link MediaAudioGenerateRequest}，
+     * 将情感 / 语速 / 音量 / 音调 / 采样率 / 音频格式等"生成上下文"一次性写入资产快照。
+     * request_json 解析失败或字段缺失时，只对应单字段留空，不抛异常。
+     * audio_format 优先取请求中的声明；缺失时按 OSS URL 后缀猜测。
+     */
+    private void applyRequestSnapshot(SakuraAudioAsset asset, SakuraMediaTask mediaTask) {
+        String requestJson = mediaTask.getRequestJson();
+        MediaAudioGenerateRequest req = null;
+        if (StrUtil.isNotBlank(requestJson)) {
+            try {
+                req = JSONUtil.toBean(requestJson, MediaAudioGenerateRequest.class);
+            } catch (Exception ex) {
+                log.info("applyRequestSnapshot 解析 request_json 失败, mediaTaskId={}, err={}",
+                        mediaTask.getId(), ex.getMessage());
+            }
+        }
+        if (Objects.nonNull(req)) {
+            asset.setEmotion(req.getEmotion());
+            asset.setSpeechRate(req.getSpeechRate());
+            asset.setLoudnessRate(req.getLoudnessRate());
+            asset.setPitch(req.getPitch());
+            asset.setSampleRate(req.getSampleRate());
+            if (StrUtil.isNotBlank(req.getAudioFormat())) {
+                // 归一化：ogg_opus → opus，其它小写
+                asset.setAudioFormat(normalizeAudioFormat(req.getAudioFormat()));
+            }
+        }
+        // 音频格式兜底：OSS URL 后缀猜测（已做归一化）
+        if (StrUtil.isBlank(asset.getAudioFormat())) {
+            asset.setAudioFormat(deriveAudioFormat(mediaTask.getOssUrl()));
+        }
+    }
+
+    /**
+     * 从 sakura_media_result 取文件大小。缺失时留空（补偿任务后续可能回填）。
+     */
+    private void applyResultSnapshot(SakuraAudioAsset asset, Long mediaTaskId) {
+        if (Objects.isNull(mediaTaskId)) {
+            return;
+        }
+        try {
+            LambdaQueryWrapper<SakuraMediaResult> wrapper = Wrappers.lambdaQuery();
+            wrapper.select(SakuraMediaResult::getId, SakuraMediaResult::getTaskId, SakuraMediaResult::getFileSize);
+            wrapper.eq(SakuraMediaResult::getTaskId, mediaTaskId);
+            wrapper.last("LIMIT 1");
+            SakuraMediaResult result = sakuraMediaResultMapper.selectOne(wrapper);
+            if (Objects.nonNull(result)) {
+                asset.setFileSize(result.getFileSize());
+            }
+        } catch (Exception ex) {
+            log.info("applyResultSnapshot 查询媒体结果异常, mediaTaskId={}, err={}",
+                    mediaTaskId, ex.getMessage());
+        }
+    }
+
+    /**
+     * 按音色库 ID 反查展示名（容错：音色库被删或异常时返回 null）。
+     */
+    private String resolveVoiceName(Long voiceLibraryId) {
+        if (Objects.isNull(voiceLibraryId) || voiceLibraryId <= 0) {
+            return null;
+        }
+        try {
+            SakuraAiVoiceLibrary voice = sakuraAiVoiceLibraryService.getById(voiceLibraryId);
+            return Objects.isNull(voice) ? null : voice.getVoiceName();
+        } catch (Exception ex) {
+            log.info("resolveVoiceName 查询音色异常, voiceLibraryId={}, err={}", voiceLibraryId, ex.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 资产标题默认取 tts_text 前 80 字。空文本兜底 "配音"。
+     */
+    private String buildAssetTitle(String ttsText) {
+        if (StrUtil.isBlank(ttsText)) {
+            return "配音";
+        }
+        String trimmed = ttsText.trim();
+        if (trimmed.length() <= ASSET_TITLE_MAX_LEN) {
+            return trimmed;
+        }
+        return trimmed.substring(0, ASSET_TITLE_MAX_LEN);
+    }
+
+    /**
+     * 从 OSS URL 后缀猜测音频格式；仅用于前端展示，不参与播放。
+     * 已做归一化：{@code ogg_opus / oggopus → opus}。
+     * 注意：长度判断放在归一化之后，避免 {@code ogg_opus}（9 字符复合标记）被 &lt;=8 守卫误判。
+     */
+    private String deriveAudioFormat(String ossUrl) {
+        if (StrUtil.isBlank(ossUrl)) {
+            return null;
+        }
+        int dot = ossUrl.lastIndexOf('.');
+        if (dot <= 0 || dot >= ossUrl.length() - 1) {
+            return null;
+        }
+        String suffix = ossUrl.substring(dot + 1);
+        int q = suffix.indexOf('?');
+        if (q > 0) {
+            suffix = suffix.substring(0, q);
+        }
+        // 先归一化，再按去点后的值长度判断
+        String normalized = normalizeAudioFormat(suffix);
+        if (StrUtil.isBlank(normalized) || normalized.length() > 8) {
+            return null;
+        }
+        return normalized;
+    }
+
+    /**
+     * 音频格式归一化（与 MediaGenerationServiceImpl 保持同义）：
+     *
+     *   - 去前导 "." / 小写 / 去 query 参数
+     *   - ogg_opus / oggopus → opus
+     *   - 空输入返回 null
+     *
+     */
+    private String normalizeAudioFormat(String raw) {
+        if (StrUtil.isBlank(raw)) {
+            return null;
+        }
+        String s = raw.trim();
+        if (s.startsWith(".")) {
+            s = s.substring(1);
+        }
+        int q = s.indexOf('?');
+        if (q > 0) {
+            s = s.substring(0, q);
+        }
+        s = s.toLowerCase();
+        if ("ogg_opus".equals(s) || "oggopus".equals(s)) {
+            return "opus";
+        }
+        return s;
+    }
+
+    /**
+     * 配音时长回填（毫秒）：优先解析音频文件本身取精确毫秒，解析不出（pcm 等无头格式）才退回任务侧
+     * {@code output_duration_seconds} 换算。业务表已有时长时跳过，避免重复探测与覆盖。
+     * 任务侧时长按计价粒度向上取整到秒，换算最多引入 1 秒误差，而 {@code duration_ms} 是成片音画对齐
+     * 与对口型时长预估的基准，必须优先走精确探测；因此只在 ossUrl 就绪（能真正探测）时才回填，
+     * ossUrl 未就绪的中间态一律不写，避免粗粒度值先落库把后续精确探测挡在门外。
+     *
+     * @param update      业务记录更新条件（就地追加时长字段）
+     * @param audioRecord 业务配音记录
+     * @param mediaTask   对应媒体任务
+     */
+    private void applyDurationMs(LambdaUpdateWrapper<SakuraAudioRecord> update, SakuraAudioRecord audioRecord,
+                                 SakuraMediaTask mediaTask) {
+        if (Objects.nonNull(audioRecord.getDurationMs()) && audioRecord.getDurationMs() > 0) {
+            return;
+        }
+        if (StrUtil.isBlank(mediaTask.getOssUrl())) {
+            return;
+        }
+        Integer probed = AudioDurationProber.probeDurationMs(mediaUrlResolver.toFullUrl(mediaTask.getOssUrl()));
+        if (Objects.nonNull(probed) && probed > 0) {
+            update.set(SakuraAudioRecord::getDurationMs, probed);
+            return;
+        }
+        if (Objects.nonNull(mediaTask.getOutputDurationSeconds()) && mediaTask.getOutputDurationSeconds() > 0) {
+            update.set(SakuraAudioRecord::getDurationMs, (int) (mediaTask.getOutputDurationSeconds() * MS_PER_SECOND));
+        }
+    }
+
+    /**
+     * 统一判定：本次事件是否对应音频业务任务（AUDIO + audio_record + 关联业务 ID）。
+     */
+    private boolean isAudioBizTask(SakuraMediaTask mediaTask) {
+        if (Objects.isNull(mediaTask)) {
+            return false;
+        }
+        if (!Objects.equals(MediaType.AUDIO.name(), mediaTask.getMediaType())) {
+            return false;
+        }
+        if (!BIZ_TASK_TYPE_AUDIO.equals(mediaTask.getBizTaskType())
+                || Objects.isNull(mediaTask.getBizTaskId())) {
+            return false;
+        }
+        return true;
+    }
+}

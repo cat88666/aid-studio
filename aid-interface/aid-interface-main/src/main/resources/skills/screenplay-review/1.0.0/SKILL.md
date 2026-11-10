@@ -1,6 +1,6 @@
 ---
 name: screenplay-review
-description: AID 只读剧本审核子 Skill，区分客观硬伤和审美分叉。
+description: SAKURA 只读剧本审核子 Skill，区分客观硬伤和审美分叉。
 ---
 
 # Screenplay Review

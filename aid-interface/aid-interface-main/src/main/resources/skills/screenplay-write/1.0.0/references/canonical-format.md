@@ -1,4 +1,4 @@
-# AID canonical screenplay plaintext
+# SAKURA canonical screenplay plaintext
 
 输出是纯叙事文本。剧集第一行必须独占写 `本集正文`，电影第一行必须独占写 `电影正文`，两者都不带冒号。
 

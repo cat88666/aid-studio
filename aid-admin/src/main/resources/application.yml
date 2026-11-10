@@ -1,7 +1,7 @@
 # 项目相关配置
-aid:
+sakura:
   # 名称
-  name: aid
+  name: sakura
   # 版本
   version: 3.9.1
   # 版权年份
@@ -142,7 +142,7 @@ server:
 # 日志配置
 logging:
   level:
-    com.aid: error
+    com.sakura: error
     org.springframework: warn
 
 # 用户配置
@@ -215,7 +215,7 @@ token:
 # MyBatis Plus配置
 mybatis-plus:
   # 搜索指定包别名
-  typeAliasesPackage: com.aid.**.domain
+  typeAliasesPackage: com.sakura.**.domain
   # 配置mapper的扫描，找到所有的mapper.xml映射文件
   mapperLocations: classpath*:mapper/**/*Mapper.xml
   # 加载全局的配置文件
@@ -239,7 +239,7 @@ springdoc:
     - group: 'default'
       display-name: '测试模块'
       paths-to-match: '/**'
-      packages-to-scan: com.aid.web.controller.tool
+      packages-to-scan: com.sakura.web.controller.tool
 
 # 防盗链配置
 referer:

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <!-- 日志存放路径（部署时用环境变量 LOG_PATH 注入，未设置时用默认值） -->
-	<property name="log.path" value="${LOG_PATH:-/home/aid/logs}" />
+	<property name="log.path" value="${LOG_PATH:-/home/sakura/logs}" />
     <!-- 日志输出格式 -->
 	<property name="log.pattern" value="%d{HH:mm:ss.SSS} [%thread] %-5level %logger{20} - [%method,%line] - %msg%n" />
 
@@ -86,7 +86,7 @@
     </appender>
 
 	<!-- 系统模块日志级别控制  -->
-	<logger name="com.aid" level="info" />
+	<logger name="com.sakura" level="info" />
 	<!-- Spring日志级别控制  -->
 	<logger name="org.springframework" level="warn" />
 	<!-- RocketMQ 客户端日志：未部署 MQ 时压制后台重连噪音，故障仍可见 ERROR -->

@@ -1,0 +1,70 @@
+package com.sakura.media.provider;
+
+import com.sakura.media.dto.MediaVideoGenerateRequest;
+import com.sakura.domain.vo.AiModelConfigVo;
+
+public interface VideoProviderClient {
+
+    // 协议标识：用于服务层路由到具体实现。
+    String protocol();
+
+    // 协议匹配能力：默认按 protocol 精确匹配；实现类可按需要覆写为别名匹配。
+    default boolean supportsProtocol(String protocol) {
+        return protocol != null && protocol().equalsIgnoreCase(protocol);
+    }
+
+    /**
+     * 服务商编码匹配能力：调度层按 {@code sakura_ai_provider.provider_code} 强路由的依据。
+     * 默认返回 {@code false}；各实现类声明自己归属的 provider_code（忽略大小写 + trim）。
+     * 这是视频 Provider 的唯一路由依据，不再按模型名前缀猜测。
+     *
+     * @param providerCode 来自 {@code AiModelConfigVo.getProviderCode()}
+     * @return 是否归属该 providerCode
+     */
+    default boolean supportsProviderCode(String providerCode) {
+        return false;
+    }
+
+    /** Whether this adapter actually forwards reference audio to its upstream protocol. */
+    default boolean supportsReferenceAudioInput() {
+        return false;
+    }
+
+    /** capability 未配置时的厂商参考图默认上限；null 表示不在公共层额外限制。 */
+    default Integer fallbackMaxReferenceImages(AiModelConfigVo modelConfig) {
+        return null;
+    }
+
+    /** capability 未配置时的厂商参考视频默认上限；0 表示禁止，null 表示不在公共层额外限制。 */
+    default Integer fallbackMaxReferenceVideos(AiModelConfigVo modelConfig) {
+        return null;
+    }
+
+    /** True when a quote needs trusted source-video dimensions, frame rate or duration. */
+    default boolean requiresVerifiedMetadataForQuote() {
+        return false;
+    }
+
+    /** 在能力校验和报价之前对齐协议默认参数，不访问上游。 */
+    default void normalizeRequest(AiModelConfigVo modelConfig, MediaVideoGenerateRequest request) {
+    }
+
+    /** Pure provider contract validation; no network I/O or external mutation. */
+    default void validateRequest(AiModelConfigVo modelConfig, MediaVideoGenerateRequest request) {
+    }
+
+    /**
+     * Planned quotes may not have their final prompt yet. Implementations must
+     * validate every other provider constraint without mutating the request.
+     */
+    default void validateRequest(AiModelConfigVo modelConfig, MediaVideoGenerateRequest request,
+                                 boolean planned) {
+        validateRequest(modelConfig, request);
+    }
+
+    // 提交视频生成任务：返回直出URL或providerTaskId。
+    ProviderSubmitResult submit(AiModelConfigVo modelConfig, MediaVideoGenerateRequest request);
+
+    // 查询视频任务状态：返回归一化状态与结果URL。
+    ProviderTaskResult query(AiModelConfigVo modelConfig, String providerTaskId);
+}

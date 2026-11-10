@@ -1,0 +1,267 @@
+package com.sakura.media.provider;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.math.BigDecimal;
+
+import com.sakura.domain.vo.AiModelConfigVo;
+import com.sakura.common.exception.ServiceException;
+import com.sakura.media.dto.ReferenceAudioInput;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.StrUtil;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * 参考音频能力与「数量上限」统一收口：capability_json 的参考音频键位只在此解析，
+ * 超限拒绝，与 {@link ReferenceImageLimiter} 保持一致。
+ *
+ * @author 视觉AID
+ */
+@Slf4j
+public final class ReferenceAudioLimiter {
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    /** capability_json 键：是否支持参考音频 */
+    public static final String KEY_SUPPORTS_REFERENCE_AUDIO = "supportsReferenceAudio";
+
+    /** capability_json 键：参考音频下发前是否必须开启音画同出 */
+    public static final String KEY_REQUIRES_GENERATED_AUDIO = "referenceAudioRequiresGeneratedAudio";
+
+    /** capability_json 键：参考音频条数上限 */
+    public static final String KEY_MAX_REFERENCE_AUDIOS = "maxReferenceAudios";
+
+    /** capability_json 键：单条最短时长（秒） */
+    public static final String KEY_MIN_DURATION_SECONDS = "referenceAudioMinDurationSeconds";
+
+    /** capability_json 键：单条最长时长（秒） */
+    public static final String KEY_MAX_DURATION_SECONDS = "referenceAudioMaxDurationSeconds";
+
+    /** capability_json 键：多条总时长上限（秒） */
+    public static final String KEY_MAX_TOTAL_DURATION_SECONDS = "referenceAudioMaxTotalDurationSeconds";
+
+    /** capability_json 键：允许的音频格式 */
+    public static final String KEY_REFERENCE_AUDIO_FORMATS = "referenceAudioFormats";
+
+    /** 服务端可解析时长的音频格式；白名单超出此集合时无法探测时长 */
+    private static final List<String> PROBEABLE_FORMATS = List.of("wav", "pcm", "mp3", "m4a", "aac", "adts");
+
+    private ReferenceAudioLimiter() {
+    }
+
+    /**
+     * 解析模型的参考音频能力配置。
+     *
+     * @param modelConfig 模型聚合配置（可空）
+     * @return 能力配置；模型为空或未声明返回不可用配置，绝不返回 null
+     */
+    public static ReferenceAudioCapability readCapability(AiModelConfigVo modelConfig) {
+        return readCapabilityJson(Objects.isNull(modelConfig) ? null : modelConfig.getCapabilityJson());
+    }
+
+    /**
+     * 从 capability_json 文本解析参考音频能力配置。
+     *
+     * @param capabilityJson 能力 JSON 文本（可空）
+     * @return 能力配置；缺失或解析失败返回不可用配置，绝不返回 null
+     */
+    public static ReferenceAudioCapability readCapabilityJson(String capabilityJson) {
+        ReferenceAudioCapability capability = new ReferenceAudioCapability();
+        if (StrUtil.isBlank(capabilityJson)) {
+            return capability;
+        }
+        JsonNode node;
+        try {
+            node = MAPPER.readTree(capabilityJson);
+        } catch (Exception ex) {
+            log.warn("解析 capability_json 参考音频键位失败, err={}", ex.getMessage());
+            return capability;
+        }
+        if (Objects.isNull(node) || !node.isObject()) {
+            return capability;
+        }
+        capability.supported = node.path(KEY_SUPPORTS_REFERENCE_AUDIO).asBoolean(false);
+        capability.generatedAudioRequired = !node.has(KEY_REQUIRES_GENERATED_AUDIO)
+                || node.path(KEY_REQUIRES_GENERATED_AUDIO).asBoolean(true);
+        capability.maxCount = node.path(KEY_MAX_REFERENCE_AUDIOS).asInt(0);
+        capability.minDurationSeconds = decimal(node.path(KEY_MIN_DURATION_SECONDS));
+        capability.maxDurationSeconds = decimal(node.path(KEY_MAX_DURATION_SECONDS));
+        capability.maxTotalDurationSeconds = decimal(node.path(KEY_MAX_TOTAL_DURATION_SECONDS));
+        capability.clipDurationSeconds = decimal(node.path("referenceAudioClipDurationSeconds"));
+        capability.formats = readFormats(node);
+        return capability;
+    }
+
+    /**
+     * 校验参考音频数量并重排编号，禁止静默丢弃素材。
+     *
+     * @param audios      有序参考音频列表
+     * @param modelConfig 模型配置
+     * @param providerTag 日志用厂商标识
+     * @return 校验并重排编号后的列表；入参为空返回空列表
+     */
+    public static List<ReferenceAudioInput> limit(List<ReferenceAudioInput> audios,
+                                                  AiModelConfigVo modelConfig, String providerTag) {
+        if (CollectionUtil.isEmpty(audios)) {
+            return new ArrayList<>();
+        }
+        int max = readCapability(modelConfig).getMaxCount();
+        List<ReferenceAudioInput> result = new ArrayList<>(audios);
+        if (max >= 0 && result.size() > max) {
+            log.info("{} 参考音频超过上限: max={}, actual={}", providerTag, max, result.size());
+            throw new ServiceException("参考音频数量超限");
+        }
+        reindex(result);
+        return result;
+    }
+
+    /**
+     * 重排已经完成能力校验的参考音频编号为 1..N。
+     *
+     * @param audios 参考音频列表（原地修改）
+     */
+    public static void reindex(List<ReferenceAudioInput> audios) {
+        if (CollectionUtil.isEmpty(audios)) {
+            return;
+        }
+        int index = 1;
+        for (ReferenceAudioInput audio : audios) {
+            if (Objects.nonNull(audio)) {
+                audio.setIndex(index++);
+            }
+        }
+    }
+
+    /**
+     * 音频格式是否可被服务端解析出时长。
+     *
+     * @param format 音频格式（大小写不敏感）
+     * @return 可解析返回 true
+     */
+    public static boolean isProbeableFormat(String format) {
+        return StrUtil.isNotBlank(format)
+                && PROBEABLE_FORMATS.contains(StrUtil.trim(format).toLowerCase(Locale.ROOT));
+    }
+
+    /**
+     * 服务端可解析时长的格式集合（供后台配置校验提示使用）。
+     *
+     * @return 不可变格式集合
+     */
+    public static List<String> probeableFormats() {
+        return PROBEABLE_FORMATS;
+    }
+
+    private static List<String> readFormats(JsonNode node) {
+        List<String> formats = new ArrayList<>();
+        JsonNode array = node.path(KEY_REFERENCE_AUDIO_FORMATS);
+        if (!array.isArray()) {
+            return formats;
+        }
+        for (JsonNode item : array) {
+            String value = StrUtil.trimToNull(item.asText(null));
+            if (StrUtil.isNotBlank(value)) {
+                formats.add(value.toLowerCase(Locale.ROOT));
+            }
+        }
+        return formats;
+    }
+
+    private static BigDecimal decimal(JsonNode node) {
+        return node.isNumber() ? node.decimalValue() : BigDecimal.ZERO;
+    }
+
+    /** 模型参考音频能力配置。 */
+    @Getter
+    public static final class ReferenceAudioCapability {
+
+        /** 是否声明支持参考音频。 */
+        private boolean supported;
+
+        /** 参考音频下发前是否必须开启音画同出；默认保持原有依赖。 */
+        private boolean generatedAudioRequired = true;
+
+        /** 条数上限；0=不支持，-1=厂商未声明上限，正整数=明确上限。 */
+        private int maxCount;
+
+        /** 单条最短时长秒；未配置为 0 表示不限。 */
+        private BigDecimal minDurationSeconds = BigDecimal.ZERO;
+
+        /** 单条最长时长秒；未配置为 0 表示不限。 */
+        private BigDecimal maxDurationSeconds = BigDecimal.ZERO;
+
+        /** 多条总时长上限秒；未配置为 0 表示不限。 */
+        private BigDecimal maxTotalDurationSeconds = BigDecimal.ZERO;
+
+        /** 上游只使用片头时的有效输入时长；未配置则完整计入。 */
+        private BigDecimal clipDurationSeconds = BigDecimal.ZERO;
+
+        /** 允许的音频格式（小写）；为空表示未配置。 */
+        private List<String> formats = new ArrayList<>();
+
+        /**
+         * 能力是否完整可用：声明支持且条数上限与格式白名单均已配置。
+         *
+         * @return 完整可用返回 true
+         */
+        public boolean isUsable() {
+            return supported && (maxCount == -1 || maxCount > 0)
+                    && CollectionUtil.isNotEmpty(formats);
+        }
+
+        /**
+         * 能力已声明但配置不完整（缺条数上限或格式白名单）。
+         *
+         * @return 配置不完整返回 true
+         */
+        public boolean isIncomplete() {
+            return supported && !isUsable();
+        }
+
+        /**
+         * 格式是否命中白名单。
+         *
+         * @param format 音频格式
+         * @return 命中返回 true
+         */
+        public boolean acceptsFormat(String format) {
+            if (CollectionUtil.isEmpty(formats)) {
+                return false;
+            }
+            if (formats.contains("*")) {
+                return true;
+            }
+            return StrUtil.isNotBlank(format)
+                    && formats.contains(StrUtil.trim(format).toLowerCase(Locale.ROOT));
+        }
+
+        /**
+         * 单条时长是否落在允许区间。
+         *
+         * @param durationMs 时长毫秒
+         * @return 合规返回 true
+         */
+        public boolean acceptsDuration(Integer durationMs) {
+            if (Objects.isNull(durationMs) || durationMs <= 0) {
+                return false;
+            }
+            BigDecimal millis = BigDecimal.valueOf(durationMs);
+            if (minDurationSeconds.signum() > 0 && millis.compareTo(minDurationSeconds.multiply(BigDecimal.valueOf(1000))) < 0) {
+                return false;
+            }
+            return maxDurationSeconds.signum() <= 0 || effectiveDurationMs(durationMs).compareTo(maxDurationSeconds.multiply(BigDecimal.valueOf(1000))) <= 0;
+        }
+
+        public BigDecimal effectiveDurationMs(Integer durationMs) {
+            BigDecimal millis = BigDecimal.valueOf(durationMs);
+            return clipDurationSeconds.signum() > 0
+                    ? millis.min(clipDurationSeconds.multiply(BigDecimal.valueOf(1000))) : millis;
+        }
+    }
+}

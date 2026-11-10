@@ -1,0 +1,2799 @@
+package com.sakura.compose.service.impl;
+
+import com.sakura.common.error.TaskErrorCode;
+import com.sakura.common.error.TaskErrorPresentation;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import com.alibaba.fastjson2.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.sakura.sakura.domain.SakuraAiVoiceLibrary;
+import com.sakura.sakura.domain.SakuraComicProject;
+import com.sakura.sakura.domain.SakuraComicEpisode;
+import com.sakura.sakura.domain.SakuraEpisodeEditor;
+import com.sakura.sakura.domain.SakuraGenRecord;
+import com.sakura.sakura.domain.SakuraStoryboard;
+import com.sakura.sakura.domain.SakuraAudioRecord;
+import com.sakura.sakura.domain.media.SakuraMediaTask;
+import com.sakura.sakura.mapper.SakuraAudioRecordMapper;
+import com.sakura.sakura.service.ISakuraAiVoiceLibraryService;
+import com.sakura.sakura.service.ISakuraComicProjectService;
+import com.sakura.sakura.service.ISakuraComicEpisodeService;
+import com.sakura.sakura.service.ISakuraStoryboardService;
+import com.sakura.sakura.mapper.SakuraEpisodeEditorMapper;
+import com.sakura.sakura.mapper.SakuraGenRecordMapper;
+import com.sakura.sakura.mapper.SakuraMediaTaskMapper;
+import com.sakura.common.sakura.oss.util.MediaUrlResolver;
+import com.sakura.common.exception.ServiceException;
+import com.sakura.common.utils.SecurityUtils;
+import com.sakura.compose.ComposeConstants;
+import com.sakura.compose.domain.ComposeCommand;
+import com.sakura.compose.domain.ComposeGroup;
+import com.sakura.compose.domain.ComposePendingContext;
+import com.sakura.compose.domain.ComposeSubmitResult;
+import com.sakura.compose.domain.TimedSubtitleCue;
+import com.sakura.compose.dto.ComposeAcceptResult;
+import com.sakura.compose.dto.ComposeGroupDto;
+import com.sakura.compose.dto.ComposeStatusRequest;
+import com.sakura.compose.dto.ComposeStatusResult;
+import com.sakura.compose.dto.EpisodeExportRequest;
+import com.sakura.compose.dto.EpisodeExportResult;
+import com.sakura.compose.dto.EpisodeExportStatusRequest;
+import com.sakura.compose.dto.EpisodeExportStatusResult;
+import com.sakura.compose.dto.StoryboardComposeRequest;
+import com.sakura.compose.dto.VoiceoverParam;
+import com.sakura.compose.dto.timeline.TimelineData;
+import com.sakura.compose.dto.timeline.TimelineSegment;
+import com.sakura.compose.dto.timeline.TimelineSubtitleItem;
+import com.sakura.compose.enums.SubtitleRecognitionStatus;
+import com.sakura.compose.service.ComposeBatchStore;
+import com.sakura.compose.service.ComposeBatchSlotCoordinator;
+import com.sakura.compose.service.CoreComposeService;
+import com.sakura.compose.service.ExportSubtitleAlignmentService;
+import com.sakura.compose.service.StoryboardVideoSelectionResolver;
+import com.sakura.compose.service.VideoComposeService;
+import com.sakura.compose.util.MaterialUrlGuard;
+import com.sakura.compose.util.SubtitleDialogueFingerprint;
+import com.sakura.compose.util.SubtitleRecognitionMediaResolver;
+import com.sakura.compose.util.SubtitleSpeakerMatcher;
+import com.sakura.compose.util.TimelineSubtitleMatcher;
+import com.sakura.domain.vo.AiModelConfigVo;
+import com.sakura.enums.CreationStepEnum;
+import com.sakura.enums.EpisodeStatusEnum;
+import com.sakura.enums.GenTypeEnum;
+import com.sakura.enums.ProjectStatusEnum;
+import com.sakura.media.constants.MinimaxTtsConstants;
+import com.sakura.media.dto.MediaAudioGenerateRequest;
+import com.sakura.media.enums.MediaTaskStatus;
+import com.sakura.media.event.MediaTaskOssPersistedEvent;
+import com.sakura.media.provider.MinimaxProviderDetector;
+import com.sakura.media.service.IMediaGenerationService;
+import com.sakura.rps.queue.BatchParentSubmissionGuard;
+import com.sakura.rps.queue.BatchTaskSlotReservation;
+import com.sakura.service.IAiModelConfigService;
+import com.sakura.step.service.ICreationStepService;
+import com.sakura.voice.util.DialogueSubtitleFormatter;
+import com.sakura.voice.util.DialogueTextSanitizer;
+
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.digest.DigestUtil;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * 视频合成业务编排实现。
+ *
+ * @author 视觉AID
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class VideoComposeServiceImpl implements VideoComposeService {
+
+    /** 受理状态：异步进行 */
+    private static final String STATUS_ACCEPTED = "ACCEPTED";
+
+    /** 音频来源：AI 文字配音 */
+    private static final int AUDIO_SOURCE_AI = 1;
+
+    /** 删除标志：正常 */
+    private static final String DEL_FLAG_NORMAL = "0";
+
+    /** 音色库状态：启用 */
+    private static final String VOICE_STATUS_NORMAL = "0";
+
+    /** 合成进度：配音进行中 */
+    private static final String COMPOSE_STATUS_VOICING = "VOICING";
+    /** 合成进度：配音已齐、合成中 */
+    private static final String COMPOSE_STATUS_COMPOSING = "COMPOSING";
+    /** 合成进度：合成成功 */
+    private static final String COMPOSE_STATUS_SUCCEEDED = "SUCCEEDED";
+    /** 合成进度：失败（配音失败或合成失败） */
+    private static final String COMPOSE_STATUS_FAILED = "FAILED";
+
+    /** 配音/触发卡单判定阈值（毫秒）：静默超过该时长视为链路断裂，进度查询时自愈收口 */
+    private static final long VOICEOVER_STUCK_MS = 10L * 60L * 1000L;
+
+    /** 接口2 导出分组数上限（与剪辑器时间轴单工程段数上限同口径），防前端乱传锤合成层 */
+    private static final int MAX_EXPORT_GROUPS = 500;
+
+    /** 接口1 一键配音分镜数上限（与导出分组上限同口径），防单请求制造海量配音任务 */
+    private static final int MAX_VOICEOVER_STORYBOARDS = 500;
+
+    /** 一键配音通用文本上限，与单分镜正式配音保持一致。 */
+    private static final int MAX_VOICEOVER_TEXT_LENGTH = 50_000;
+
+    /** 接口2 单组素材（视频/配音）URL 数量上限，防单组乱传超长列表 */
+    private static final int MAX_URLS_PER_GROUP = 20;
+
+    /** 接口2 单组字幕最大字数（与剪辑器时间轴口径一致），防超长文本挤爆字幕渲染 */
+    private static final int MAX_SUBTITLE_LENGTH = 500;
+
+    /** 成片指纹包含字幕布局规则，规则变化后不得复用旧的无字幕或短字幕成片。 */
+    private static final String SUBTITLE_LAYOUT_FINGERPRINT = "body-limit-segment-window";
+
+    /** 接口2 工程报文最大字符数（与剪辑器时间轴保存口径一致），防超大 JSON 落库 */
+    private static final int MAX_TIMELINE_JSON_LENGTH = 1_000_000;
+
+    /** 抽卡记录 Mapper（接口1 取分镜视频） */
+    private final SakuraGenRecordMapper sakuraGenRecordMapper;
+
+    /** 分镜服务（接口1 校验分镜归属并按分镜取被选中的视频） */
+    private final ISakuraStoryboardService sakuraStoryboardService;
+
+    /** 配音记录 Mapper */
+    private final SakuraAudioRecordMapper sakuraAudioRecordMapper;
+
+    /** 媒体任务 Mapper（sakura_media_task 无独立 Service，沿用项目直读 Mapper 的统一做法） */
+    private final SakuraMediaTaskMapper sakuraMediaTaskMapper;
+
+    /** 剧集剪辑 Mapper（接口2） */
+    private final SakuraEpisodeEditorMapper sakuraEpisodeEditorMapper;
+
+    /** 项目服务（接口2 自动建档时校验项目归属） */
+    private final ISakuraComicProjectService sakuraComicProjectService;
+
+    /** 剧集服务（接口2 审核中候选版本保护） */
+    private final ISakuraComicEpisodeService sakuraComicEpisodeService;
+
+    /** 模型配置服务（按 voiceModelId 解析 TTS 模型码） */
+    private final IAiModelConfigService aiModelConfigService;
+
+    /** 音色库服务（逐段音色反查：voiceLibraryId → 模型 + 音色编码） */
+    private final ISakuraAiVoiceLibraryService sakuraAiVoiceLibraryService;
+
+    /** 统一媒体生成服务（异步配音） */
+    private final IMediaGenerationService mediaGenerationService;
+
+    /** 创作步骤校验：一键配音与单分镜、批量配音统一要求步骤6已解锁。 */
+    private final ICreationStepService creationStepService;
+
+    /** MiniMax 模型归属判定：用于受理前执行同步接口文本上限校验。 */
+    private final MinimaxProviderDetector minimaxProviderDetector;
+
+    /** 核心合成方法 */
+    private final CoreComposeService coreComposeService;
+
+    /** 事件发布器（导出卡单自愈：重发 OSS 持久化事件驱动成片回写） */
+    private final ApplicationEventPublisher applicationEventPublisher;
+
+    /** 合成批次 Redis 暂存/并发控制 */
+    private final ComposeBatchStore composeBatchStore;
+
+    /** 跨入口批量配音/导出逻辑槽协调器。 */
+    private final ComposeBatchSlotCoordinator composeBatchSlotCoordinator;
+
+    /** 串行化停止与真实供应商同步受理。 */
+    private final BatchParentSubmissionGuard batchParentSubmissionGuard;
+
+    /** 媒体 URL 解析器：DB 相对路径 → 完整可访问 URL（喂 MPS 需完整 URL） */
+    private final MediaUrlResolver mediaUrlResolver;
+
+    /** 分镜当前视频唯一解析入口，导出不信任前端缓存的历史素材地址。 */
+    private final StoryboardVideoSelectionResolver storyboardVideoSelectionResolver;
+
+    /** 导出自动字幕服务：开启时按分镜同步识别并回填精确时间戳。 */
+    private final ExportSubtitleAlignmentService exportSubtitleAlignmentService;
+
+    /** 通用线程池：承载事务提交后的异步配音派发（避免在事务内做阻塞HTTP占用DB连接） */
+    private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
+    /** 配音派发任务：承载单条待发起的配音记录、文本与该段实际音色（支持逐段音色），事务提交后异步逐条发起 */
+    private static final class VoiceoverDispatchJob {
+        /** 已入库的配音记录（含主键、projectId、episodeId） */
+        private final SakuraAudioRecord audioRecord;
+        /** 该段配音文本 */
+        private final String ttsText;
+        /** 该段实际音色及音频默认参数。 */
+        private final ResolvedSegmentVoice voice;
+
+        VoiceoverDispatchJob(SakuraAudioRecord audioRecord, String ttsText,
+                             ResolvedSegmentVoice voice) {
+            this.audioRecord = audioRecord;
+            this.ttsText = ttsText;
+            this.voice = voice;
+        }
+    }
+
+    /** 单段音色解析结果（逐段音色用） */
+    private static final class ResolvedSegmentVoice {
+        /** TTS 模型配置 */
+        final AiModelConfigVo modelConfig;
+        /** 厂商音色编码 */
+        final String voiceCode;
+        /** 音色库ID（老入参兜底路径为 null） */
+        final Long voiceLibraryId;
+        /** 模型ID */
+        final Long voiceModelId;
+        /** 音色默认语言区域码 */
+        final String language;
+        /** 音色默认音调 */
+        final Integer defaultPitch;
+        /** 音色默认音频格式 */
+        final String audioFormat;
+        /** 音色默认采样率 */
+        final Integer sampleRate;
+
+        ResolvedSegmentVoice(AiModelConfigVo modelConfig, String voiceCode, Long voiceLibraryId, Long voiceModelId,
+                             String language, Integer defaultPitch, String audioFormat, Integer sampleRate) {
+            this.modelConfig = modelConfig;
+            this.voiceCode = voiceCode;
+            this.voiceLibraryId = voiceLibraryId;
+            this.voiceModelId = voiceModelId;
+            this.language = language;
+            this.defaultPitch = defaultPitch;
+            this.audioFormat = audioFormat;
+            this.sampleRate = sampleRate;
+        }
+    }
+
+    /** 一键配音整批归属，以所选分镜视频为权威源。 */
+    private record VoiceoverScope(Long projectId, Long episodeId) { }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ComposeAcceptResult composeWithVoiceover(StoryboardComposeRequest request) {
+        if (Objects.isNull(request) || CollectionUtil.isEmpty(request.getStoryboardIds())
+                || Objects.isNull(request.getVoiceover())) {
+            log.error("接口1 入参非法: storyboardIds/voiceover 为空");
+            throw new ServiceException("参数有误");
+        }
+        // 前置快校验（零 I/O）：分镜数上限 + 分辨率档合法性，前端乱传直接拒绝
+        if (request.getStoryboardIds().size() > MAX_VOICEOVER_STORYBOARDS) {
+            log.info("接口1 分镜数超上限, size={}, max={}",
+                    request.getStoryboardIds().size(), MAX_VOICEOVER_STORYBOARDS);
+            throw new ServiceException("分镜过多");
+        }
+        if (!ComposeConstants.isValidResolution(request.getResolution())) {
+            log.info("接口1 分辨率档非法, resolution={}", request.getResolution());
+            throw new ServiceException("分辨率无效");
+        }
+        VoiceoverParam voiceover = request.getVoiceover();
+        // 默认音色解析（可为 null）：voiceLibraryId 优先反查，其次 voiceModelId+timbreCode 老入参；
+        // 允许默认音色缺失——只要每个有台词的段都带逐段音色（voiceLibraryIds），仍可受理；
+        // 段级双空在下方循环内 fail-fast，避免"假受理后全失败"
+        Map<Long, ResolvedSegmentVoice> voiceCache = new java.util.HashMap<>();
+        ResolvedSegmentVoice defaultVoice = resolveDefaultVoice(voiceover, voiceCache);
+        Long userId = SecurityUtils.getUserId();
+
+        String composeBatchId = "cb_" + IdUtil.fastSimpleUUID();
+        List<Long> storyboardIds = request.getStoryboardIds();
+        List<String> ttsTexts = Objects.isNull(voiceover.getTtsTexts()) ? new ArrayList<>() : voiceover.getTtsTexts();
+
+        List<Long> audioRecordIds = new ArrayList<>();
+        List<ComposePendingContext.Item> items = new ArrayList<>();
+        // 待派发的配音任务：事务提交后再异步发起，避免在事务内做阻塞HTTP
+        List<VoiceoverDispatchJob> dispatchJobs = new ArrayList<>();
+
+        // 前置校验（任务生成前 fail-fast）：分镜归属 + 每个分镜已有「视频生成步骤被选中的视频」，
+        // 任一缺失整批拒绝，不产生配音记录、不冻结积分
+        List<SakuraGenRecord> genRecords = loadSelectedStoryboardVideos(storyboardIds, userId);
+        VoiceoverScope scope = resolveVoiceoverScope(request, storyboardIds, genRecords);
+        creationStepService.checkStepUnlocked(scope.projectId(), scope.episodeId(), userId,
+                CreationStepEnum.AUDIO.getValue());
+        BatchTaskSlotReservation slotReservation = composeBatchSlotCoordinator.acquireVoiceover(
+                scope.projectId(), scope.episodeId(), composeBatchId);
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    if (status != TransactionSynchronization.STATUS_COMMITTED) {
+                        composeBatchSlotCoordinator.abortVoiceover(composeBatchId, slotReservation);
+                    }
+                }
+            });
+        }
+
+        for (int i = 0; i < storyboardIds.size(); i++) {
+            SakuraGenRecord genRecord = genRecords.get(i);
+            // 台词标记统一清洗（幂等）：剥掉 [角色_形象]：/@音频N[...]/竖线分隔符等结构标记，
+            // 只朗读正文；清洗后为空视为该段无配音（与未填一致，合成时配音轨补 Empty）
+            String ttsText = i < ttsTexts.size() ? DialogueTextSanitizer.sanitize(ttsTexts.get(i)) : null;
+
+            // 纯配音合成：本接口不烧字幕、不加背景音乐（字幕/BGM 由成片合成导出阶段处理）
+            ComposePendingContext.Item item = new ComposePendingContext.Item();
+            item.setVideoUrl(mediaUrlResolver.toFullUrl(genRecord.getFileUrl()));
+            item.setVideoDuration(Objects.isNull(genRecord.getVideoDuration())
+                    ? null : genRecord.getVideoDuration().doubleValue());
+
+            // 该段有配音文本才落配音记录；否则该组无配音（合成时配音轨补 Empty）
+            if (StrUtil.isNotBlank(ttsText)) {
+                // 逐段音色：该段带 voiceLibraryIds[i] 用指定音色（角色绑定），否则回落默认音色；
+                // 双空 fail-fast 整批拒绝（事务回滚，不产生半批配音）
+                ResolvedSegmentVoice segmentVoice = resolveSegmentVoice(voiceover, i, defaultVoice, voiceCache);
+                if (Objects.isNull(segmentVoice)) {
+                    log.error("接口1 段级音色缺失, batchId={}, index={}", composeBatchId, i);
+                    throw new ServiceException("音色不可用");
+                }
+                validateVoiceoverText(ttsText, segmentVoice);
+                SakuraAudioRecord audioRecord = buildAudioRecord(scope, genRecord, segmentVoice, ttsText,
+                        userId, composeBatchId);
+                sakuraAudioRecordMapper.insert(audioRecord);
+                // 仅收集派发任务，事务提交后异步发起（杜绝事务内阻塞HTTP + REQUIRES_NEW 双连接争抢）
+                dispatchJobs.add(new VoiceoverDispatchJob(audioRecord, ttsText, segmentVoice));
+                audioRecordIds.add(audioRecord.getId());
+                item.setAudioRecordId(audioRecord.getId());
+            }
+            items.add(item);
+        }
+
+        // 整批无有效配音文本：合成无意义，且进度查询也无配音记录可依据，故直接拒绝（事务回滚，不残留空批次）
+        if (audioRecordIds.isEmpty()) {
+            log.error("接口1 无有效配音文本, batchId={}", composeBatchId);
+            throw new ServiceException("请填写配音");
+        }
+
+        ComposePendingContext context = new ComposePendingContext();
+        context.setComposeBatchId(composeBatchId);
+        context.setUserId(userId);
+        context.setProjectId(scope.projectId());
+        context.setEpisodeId(scope.episodeId());
+        context.setResolution(request.getResolution());
+        // 配音不可截断：段长以配音为准（取视频/配音较长者），视频不足由合成层循环补齐画面，
+        // 漏设会回落"视频5秒"定段长，配音超长时挤乱后续段（音画错位+片尾黑屏）
+        context.setAlignStrategy(ComposeConstants.ALIGN_STRATEGY_AUDIO);
+        context.setItems(items);
+        composeBatchStore.saveContext(context);
+
+        // 事务提交后再异步派发配音：避免在事务内做阻塞 HTTP，也避免 REQUIRES_NEW 与外层事务争抢连接造成连接池占用/死锁
+        registerVoiceoverDispatch(dispatchJobs, userId);
+
+        log.info("接口1 一键配音受理, batchId={}, storyboards={}, audios={}",
+                composeBatchId, storyboardIds.size(), audioRecordIds.size());
+
+        ComposeAcceptResult result = new ComposeAcceptResult();
+        result.setComposeBatchId(composeBatchId);
+        result.setAudioRecordIds(audioRecordIds);
+        result.setStatus(STATUS_ACCEPTED);
+        return result;
+    }
+
+    /**
+     * 接口1 前置校验并按分镜取「分镜视频」（final_video_id 指针，即视频生成步骤选中的原视频，
+     * 与批量配音/分段打包同口径；配音视频抢占选中不影响该指针，重配音素材恒为配音前原视频）。
+     * 分镜缺失/越权报「分镜不存在」；分镜未选定视频、指针失效或文件未生成报「请先选择视频」；
+     * 校验全部通过才返回，任一失败整批拒绝（任务生成前，不产生配音记录）。
+     * 查询字段精简：分镜仅 select id/user_id/final_video_id/del_flag，视频记录仅 select
+     * id/storyboard_id/project_id/episode_id/gen_type/file_url/video_duration，后续扩展取数请同步增列。
+     *
+     * @param storyboardIds 分镜ID列表（顺序即合成顺序，允许同分镜重复出现）
+     * @param userId        当前用户ID
+     * @return 与 storyboardIds 顺序一一对应的分镜视频记录列表
+     */
+    private List<SakuraGenRecord> loadSelectedStoryboardVideos(List<Long> storyboardIds, Long userId) {
+        for (Long storyboardId : storyboardIds) {
+            if (Objects.isNull(storyboardId)) {
+                log.error("接口1 分镜ID为空, userId={}", userId);
+                throw new ServiceException("参数有误");
+            }
+        }
+        // 分镜归属校验：全部存在、未删除、归属当前用户
+        Set<Long> distinctIds = new LinkedHashSet<>(storyboardIds);
+        List<SakuraStoryboard> storyboards = sakuraStoryboardService.list(
+                Wrappers.<SakuraStoryboard>lambdaQuery()
+                        .select(SakuraStoryboard::getId, SakuraStoryboard::getUserId,
+                                SakuraStoryboard::getFinalVideoId, SakuraStoryboard::getDelFlag)
+                        .in(SakuraStoryboard::getId, distinctIds)
+                        .eq(SakuraStoryboard::getUserId, userId)
+                        .eq(SakuraStoryboard::getDelFlag, DEL_FLAG_NORMAL));
+        if (storyboards.size() != distinctIds.size()) {
+            log.error("接口1 分镜缺失或越权, storyboardIds={}, userId={}", distinctIds, userId);
+            throw new ServiceException("分镜不存在");
+        }
+        // 按 final_video_id 批量取分镜视频记录；genType 限原视频轨（历史脏数据误指配音视频时视为未选定）
+        Set<Long> finalVideoIds = new LinkedHashSet<>();
+        Map<Long, Long> finalVideoIdByStoryboardId = new java.util.HashMap<>();
+        for (SakuraStoryboard storyboard : storyboards) {
+            if (Objects.nonNull(storyboard.getFinalVideoId())) {
+                finalVideoIds.add(storyboard.getFinalVideoId());
+                finalVideoIdByStoryboardId.put(storyboard.getId(), storyboard.getFinalVideoId());
+            }
+        }
+        Map<Long, SakuraGenRecord> recordById = new java.util.HashMap<>();
+        if (CollectionUtil.isNotEmpty(finalVideoIds)) {
+            List<SakuraGenRecord> records = sakuraGenRecordMapper.selectList(
+                    Wrappers.<SakuraGenRecord>lambdaQuery()
+                            .select(SakuraGenRecord::getId, SakuraGenRecord::getStoryboardId,
+                                    SakuraGenRecord::getProjectId, SakuraGenRecord::getEpisodeId,
+                                    SakuraGenRecord::getGenType, SakuraGenRecord::getFileUrl,
+                                    SakuraGenRecord::getVideoDuration)
+                            .in(SakuraGenRecord::getId, finalVideoIds)
+                            .eq(SakuraGenRecord::getUserId, userId)
+                            .in(SakuraGenRecord::getGenType, GenTypeEnum.originalVideoValues())
+                            .eq(SakuraGenRecord::getDelFlag, DEL_FLAG_NORMAL));
+            for (SakuraGenRecord record : records) {
+                if (StrUtil.isNotBlank(record.getFileUrl())) {
+                    recordById.put(record.getId(), record);
+                }
+            }
+        }
+        List<SakuraGenRecord> result = new ArrayList<>(storyboardIds.size());
+        for (Long storyboardId : storyboardIds) {
+            Long finalVideoId = finalVideoIdByStoryboardId.get(storyboardId);
+            SakuraGenRecord record = Objects.isNull(finalVideoId) ? null : recordById.get(finalVideoId);
+            if (Objects.isNull(record)) {
+                log.error("接口1 分镜未选中视频, storyboardId={}, finalVideoId={}, userId={}",
+                        storyboardId, finalVideoId, userId);
+                throw new ServiceException("请先选择视频");
+            }
+            if (!Objects.equals(storyboardId, record.getStoryboardId())) {
+                log.error("接口1 分镜视频归属异常, storyboardId={}, videoRecordId={}, recordStoryboardId={}",
+                        storyboardId, record.getId(), record.getStoryboardId());
+                throw new ServiceException("视频归属异常");
+            }
+            if (Objects.isNull(record.getVideoDuration()) || record.getVideoDuration() <= 0) {
+                log.info("接口1 分镜视频时长缺失, storyboardId={}, videoRecordId={}",
+                        storyboardId, record.getId());
+                throw new ServiceException("视频时长缺失");
+            }
+            result.add(record);
+        }
+        return result;
+    }
+
+    /**
+     * 解析并校验一键配音整批项目/剧集归属。分镜视频记录是权威来源，请求字段只用于一致性校验，
+     * 禁止前端覆盖业务归属，也禁止跨项目或跨剧集混合合成。
+     */
+    private VoiceoverScope resolveVoiceoverScope(StoryboardComposeRequest request, List<Long> storyboardIds,
+                                                  List<SakuraGenRecord> genRecords) {
+        if (CollectionUtil.isEmpty(genRecords)) {
+            log.error("接口1 无有效分镜视频, storyboardIds={}", storyboardIds);
+            throw new ServiceException("请先选择视频");
+        }
+        SakuraGenRecord first = genRecords.get(0);
+        Long projectId = first.getProjectId();
+        Long episodeId = first.getEpisodeId();
+        if (Objects.isNull(projectId) || Objects.isNull(episodeId)) {
+            log.error("接口1 分镜视频缺少业务归属, videoRecordId={}", first.getId());
+            throw new ServiceException("视频归属异常");
+        }
+        for (SakuraGenRecord record : genRecords) {
+            if (!Objects.equals(projectId, record.getProjectId())
+                    || !Objects.equals(episodeId, record.getEpisodeId())) {
+                log.info("接口1 禁止跨项目剧集合成, storyboardIds={}", storyboardIds);
+                throw new ServiceException("分镜归属不一致");
+            }
+        }
+        if (Objects.nonNull(request.getProjectId()) && !Objects.equals(projectId, request.getProjectId())) {
+            log.info("接口1 projectId 与分镜不一致, request={}, actual={}", request.getProjectId(), projectId);
+            throw new ServiceException("项目归属错误");
+        }
+        if (Objects.nonNull(request.getEpisodeId()) && !Objects.equals(episodeId, request.getEpisodeId())) {
+            log.info("接口1 episodeId 与分镜不一致, request={}, actual={}", request.getEpisodeId(), episodeId);
+            throw new ServiceException("剧集归属错误");
+        }
+        return new VoiceoverScope(projectId, episodeId);
+    }
+
+    @Override
+    public EpisodeExportResult exportEpisode(EpisodeExportRequest request) {
+        if (Objects.isNull(request) || CollectionUtil.isEmpty(request.getGroups())) {
+            log.error("接口2 入参非法: request/groups 为空");
+            throw new ServiceException("参数有误");
+        }
+        // 前置快校验（零 I/O）：分组数 / 分辨率档 / 工程报文大小，前端乱传直接拒绝
+        if (request.getGroups().size() > MAX_EXPORT_GROUPS) {
+            log.info("接口2 分组数超上限, groups={}, max={}", request.getGroups().size(), MAX_EXPORT_GROUPS);
+            throw new ServiceException("分组过多");
+        }
+        if (!ComposeConstants.isValidResolution(request.getResolution())) {
+            log.info("接口2 分辨率档非法, resolution={}", request.getResolution());
+            throw new ServiceException("分辨率无效");
+        }
+        if (StrUtil.isNotBlank(request.getTimelineJson())
+                && request.getTimelineJson().length() > MAX_TIMELINE_JSON_LENGTH) {
+            log.info("接口2 工程报文超长, length={}, max={}",
+                    request.getTimelineJson().length(), MAX_TIMELINE_JSON_LENGTH);
+            throw new ServiceException("工程报文过大");
+        }
+        // 分组数据逐项校验：视频必填、时长必填且与 URL 对齐（时长决定对齐与扣费，缺失会导致 0 冻结+字幕错位）；
+        // 同时做素材地址结构快校验（blob:/data:/嵌套协议头直接拒绝），零 I/O、不触库
+        validateExportGroups(request.getGroups());
+        validateRequestTimeline(request.getTimelineJson(), request.getGroups());
+        rejectForbiddenUrl(request.getGlobalBgmUrl(), ComposeConstants.MATERIAL_LABEL_BGM, -1);
+        Long userId = SecurityUtils.getUserId();
+        // 定位剪辑记录：传 episodeEditorId 校验归属；未传按 项目+剧集+用户 查找或自动创建
+        SakuraEpisodeEditor editor = resolveEditor(request, userId);
+        // 受理锁：同一剪辑记录的导出受理串行化，堵住并发双击在「防重查库→置合成中」窗口期的重复冻结
+        if (!composeBatchStore.tryExportLock(editor.getId())) {
+            log.info("接口2 导出受理锁竞争失败, episodeEditorId={}, userId={}", editor.getId(), userId);
+            // 多开窗口或重复点击命中锁时，若首个请求已落下运行态，拒绝并提示先停止。
+            // 锁存在但运行态尚未落库的极短窗口同样返回友好提示。
+            SakuraEpisodeEditor currentEditor = reloadEditorInLock(editor.getId());
+            EpisodeExportResult inFlight = resolveInFlightExport(currentEditor);
+            if (Objects.nonNull(inFlight)) {
+                throw new ServiceException("任务执行中，请先停止");
+            }
+            throw new ServiceException("任务执行中，请先停止");
+        }
+        BatchTaskSlotReservation exportReservation = null;
+        boolean keepExportReservation = false;
+        try {
+            // 锁内重读剪辑记录：锁外快照可能已被上一个并发受理改为「合成中」，防重与复用判定必须基于最新状态
+            SakuraEpisodeEditor freshEditor = reloadEditorInLock(editor.getId());
+            EpisodeExportResult inFlight = resolveInFlightExport(freshEditor);
+            if (Objects.nonNull(inFlight)) {
+                throw new ServiceException("任务执行中，请先停止");
+            }
+            // 必须在视频同步、工程 show=false 清洗等就地修改前记录前端整批来源，防止清洗后误判为全空。
+            boolean clientGroupBatchHasSubtitle = hasAnyGroupSubtitle(request.getGroups());
+            // 系统分镜段以服务端当前选中记录为权威源，换片后即使前端仍持有旧工程快照也不会导出旧视频。
+            // 运行中请求已在上方拒绝，只有真正的新受理才执行素材同步与素材探测。
+            Map<Long, SakuraGenRecord> selectedVideos = synchronizeExportGroupVideos(
+                    request.getGroups(), freshEditor, userId);
+            // 冗余配音归一化：段视频为配音视频（compose，声音已合进画面）时自动忽略该组配音 MP3，
+            // 防止成片同一段叠两层人声；发生在指纹计算之前，等价请求可命中成片复用
+            normalizeComposeGroupAudio(request.getGroups(), userId,
+                    freshEditor.getProjectId(), freshEditor.getEpisodeId());
+            // 耗时素材同步/探测完成后再占逻辑槽，随后立即进入 mark COMPOSING + owner 绑定，
+            // 避免 provisional 窗口超过僵尸宽限期。
+            exportReservation = composeBatchSlotCoordinator.acquireExport(
+                    freshEditor.getProjectId(), freshEditor.getEpisodeId());
+            EpisodeExportResult result = doExportEpisode(
+                    request, freshEditor, userId, selectedVideos, clientGroupBatchHasSubtitle,
+                    exportReservation);
+            keepExportReservation = Objects.equals(
+                    ComposeConstants.EXPORT_STATUS_COMPOSING, result.getExportStatus());
+            return result;
+        } finally {
+            if (Objects.nonNull(exportReservation) && !keepExportReservation) {
+                composeBatchSlotCoordinator.abortExport(editor.getId(), exportReservation);
+            }
+            composeBatchStore.unlockExport(editor.getId());
+        }
+    }
+
+    /**
+     * 受理锁内重读剪辑记录（防重/复用判定使用最新状态）。
+     * 查询字段精简：受理流程所需字段（新增使用字段时此处必须同步补充），
+     * 刻意不读大字段 timeline_json（受理只覆盖写入、不读取）。
+     *
+     * @param episodeEditorId 剪辑记录ID
+     * @return 最新剪辑记录
+     */
+    private SakuraEpisodeEditor reloadEditorInLock(Long episodeEditorId) {
+        SakuraEpisodeEditor fresh = sakuraEpisodeEditorMapper.selectOne(
+                Wrappers.<SakuraEpisodeEditor>lambdaQuery()
+                        .select(SakuraEpisodeEditor::getId, SakuraEpisodeEditor::getUserId,
+                                SakuraEpisodeEditor::getProjectId, SakuraEpisodeEditor::getEpisodeId,
+                                SakuraEpisodeEditor::getExportStatus, SakuraEpisodeEditor::getExportTaskId,
+                                SakuraEpisodeEditor::getFinalVideoUrl, SakuraEpisodeEditor::getPendingVideoUrl,
+                                SakuraEpisodeEditor::getExportFingerprint, SakuraEpisodeEditor::getUpdateTime,
+                                SakuraEpisodeEditor::getDelFlag)
+                        .eq(SakuraEpisodeEditor::getId, episodeEditorId)
+                        .eq(SakuraEpisodeEditor::getDelFlag, DEL_FLAG_NORMAL)
+                        .last("LIMIT 1"));
+        if (Objects.isNull(fresh)) {
+            log.error("接口2 锁内重读剪辑记录缺失, episodeEditorId={}", episodeEditorId);
+            throw new ServiceException("记录不存在");
+        }
+        return fresh;
+    }
+
+    /**
+     * 导出受理主流程（受理锁内执行）。
+     * 刻意不包整体事务：素材可达性探测与预冻结均为阻塞外部调用，包事务会长时间占用连接；
+     * 各 DB 写入单条原子，受理失败由补偿回写落失败终态。
+     *
+     * @param request 导出入参
+     * @param editor  剪辑记录
+     * @param userId  当前用户ID
+     * @param clientGroupBatchHasSubtitle 前端分组原始入参是否存在任一有效字幕
+     * @return 导出受理结果
+     */
+    private EpisodeExportResult doExportEpisode(EpisodeExportRequest request, SakuraEpisodeEditor editor, Long userId,
+                                                Map<Long, SakuraGenRecord> selectedVideos,
+                                                boolean clientGroupBatchHasSubtitle,
+                                                BatchTaskSlotReservation exportReservation) {
+        // 字幕收口：分组未携带字幕时回落工程时间轴中该段的台词。
+        // 必须发生在指纹计算之前——指纹含字幕，回落结果参与复用判定才不会命中「无字幕」的旧成片
+        TimelineSubtitleContext subtitleContext = applyTimelineSubtitles(request, editor, selectedVideos);
+        // 整批字幕来源互斥：前端任一分镜有有效字幕时整批只用前端；仅整批全空才查询服务端分镜台词。
+        int storyboardSubtitleCount = backfillStoryboardSubtitlesWhenClientBatchEmpty(
+                request.getGroups(), subtitleContext.matchedSegments(), subtitleContext.timeline(), editor, userId,
+                clientGroupBatchHasSubtitle);
+        if (storyboardSubtitleCount > 0) {
+            // 同步修复本次工程快照，避免下次打开剪辑器或重复导出时再次缺失服务端兜底文本。
+            refreshTimelineJson(request, subtitleContext.timeline());
+        }
+
+        // 前端字幕与服务端兜底字幕统一按当前台词重匹配历史 ASR 人物；即使自动识别已关闭，
+        // 也不能让旧检查点中的人物名称覆盖本次双人或多人台词。
+        int rematchedCueCount = rematchExistingAsrCueSpeakers(
+                request.getGroups(), subtitleContext.matchedSegments());
+        if (rematchedCueCount > 0) {
+            refreshTimelineJson(request, subtitleContext.timeline());
+        }
+
+        // 自动字幕开启时，只处理有台词且当前视频尚无有效时间戳的分镜。识别在本次请求内同步完成；
+        // Provider 请求异常仍终止导出，任务成功但未识别人声时仅该镜回落文本时长排布，保证可以导出。
+        boolean automaticSubtitleEnabled = exportSubtitleAlignmentService.isEnabled();
+        int alignmentTotal = automaticSubtitleEnabled
+                ? exportSubtitleAlignmentService.countRequired(request.getGroups(),
+                subtitleContext.matchedSegments(), selectedVideos) : 0;
+        if (automaticSubtitleEnabled) {
+            // 兼容旧工程：已有有效 ASR 时间戳会在统计阶段补齐完成标记；无台词的陈旧时间戳同时清理。
+            refreshTimelineJson(request, subtitleContext.timeline());
+        }
+        boolean exportStarted = alignmentTotal > 0;
+        String exportRunToken = null;
+        if (exportStarted) {
+            exportRunToken = markExportComposing(request, editor, userId);
+            String activeRunToken = exportRunToken;
+            try {
+                composeBatchSlotCoordinator.bindExport(editor.getId(), exportReservation);
+                exportSubtitleAlignmentService.align(request.getGroups(), subtitleContext.matchedSegments(),
+                        selectedVideos,
+                        (completed, total) -> updateSubtitleProgress(
+                                editor.getId(), activeRunToken, completed, total),
+                        () -> checkpointGeneratedTimeline(request, subtitleContext.timeline(),
+                                editor.getId(), activeRunToken, userId),
+                        () -> updateExportHeartbeat(editor.getId(), activeRunToken),
+                        providerCall -> batchParentSubmissionGuard.execute(exportSubmissionScope(editor.getId()), () ->
+                        {
+                            requireExportSubmissionActive(editor.getId(), activeRunToken);
+                            return providerCall.get();
+                        }));
+            } catch (Exception alignmentEx) {
+                writeAcceptFailed(editor.getId(), activeRunToken, resolveShortError(alignmentEx));
+                throw alignmentEx;
+            }
+        }
+
+        // 素材指纹：分组素材（视频/配音URL与时长、字幕、BGM、分辨率）归一化后哈希。
+        // 上次导出成功且指纹一致 → 素材未变（没重新出片/重新配音/改字幕），直接复用成片，不再合成不再扣费。
+        // 最新成片可能在待审槽（已过审内容重新导出的产物），复用优先返回待审新片
+        String fingerprint = computeExportFingerprint(request);
+        String latestVideoUrl = StrUtil.isNotBlank(editor.getPendingVideoUrl())
+                ? editor.getPendingVideoUrl() : editor.getFinalVideoUrl();
+        if (!Boolean.TRUE.equals(request.getForceRecompose())
+                && Objects.equals(editor.getExportStatus(), ComposeConstants.EXPORT_STATUS_SUCCESS)
+                && StrUtil.isNotBlank(latestVideoUrl)
+                && Objects.equals(fingerprint, editor.getExportFingerprint())) {
+            restoreReusedExport(request, editor, userId, exportStarted, exportRunToken);
+            log.info("接口2 素材未变复用已有成片, episodeEditorId={}, fingerprint={}", editor.getId(), fingerprint);
+            EpisodeExportResult reusedResult = new EpisodeExportResult();
+            reusedResult.setEpisodeEditorId(editor.getId());
+            reusedResult.setExportTaskId(editor.getExportTaskId());
+            reusedResult.setExportStatus(ComposeConstants.EXPORT_STATUS_SUCCESS);
+            reusedResult.setReused(true);
+            reusedResult.setFinalVideoUrl(latestVideoUrl);
+            return reusedResult;
+        }
+        // 审核中的候选视频必须保持不可变；只有素材未变的幂等导出允许在上方直接复用。
+        assertContentNotAuditing(editor);
+        // 说明：已过审/审核中内容重新导出不再回落审核状态、不下架旧片——
+        // 新成片由回写监听器落待审槽（pending_video_url），旧片继续公开展示，重新过审后新片转正
+
+        if (!exportStarted) {
+            exportRunToken = markExportComposing(request, editor, userId);
+        }
+
+        ComposeCommand command;
+        ComposeSubmitResult submitResult;
+        try {
+            if (!exportStarted) {
+                composeBatchSlotCoordinator.bindExport(editor.getId(), exportReservation);
+            }
+            command = buildExportCommand(request, editor, userId);
+            String activeRunToken = exportRunToken;
+            submitResult = batchParentSubmissionGuard.execute(exportSubmissionScope(editor.getId()), () ->
+            {
+                requireExportSubmissionActive(editor.getId(), activeRunToken);
+                return coreComposeService.compose(command);
+            });
+        } catch (Exception composeEx) {
+            // 受理失败补偿：把刚置的「合成中」落为失败终态（条件更新，不覆盖并发终态），
+            // 同步把失败原因回写 errorMsg，进度轮询与本次响应口径一致
+            writeAcceptFailed(editor.getId(), exportRunToken, resolveShortError(composeEx));
+            throw composeEx;
+        }
+
+        String exportTaskId = String.valueOf(submitResult.getMediaTaskId());
+        LambdaUpdateWrapper<SakuraEpisodeEditor> taskIdUpdate = new LambdaUpdateWrapper<>();
+        taskIdUpdate.eq(SakuraEpisodeEditor::getId, editor.getId());
+        taskIdUpdate.eq(SakuraEpisodeEditor::getExportStatus, ComposeConstants.EXPORT_STATUS_COMPOSING);
+        taskIdUpdate.eq(SakuraEpisodeEditor::getExportTaskId, exportRunToken);
+        taskIdUpdate.set(SakuraEpisodeEditor::getExportTaskId, exportTaskId);
+        // 素材指纹在受理成功后才落库：仅描述「当前任务对应的素材」，受理失败不残留新指纹
+        taskIdUpdate.set(SakuraEpisodeEditor::getExportFingerprint, fingerprint);
+        taskIdUpdate.set(SakuraEpisodeEditor::getUpdateTime, new Date());
+        taskIdUpdate.set(SakuraEpisodeEditor::getUpdateBy, String.valueOf(userId));
+        int linked = sakuraEpisodeEditorMapper.update(null, taskIdUpdate);
+        if (linked != 1) {
+            log.error("接口2 合成任务绑定失败, episodeEditorId={}, mediaTaskId={}, runToken={}",
+                    editor.getId(), submitResult.getMediaTaskId(), exportRunToken);
+            writeAcceptFailed(editor.getId(), exportRunToken, "导出状态失效");
+            throw new ServiceException("导出状态失效");
+        }
+
+        log.info("接口2 导出受理, episodeEditorId={}, mediaTaskId={}", editor.getId(), submitResult.getMediaTaskId());
+
+        EpisodeExportResult result = new EpisodeExportResult();
+        result.setEpisodeEditorId(editor.getId());
+        result.setExportTaskId(exportTaskId);
+        result.setExportStatus(ComposeConstants.EXPORT_STATUS_COMPOSING);
+        result.setReused(false);
+        return result;
+    }
+
+    /**
+     * 自动字幕阶段可能先把导出置为合成中；若补齐检查点后最终素材指纹仍未变化，
+     * 原子恢复原成功状态并保留最新工程，禁止仅因字幕检查点维护重复提交云合成。
+     */
+    private void restoreReusedExport(EpisodeExportRequest request, SakuraEpisodeEditor editor, Long userId,
+                                     boolean exportStarted, String exportRunToken) {
+        LambdaUpdateWrapper<SakuraEpisodeEditor> update = new LambdaUpdateWrapper<>();
+        update.eq(SakuraEpisodeEditor::getId, editor.getId());
+        if (exportStarted) {
+            update.eq(SakuraEpisodeEditor::getExportStatus, ComposeConstants.EXPORT_STATUS_COMPOSING);
+            update.eq(SakuraEpisodeEditor::getExportTaskId, exportRunToken);
+            update.set(SakuraEpisodeEditor::getExportStatus, ComposeConstants.EXPORT_STATUS_SUCCESS);
+            update.set(SakuraEpisodeEditor::getExportProgress, 100);
+            update.set(SakuraEpisodeEditor::getExportTaskId, editor.getExportTaskId());
+            update.set(SakuraEpisodeEditor::getErrorMsg, null);
+        }
+        if (StrUtil.isNotBlank(request.getTimelineJson())) {
+            update.set(SakuraEpisodeEditor::getTimelineJson, request.getTimelineJson());
+        }
+        update.set(SakuraEpisodeEditor::getUpdateTime, new Date());
+        update.set(SakuraEpisodeEditor::getUpdateBy, String.valueOf(userId));
+        int updated = sakuraEpisodeEditorMapper.update(null, update);
+        if (updated != 1) {
+            log.error("接口2 复用成片状态恢复失败, episodeEditorId={}, runToken={}",
+                    editor.getId(), exportRunToken);
+            throw new ServiceException("导出状态失效");
+        }
+    }
+
+    /** 审核期间禁止生成不同内容覆盖候选快照，审核通过或驳回后再允许重新导出。 */
+    private void assertContentNotAuditing(SakuraEpisodeEditor editor) {
+        if (Objects.equals(editor.getEpisodeId(), 0L)) {
+            SakuraComicProject project = sakuraComicProjectService.getOne(Wrappers.<SakuraComicProject>lambdaQuery()
+                    .select(SakuraComicProject::getId, SakuraComicProject::getStatus)
+                    .eq(SakuraComicProject::getId, editor.getProjectId())
+                    .eq(SakuraComicProject::getDelFlag, DEL_FLAG_NORMAL)
+                    .last("LIMIT 1"));
+            if (Objects.nonNull(project)
+                    && Objects.equals(project.getStatus(), ProjectStatusEnum.AUDITING.getValue())) {
+                log.info("接口2 审核中拒绝变更电影候选视频, projectId={}", editor.getProjectId());
+                throw new ServiceException("内容审核中");
+            }
+            return;
+        }
+        SakuraComicEpisode episode = sakuraComicEpisodeService.getOne(Wrappers.<SakuraComicEpisode>lambdaQuery()
+                .select(SakuraComicEpisode::getId, SakuraComicEpisode::getStatus)
+                .eq(SakuraComicEpisode::getId, editor.getEpisodeId())
+                .eq(SakuraComicEpisode::getDelFlag, DEL_FLAG_NORMAL)
+                .last("LIMIT 1"));
+        if (Objects.nonNull(episode)
+                && Objects.equals(episode.getStatus(), EpisodeStatusEnum.AUDITING.getValue())) {
+            log.info("接口2 审核中拒绝变更剧集候选视频, episodeId={}", editor.getEpisodeId());
+            throw new ServiceException("内容审核中");
+        }
+    }
+
+    /** 把剪辑记录切换为合成中，并写入本次受理令牌隔离并发或崩溃后恢复的旧请求。 */
+    private String markExportComposing(EpisodeExportRequest request, SakuraEpisodeEditor editor, Long userId) {
+        String runToken = "ACCEPT_" + IdUtil.fastSimpleUUID();
+        LambdaUpdateWrapper<SakuraEpisodeEditor> editorUpdate = new LambdaUpdateWrapper<>();
+        editorUpdate.eq(SakuraEpisodeEditor::getId, editor.getId());
+        if (Objects.nonNull(editor.getUpdateTime())) {
+            // 防止导出读取工程后，用户在极短窗口内又保存了新工程而被本次快照覆盖。
+            editorUpdate.eq(SakuraEpisodeEditor::getUpdateTime, editor.getUpdateTime());
+        }
+        editorUpdate.set(SakuraEpisodeEditor::getExportStatus, ComposeConstants.EXPORT_STATUS_COMPOSING);
+        editorUpdate.set(SakuraEpisodeEditor::getExportProgress, 0);
+        editorUpdate.set(SakuraEpisodeEditor::getExportTaskId, runToken);
+        editorUpdate.set(SakuraEpisodeEditor::getErrorMsg, null);
+        if (StrUtil.isNotBlank(request.getTimelineJson())) {
+            editorUpdate.set(SakuraEpisodeEditor::getTimelineJson, request.getTimelineJson());
+        }
+        editorUpdate.set(SakuraEpisodeEditor::getUpdateTime, new Date());
+        editorUpdate.set(SakuraEpisodeEditor::getUpdateBy, String.valueOf(userId));
+        int updated = sakuraEpisodeEditorMapper.update(null, editorUpdate);
+        if (updated != 1) {
+            log.info("接口2 工程已被并发修改, episodeEditorId={}, expectedUpdateTime={}",
+                    editor.getId(), editor.getUpdateTime());
+            throw new ServiceException("工程已被修改");
+        }
+        return runToken;
+    }
+
+    /** 自动字幕阶段占导出总进度前 20%，后续 MPS 进度沿用现有单调递增更新。 */
+    private void updateSubtitleProgress(Long episodeEditorId, String runToken, int completed, int total) {
+        if (total <= 0) {
+            return;
+        }
+        int progress = Math.max(1, Math.min(20, (int) Math.floor(completed * 20D / total)));
+        LambdaUpdateWrapper<SakuraEpisodeEditor> update = new LambdaUpdateWrapper<>();
+        update.eq(SakuraEpisodeEditor::getId, episodeEditorId);
+        update.eq(SakuraEpisodeEditor::getExportStatus, ComposeConstants.EXPORT_STATUS_COMPOSING);
+        update.eq(SakuraEpisodeEditor::getExportTaskId, runToken);
+        update.and(wrapper -> wrapper.isNull(SakuraEpisodeEditor::getExportProgress)
+                .or().lt(SakuraEpisodeEditor::getExportProgress, progress));
+        update.set(SakuraEpisodeEditor::getExportProgress, progress);
+        update.set(SakuraEpisodeEditor::getUpdateTime, new Date());
+        sakuraEpisodeEditorMapper.update(null, update);
+    }
+
+    /** 把本次后端补齐的字幕文本、时间戳与检查点写回请求工程。 */
+    private void refreshTimelineJson(EpisodeExportRequest request, TimelineData timeline) {
+        if (Objects.isNull(timeline)) {
+            return;
+        }
+        String timelineJson = JSON.toJSONString(timeline);
+        if (timelineJson.length() > MAX_TIMELINE_JSON_LENGTH) {
+            log.error("接口2 字幕工程报文超长, length={}, max={}",
+                    timelineJson.length(), MAX_TIMELINE_JSON_LENGTH);
+            throw new ServiceException("工程报文过大");
+        }
+        request.setTimelineJson(timelineJson);
+    }
+
+    /** 每个分镜状态变化后条件覆盖工程报文，成功分镜可在下次导出直接复用。 */
+    private void persistGeneratedTimeline(Long episodeEditorId, String runToken,
+                                          String timelineJson, Long userId) {
+        if (StrUtil.isBlank(timelineJson)) {
+            return;
+        }
+        LambdaUpdateWrapper<SakuraEpisodeEditor> update = new LambdaUpdateWrapper<>();
+        update.eq(SakuraEpisodeEditor::getId, episodeEditorId);
+        update.eq(SakuraEpisodeEditor::getExportStatus, ComposeConstants.EXPORT_STATUS_COMPOSING);
+        update.eq(SakuraEpisodeEditor::getExportTaskId, runToken);
+        update.set(SakuraEpisodeEditor::getTimelineJson, timelineJson);
+        update.set(SakuraEpisodeEditor::getUpdateTime, new Date());
+        update.set(SakuraEpisodeEditor::getUpdateBy, String.valueOf(userId));
+        int updated = sakuraEpisodeEditorMapper.update(null, update);
+        if (updated != 1) {
+            log.error("接口2 字幕检查点写入失效, episodeEditorId={}, runToken={}", episodeEditorId, runToken);
+            throw new ServiceException("导出状态失效");
+        }
+    }
+
+    /** 序列化并立即落库一个分镜级字幕检查点。 */
+    private void checkpointGeneratedTimeline(EpisodeExportRequest request, TimelineData timeline,
+                                             Long episodeEditorId, String runToken, Long userId) {
+        refreshTimelineJson(request, timeline);
+        persistGeneratedTimeline(episodeEditorId, runToken, request.getTimelineJson(), userId);
+    }
+
+    /** 腾讯云任务轮询期间刷新受理存活时间，防止长分镜被误判为崩溃残留。 */
+    private void updateExportHeartbeat(Long episodeEditorId, String runToken) {
+        try {
+            LambdaUpdateWrapper<SakuraEpisodeEditor> update = new LambdaUpdateWrapper<>();
+            update.eq(SakuraEpisodeEditor::getId, episodeEditorId);
+            update.eq(SakuraEpisodeEditor::getExportStatus, ComposeConstants.EXPORT_STATUS_COMPOSING);
+            update.eq(SakuraEpisodeEditor::getExportTaskId, runToken);
+            update.set(SakuraEpisodeEditor::getUpdateTime, new Date());
+            sakuraEpisodeEditorMapper.update(null, update);
+        } catch (Exception ex) {
+            // 心跳是卡单保护，不应因一次瞬时写库失败中断正在进行的腾讯云识别。
+            log.warn("接口2 字幕识别心跳失败, episodeEditorId={}", episodeEditorId, ex);
+        }
+    }
+
+    /**
+     * 受理失败补偿回写：仅当记录仍处「合成中」时落失败终态 + 失败原因。
+     * 补偿失败只记录日志，不吞掉原始受理异常。
+     *
+     * @param episodeEditorId 剪辑记录ID
+     * @param errorMsg        失败原因短文案
+     */
+    private void writeAcceptFailed(Long episodeEditorId, String runToken, String errorMsg) {
+        try {
+            LambdaUpdateWrapper<SakuraEpisodeEditor> failUpdate = new LambdaUpdateWrapper<>();
+            failUpdate.eq(SakuraEpisodeEditor::getId, episodeEditorId);
+            failUpdate.eq(SakuraEpisodeEditor::getExportStatus, ComposeConstants.EXPORT_STATUS_COMPOSING);
+            failUpdate.eq(SakuraEpisodeEditor::getExportTaskId, runToken);
+            failUpdate.set(SakuraEpisodeEditor::getExportStatus, ComposeConstants.EXPORT_STATUS_FAILED);
+            failUpdate.set(SakuraEpisodeEditor::getErrorMsg, errorMsg);
+            failUpdate.set(SakuraEpisodeEditor::getUpdateTime, new Date());
+            int updated = sakuraEpisodeEditorMapper.update(null, failUpdate);
+            if (updated == 1) {
+                composeBatchSlotCoordinator.releaseExport(episodeEditorId, runToken);
+            }
+        } catch (Exception writeEx) {
+            log.error("接口2 受理失败补偿回写异常, episodeEditorId={}", episodeEditorId, writeEx);
+        }
+    }
+
+    /**
+     * 提取受理异常的用户短文案：业务异常直接用其消息，其余统一「合成失败」。
+     *
+     * @param ex 受理异常
+     * @return 失败原因短文案
+     */
+    private String resolveShortError(Exception ex) {
+        String message = ex.getMessage();
+        boolean bizError = ex instanceof ServiceException
+                || (ex.getClass() == RuntimeException.class && StrUtil.isNotBlank(message));
+        return bizError && StrUtil.isNotBlank(message) ? message : "合成失败";
+    }
+
+    /**
+     * 素材地址结构快校验：blob:/data:/嵌套协议头等前端误传地址直接拒绝。
+     *
+     * @param url        素材地址（可空，空不校验）
+     * @param label      素材标签（错误文案前缀）
+     * @param groupIndex 分组下标（日志用，-1=全片级）
+     */
+    private void rejectForbiddenUrl(String url, String label, int groupIndex) {
+        if (MaterialUrlGuard.isForbidden(url)) {
+            log.error("合成素材地址结构非法, groupIndex={}, label={}, url={}", groupIndex, label, url);
+            throw new ServiceException(label + "异常");
+        }
+    }
+
+    /**
+     * 计算导出素材指纹：分辨率 + 整片BGM + 各组（视频URL/时长、配音URL/时长、字幕、分组BGM）
+     * 归一化拼接后 SHA-256。URL 统一转相对路径（同一文件的全 URL 与相对路径视为相同素材），
+     * 时长统一保留 3 位小数去尾零。分镜重新出片/重新配音会生成新 OSS 文件（URL 必变），
+     * 字幕/BGM/分辨率改动直接改变指纹——任何素材变化都会触发重新合成。
+     *
+     * @param request 导出入参
+     * @return SHA-256 十六进制指纹（64字符）
+     */
+    private String computeExportFingerprint(EpisodeExportRequest request) {
+        StringBuilder raw = new StringBuilder("compose");
+        raw.append("|SL:").append(SUBTITLE_LAYOUT_FINGERPRINT);
+        raw.append("|R:").append(StrUtil.isBlank(request.getResolution())
+                ? "FHD" : request.getResolution().trim().toUpperCase());
+        raw.append("|GB:").append(normalizeFingerprintUrl(request.getGlobalBgmUrl()));
+        for (ComposeGroupDto group : request.getGroups()) {
+            raw.append("|G|SID:").append(group.getStoryboardId());
+            appendUrlList(raw, group.getVideoUrls());
+            appendDurationList(raw, group.getVideoDurations());
+            appendUrlList(raw, group.getAudioUrls());
+            appendDurationList(raw, group.getAudioDurations());
+            raw.append("|S:").append(StrUtil.isBlank(group.getSubtitle()) ? "" : group.getSubtitle().trim());
+            raw.append("|SC:").append(CollectionUtil.isEmpty(group.getSubtitleCues())
+                    ? "" : JSON.toJSONString(group.getSubtitleCues()));
+            raw.append("|B:").append(normalizeFingerprintUrl(group.getBgmUrl()));
+        }
+        return DigestUtil.sha256Hex(raw.toString());
+    }
+
+    /**
+     * 指纹用 URL 归一化：转相对路径（全 URL 与相对路径指向同一文件时指纹一致），空返回空串。
+     *
+     * @param url 原始 URL
+     * @return 归一化结果
+     */
+    private String normalizeFingerprintUrl(String url) {
+        if (StrUtil.isBlank(url)) {
+            return "";
+        }
+        String relative = mediaUrlResolver.toRelativePath(url.trim());
+        return StrUtil.isBlank(relative) ? url.trim() : relative;
+    }
+
+    /**
+     * 指纹拼接 URL 列表（保序）。
+     *
+     * @param raw  拼接器
+     * @param urls URL 列表
+     */
+    private void appendUrlList(StringBuilder raw, List<String> urls) {
+        raw.append("|U:");
+        if (CollectionUtil.isEmpty(urls)) {
+            return;
+        }
+        for (String url : urls) {
+            raw.append(normalizeFingerprintUrl(url)).append(',');
+        }
+    }
+
+    /**
+     * 指纹拼接时长列表（保序，3 位小数去尾零，null 记为 -）。
+     *
+     * @param raw       拼接器
+     * @param durations 时长列表
+     */
+    private void appendDurationList(StringBuilder raw, List<Double> durations) {
+        raw.append("|D:");
+        if (CollectionUtil.isEmpty(durations)) {
+            return;
+        }
+        for (Double duration : durations) {
+            if (Objects.isNull(duration)) {
+                raw.append('-');
+            } else {
+                raw.append(BigDecimal.valueOf(duration)
+                        .setScale(3, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString());
+            }
+            raw.append(',');
+        }
+    }
+
+    @Override
+    public EpisodeExportStatusResult queryExportStatus(EpisodeExportStatusRequest request) {
+        // episodeEditorId 与 projectId+episodeId 二选一
+        if (Objects.isNull(request) || (Objects.isNull(request.getEpisodeEditorId())
+                && (Objects.isNull(request.getProjectId()) || Objects.isNull(request.getEpisodeId())))) {
+            log.error("接口2 进度查询入参非法: episodeEditorId 与 projectId+episodeId 均为空");
+            throw new ServiceException("参数有误");
+        }
+        Long userId = SecurityUtils.getUserId();
+        // 查询字段精简：仅返回进度展示所需字段（新增出参字段时此处必须同步补充）
+        LambdaQueryWrapper<SakuraEpisodeEditor> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(SakuraEpisodeEditor::getId, SakuraEpisodeEditor::getProjectId, SakuraEpisodeEditor::getEpisodeId,
+                SakuraEpisodeEditor::getExportStatus, SakuraEpisodeEditor::getExportProgress,
+                SakuraEpisodeEditor::getFinalVideoUrl, SakuraEpisodeEditor::getPendingVideoUrl,
+                SakuraEpisodeEditor::getCoverUrl,
+                SakuraEpisodeEditor::getErrorMsg, SakuraEpisodeEditor::getExportTaskId,
+                SakuraEpisodeEditor::getUpdateTime);
+        // 仅可查本人未删除的记录（防越权）
+        wrapper.eq(SakuraEpisodeEditor::getUserId, userId);
+        wrapper.eq(SakuraEpisodeEditor::getDelFlag, DEL_FLAG_NORMAL);
+        if (Objects.nonNull(request.getEpisodeEditorId())) {
+            wrapper.eq(SakuraEpisodeEditor::getId, request.getEpisodeEditorId());
+        } else {
+            wrapper.eq(SakuraEpisodeEditor::getProjectId, request.getProjectId());
+            wrapper.eq(SakuraEpisodeEditor::getEpisodeId, request.getEpisodeId());
+        }
+        wrapper.orderByDesc(SakuraEpisodeEditor::getId);
+        wrapper.last("LIMIT 1");
+        SakuraEpisodeEditor editor = sakuraEpisodeEditorMapper.selectOne(wrapper);
+        if (Objects.isNull(editor)) {
+            log.info("接口2 进度查询未命中记录, editorId={}, projectId={}, episodeId={}, userId={}",
+                    request.getEpisodeEditorId(), request.getProjectId(), request.getEpisodeId(), userId);
+            throw new ServiceException("记录不存在");
+        }
+        // 自愈：合成任务已终态但剪辑记录仍停留在合成中（历史回写事件丢失）时，按任务终态补偿回写后重读
+        editor = selfHealStuckExport(editor, wrapper);
+
+        EpisodeExportStatusResult result = new EpisodeExportStatusResult();
+        result.setEpisodeEditorId(editor.getId());
+        result.setProjectId(editor.getProjectId());
+        result.setEpisodeId(editor.getEpisodeId());
+        result.setExportStatus(editor.getExportStatus());
+        result.setExportProgress(editor.getExportProgress());
+        result.setFinalVideoUrl(editor.getFinalVideoUrl());
+        result.setCoverUrl(editor.getCoverUrl());
+        result.setErrorMsg(editor.getErrorMsg());
+        // 同步识别阶段库内使用临时受理令牌做并发隔离，不作为正式 MPS 任务ID暴露给前端。
+        result.setExportTaskId(NumberUtil.isLong(editor.getExportTaskId()) ? editor.getExportTaskId() : null);
+        // 待审新片：非空=成片已变更需重新提审（旧片继续公开展示，过审后新片自动转正）
+        result.setPendingVideoUrl(editor.getPendingVideoUrl());
+        result.setNeedReaudit(StrUtil.isNotBlank(editor.getPendingVideoUrl()));
+        return result;
+    }
+
+    /**
+     * 导出卡单自愈：剪辑记录仍显示「合成中」，但对应 COMPOSE 任务其实已终态
+     * （回写事件丢失，如进程重启或事件未发布，回写监听器没有触发）。
+     * 成功 → 重发 OSS 持久化事件驱动 ComposeResultListener 按双槽规则回写后重读；
+     * 失败 → 直接补写失败终态。任务仍在跑或自愈异常时原样返回，不影响查询主链路。
+     *
+     * @param editor  当前剪辑记录
+     * @param wrapper 原查询条件（自愈后重读用）
+     * @return 自愈后的最新剪辑记录（无需自愈时原样返回）
+     */
+    private SakuraEpisodeEditor selfHealStuckExport(SakuraEpisodeEditor editor,
+            LambdaQueryWrapper<SakuraEpisodeEditor> wrapper) {
+        if (!Objects.equals(editor.getExportStatus(), ComposeConstants.EXPORT_STATUS_COMPOSING)) {
+            return editor;
+        }
+        if (StrUtil.isBlank(editor.getExportTaskId()) || !NumberUtil.isLong(editor.getExportTaskId())) {
+            Date updateTime = editor.getUpdateTime();
+            if (Objects.isNull(updateTime)
+                    || System.currentTimeMillis() - updateTime.getTime() < EXPORT_ACCEPTING_GRACE_MS) {
+                return editor;
+            }
+            try {
+                LambdaUpdateWrapper<SakuraEpisodeEditor> interruptedUpdate = new LambdaUpdateWrapper<>();
+                interruptedUpdate.eq(SakuraEpisodeEditor::getId, editor.getId());
+                interruptedUpdate.eq(SakuraEpisodeEditor::getExportStatus,
+                        ComposeConstants.EXPORT_STATUS_COMPOSING);
+                interruptedUpdate.eq(SakuraEpisodeEditor::getExportTaskId, editor.getExportTaskId());
+                interruptedUpdate.set(SakuraEpisodeEditor::getExportStatus, ComposeConstants.EXPORT_STATUS_FAILED);
+                interruptedUpdate.set(SakuraEpisodeEditor::getErrorMsg, "导出已中断");
+                interruptedUpdate.set(SakuraEpisodeEditor::getUpdateTime, new Date());
+                int updated = sakuraEpisodeEditorMapper.update(null, interruptedUpdate);
+                if (updated == 1) {
+                    composeBatchSlotCoordinator.releaseExport(editor.getId(), editor.getExportTaskId());
+                }
+                SakuraEpisodeEditor refreshed = sakuraEpisodeEditorMapper.selectOne(wrapper);
+                log.info("接口2 同步受理卡单已自愈, episodeEditorId={}", editor.getId());
+                return Objects.nonNull(refreshed) ? refreshed : editor;
+            } catch (Exception ex) {
+                log.error("接口2 同步受理卡单自愈异常, episodeEditorId={}", editor.getId(), ex);
+                return editor;
+            }
+        }
+        try {
+            // 查询字段精简：自愈判定仅需终态与结果字段（新增使用字段时此处必须同步补充）
+            SakuraMediaTask task = sakuraMediaTaskMapper.selectOne(new LambdaQueryWrapper<SakuraMediaTask>()
+                    .select(SakuraMediaTask::getId, SakuraMediaTask::getStatus, SakuraMediaTask::getOssUrl,
+                            SakuraMediaTask::getErrorMessage, SakuraMediaTask::getErrorDetailJson, SakuraMediaTask::getUserId)
+                    .eq(SakuraMediaTask::getId, Long.parseLong(editor.getExportTaskId()))
+                    .last("LIMIT 1"));
+            if (Objects.isNull(task)) {
+                return editor;
+            }
+            if (MediaTaskStatus.SUCCEEDED.name().equals(task.getStatus())
+                    && StrUtil.isNotBlank(task.getOssUrl())) {
+                // 重发事件让 ComposeResultListener 按审核双槽规则回写（监听器幂等）
+                applicationEventPublisher.publishEvent(
+                        new MediaTaskOssPersistedEvent(this, task.getId(), task.getUserId()));
+                log.info("接口2 导出卡单自愈成功, episodeEditorId={}, taskId={}", editor.getId(), task.getId());
+            } else if (MediaTaskStatus.FAILED.name().equals(task.getStatus())) {
+                LambdaUpdateWrapper<SakuraEpisodeEditor> failUpdate = new LambdaUpdateWrapper<>();
+                failUpdate.eq(SakuraEpisodeEditor::getId, editor.getId());
+                failUpdate.eq(SakuraEpisodeEditor::getExportStatus, ComposeConstants.EXPORT_STATUS_COMPOSING);
+                failUpdate.eq(SakuraEpisodeEditor::getExportTaskId, String.valueOf(task.getId()));
+                failUpdate.set(SakuraEpisodeEditor::getExportStatus, ComposeConstants.EXPORT_STATUS_FAILED);
+                failUpdate.set(SakuraEpisodeEditor::getErrorMsg,
+                        StrUtil.blankToDefault(task.getErrorMessage(), "合成失败"));
+                failUpdate.set(SakuraEpisodeEditor::getUpdateTime, new Date());
+                int updated = sakuraEpisodeEditorMapper.update(null, failUpdate);
+                if (updated == 1) {
+                    composeBatchSlotCoordinator.releaseExport(editor.getId(), String.valueOf(task.getId()));
+                }
+                log.info("接口2 导出卡单自愈为失败终态, episodeEditorId={}, taskId={}", editor.getId(), task.getId());
+            } else {
+                // 任务仍在跑：无需自愈
+                return editor;
+            }
+            SakuraEpisodeEditor refreshed = sakuraEpisodeEditorMapper.selectOne(wrapper);
+            return Objects.nonNull(refreshed) ? refreshed : editor;
+        } catch (Exception ex) {
+            // 自愈属于兜底增强，异常不阻断进度查询
+            log.error("接口2 导出卡单自愈异常, episodeEditorId={}", editor.getId(), ex);
+            return editor;
+        }
+    }
+
+    /**
+     * 接口2 分组数据校验（fail-fast，零 I/O）：
+     * 每组视频 URL 非空且结构合法、数量不超上限；视频时长必填且与 URL 等长、每项 > 0；
+     * 有配音则配音时长同样必填对齐；字幕不超长；
+     * 视频/配音/分组 BGM 地址均拒绝 blob:/data:/嵌套协议头等前端误传结构。
+     * 时长决定段对齐（字幕区间、BGM 铺设、配音补位）与预冻结扣费，缺失或错位直接拒绝。
+     *
+     * @param groups 合成分组列表
+     */
+    private void validateExportGroups(List<ComposeGroupDto> groups) {
+        Set<Long> storyboardIds = new LinkedHashSet<>();
+        for (int i = 0; i < groups.size(); i++) {
+            ComposeGroupDto group = groups.get(i);
+            if (Objects.isNull(group) || CollectionUtil.isEmpty(group.getVideoUrls())) {
+                log.error("接口2 第{}组视频URL为空", i);
+                throw new ServiceException("参数有误");
+            }
+            if (Objects.isNull(group.getStoryboardId()) || group.getStoryboardId() <= 0) {
+                log.error("接口2 第{}组分镜ID无效, storyboardId={}", i, group.getStoryboardId());
+                throw new ServiceException("分镜ID无效");
+            }
+            if (!storyboardIds.add(group.getStoryboardId())) {
+                log.error("接口2 分镜ID重复, storyboardId={}", group.getStoryboardId());
+                throw new ServiceException("分镜ID重复");
+            }
+            if (group.getVideoUrls().size() > MAX_URLS_PER_GROUP) {
+                log.error("接口2 第{}组视频URL数超上限, size={}, max={}",
+                        i, group.getVideoUrls().size(), MAX_URLS_PER_GROUP);
+                throw new ServiceException("素材过多");
+            }
+            for (String videoUrl : group.getVideoUrls()) {
+                rejectForbiddenUrl(videoUrl, ComposeConstants.MATERIAL_LABEL_VIDEO, i);
+            }
+            if (CollectionUtil.isEmpty(group.getVideoDurations())
+                    || group.getVideoDurations().size() != group.getVideoUrls().size()) {
+                log.error("接口2 第{}组视频时长缺失或与URL数量不一致, urls={}, durations={}",
+                        i, group.getVideoUrls().size(),
+                        CollectionUtil.isEmpty(group.getVideoDurations()) ? 0 : group.getVideoDurations().size());
+                throw new ServiceException("视频时长有误");
+            }
+            for (Double duration : group.getVideoDurations()) {
+                if (Objects.isNull(duration) || duration <= 0) {
+                    log.error("接口2 第{}组存在非法视频时长, duration={}", i, duration);
+                    throw new ServiceException("视频时长有误");
+                }
+            }
+            validateSubtitleLength(group.getSubtitle(), i);
+            rejectForbiddenUrl(group.getBgmUrl(), ComposeConstants.MATERIAL_LABEL_BGM, i);
+            if (CollectionUtil.isEmpty(group.getAudioUrls())) {
+                continue;
+            }
+            if (group.getAudioUrls().size() > MAX_URLS_PER_GROUP) {
+                log.error("接口2 第{}组配音URL数超上限, size={}, max={}",
+                        i, group.getAudioUrls().size(), MAX_URLS_PER_GROUP);
+                throw new ServiceException("素材过多");
+            }
+            for (String audioUrl : group.getAudioUrls()) {
+                rejectForbiddenUrl(audioUrl, ComposeConstants.MATERIAL_LABEL_AUDIO, i);
+            }
+            if (CollectionUtil.isEmpty(group.getAudioDurations())
+                    || group.getAudioDurations().size() != group.getAudioUrls().size()) {
+                log.error("接口2 第{}组配音时长缺失或与URL数量不一致, urls={}, durations={}",
+                        i, group.getAudioUrls().size(),
+                        CollectionUtil.isEmpty(group.getAudioDurations()) ? 0 : group.getAudioDurations().size());
+                throw new ServiceException("配音时长有误");
+            }
+            for (Double duration : group.getAudioDurations()) {
+                if (Objects.isNull(duration) || duration <= 0) {
+                    log.error("接口2 第{}组存在非法配音时长, duration={}", i, duration);
+                    throw new ServiceException("配音时长有误");
+                }
+            }
+        }
+    }
+
+    /**
+     * 校验本次请求携带的时间轴工程是否符合当前稳定结构。
+     *
+     * @param timelineJson 时间轴工程 JSON
+     * @param groups       导出分组
+     */
+    private void validateRequestTimeline(String timelineJson, List<ComposeGroupDto> groups) {
+        if (StrUtil.isBlank(timelineJson)) {
+            return;
+        }
+        TimelineData timeline = parseTimelineData(timelineJson, null);
+        if (Objects.isNull(timeline)
+                || !Objects.equals(timeline.getVersion(), ComposeConstants.TIMELINE_VERSION)
+                || StrUtil.isBlank(timeline.getResolution())
+                || !ComposeConstants.isValidResolution(timeline.getResolution())
+                || Objects.isNull(timeline.getTotalDurationSeconds())
+                || !Double.isFinite(timeline.getTotalDurationSeconds())
+                || timeline.getTotalDurationSeconds() < 0
+                || CollectionUtil.isEmpty(timeline.getSegments())
+                || Objects.isNull(timeline.getBgm())) {
+            log.error("接口2 时间轴结构非法, version={}, segments={}",
+                    Objects.isNull(timeline) ? null : timeline.getVersion(),
+                    Objects.isNull(timeline) || Objects.isNull(timeline.getSegments())
+                            ? null : timeline.getSegments().size());
+            throw new ServiceException("时间轴格式错误");
+        }
+
+        Set<Long> segmentIds = new LinkedHashSet<>();
+        for (int index = 0; index < timeline.getSegments().size(); index++) {
+            TimelineSegment segment = timeline.getSegments().get(index);
+            if (Objects.isNull(segment) || Objects.isNull(segment.getStoryboardId())
+                    || segment.getStoryboardId() <= 0 || Objects.isNull(segment.getVideo())
+                    || Objects.isNull(segment.getVoice()) || Objects.isNull(segment.getSubtitle())
+                    || !segmentIds.add(segment.getStoryboardId())) {
+                log.error("接口2 时间轴第{}段结构非法, storyboardId={}", index,
+                        Objects.isNull(segment) ? null : segment.getStoryboardId());
+                throw new ServiceException("时间轴格式错误");
+            }
+        }
+        for (ComposeGroupDto group : groups) {
+            if (!segmentIds.contains(group.getStoryboardId())) {
+                log.error("接口2 导出分组不在工程时间轴, storyboardId={}", group.getStoryboardId());
+                throw new ServiceException("分镜匹配失败");
+            }
+        }
+    }
+
+    /**
+     * 字幕长度校验：超过渲染上限的长文本会切出海量字幕屏，直接拒绝。
+     *
+     * @param subtitle   字幕文本（可空）
+     * @param groupIndex 分组下标（日志用）
+     */
+    private void validateSubtitleLength(String subtitle, int groupIndex) {
+        if (StrUtil.isNotBlank(subtitle) && subtitle.length() > MAX_SUBTITLE_LENGTH) {
+            log.error("接口2 第{}组字幕超长, length={}, max={}", groupIndex, subtitle.length(), MAX_SUBTITLE_LENGTH);
+            throw new ServiceException("字幕过长");
+        }
+    }
+
+    /**
+     * 导出字幕工程收口：分组未携带字幕时按段回落工程中的台词，
+     * 工程中该段字幕被关闭（show=false）时一律不烧。段与分组仅按稳定 storyboardId 对应，
+     * 禁止使用视频地址或数组下标猜测，避免素材换片、部分导出或顺序变化时串用字幕。
+     *
+     * @param request 导出入参（就地修改各组 subtitle）
+     * @param editor  剪辑记录
+     */
+    private TimelineSubtitleContext applyTimelineSubtitles(EpisodeExportRequest request, SakuraEpisodeEditor editor,
+                                                           Map<Long, SakuraGenRecord> selectedVideos) {
+        List<ComposeGroupDto> groups = request.getGroups();
+        // 本次请求携带的工程优先（前端刚改完还没保存的字幕也能生效），否则读库内已保存工程
+        String storedTimelineJson = loadTimelineJson(editor.getId());
+        boolean requestTimelineProvided = StrUtil.isNotBlank(request.getTimelineJson());
+        String timelineJson = requestTimelineProvided ? request.getTimelineJson() : storedTimelineJson;
+        if (StrUtil.isBlank(timelineJson)) {
+            log.warn("接口2 工程时间轴为空,跳过工程字幕回落, episodeEditorId={}", editor.getId());
+            return new TimelineSubtitleContext(null, List.of());
+        }
+        TimelineData timeline = parseTimelineData(timelineJson, editor.getId());
+        List<TimelineSegment> segments = Objects.isNull(timeline) ? null : timeline.getSegments();
+        if (CollectionUtil.isEmpty(segments)) {
+            log.warn("接口2 工程时间轴无有效分镜,跳过工程字幕回落, episodeEditorId={}", editor.getId());
+            return new TimelineSubtitleContext(timeline, List.of());
+        }
+        if (requestTimelineProvided && StrUtil.isNotBlank(storedTimelineJson)
+                && !Objects.equals(request.getTimelineJson(), storedTimelineJson)) {
+            mergeStoredSubtitleCheckpoints(groups, timeline, storedTimelineJson, selectedVideos, editor.getId());
+        }
+        List<TimelineSegment> matchedSegments = TimelineSubtitleMatcher.match(groups, segments);
+        for (int i = 0; i < groups.size(); i++) {
+            ComposeGroupDto group = groups.get(i);
+            TimelineSegment segment = matchedSegments.get(i);
+            if (Objects.isNull(segment)) {
+                log.warn("接口2 导出分组未匹配工程分镜,跳过工程字幕回落, episodeEditorId={}, groupIndex={}, storyboardId={}",
+                        editor.getId(), i, group.getStoryboardId());
+                continue;
+            }
+            TimelineSubtitleItem subtitle = segment.getSubtitle();
+            // 仅工程里显式关闭（show=false）才强制不烧；缺字幕结构只是工程没这项，
+            // 不能反过来把前端本次显式传入的字幕抹掉
+            if (Objects.nonNull(subtitle) && Boolean.FALSE.equals(subtitle.getShow())) {
+                group.setSubtitle(null);
+                group.setSubtitleCues(null);
+                continue;
+            }
+            if (Objects.isNull(subtitle)) {
+                continue;
+            }
+            SakuraGenRecord selectedVideo = selectedVideos.get(group.getStoryboardId());
+            String selectedFingerprint = SubtitleRecognitionMediaResolver.fingerprint(group, selectedVideo);
+            boolean timelineCuesMatch = StrUtil.isNotBlank(subtitle.getSourceMediaFingerprint())
+                    && Objects.equals(selectedFingerprint, subtitle.getSourceMediaFingerprint());
+            if (CollectionUtil.isEmpty(group.getSubtitleCues())
+                    && CollectionUtil.isNotEmpty(subtitle.getCues()) && timelineCuesMatch) {
+                group.setSubtitleCues(subtitle.getCues());
+                group.setSubtitleSourceMediaFingerprint(subtitle.getSourceMediaFingerprint());
+            }
+            if (StrUtil.isBlank(group.getSubtitle()) && StrUtil.isNotBlank(subtitle.getText())) {
+                validateSubtitleLength(subtitle.getText(), i);
+                group.setSubtitle(subtitle.getText());
+            }
+        }
+        return new TimelineSubtitleContext(timeline, matchedSegments);
+    }
+
+    /**
+     * 当前端整批字幕完全为空时，按分镜归属批量读取服务端台词并补入导出分组。
+     * 任一分组或工程分镜已有有效文本/时间戳时整批不查询，避免同一成片混用前后端字幕来源。
+     *
+     * @param groups          导出分组
+     * @param matchedSegments 与导出分组按下标对应的工程分镜
+     * @param timeline        本次采用的完整工程时间线
+     * @param editor          当前剪辑记录
+     * @param userId          当前用户ID
+     * @param clientGroupBatchHasSubtitle 前端分组原始入参是否存在任一有效字幕
+     * @return 成功补入字幕的分组数
+     */
+    private int backfillStoryboardSubtitlesWhenClientBatchEmpty(List<ComposeGroupDto> groups,
+                                                                List<TimelineSegment> matchedSegments,
+                                                                TimelineData timeline,
+                                                                SakuraEpisodeEditor editor, Long userId,
+                                                                boolean clientGroupBatchHasSubtitle) {
+        if (CollectionUtil.isEmpty(groups) || Objects.isNull(editor) || Objects.isNull(userId)
+                || clientGroupBatchHasSubtitle || hasAnyClientSubtitle(groups, timeline)) {
+            return 0;
+        }
+
+        Set<Long> storyboardIds = new LinkedHashSet<>();
+        for (int index = 0; index < groups.size(); index++) {
+            ComposeGroupDto group = groups.get(index);
+            TimelineSegment segment = CollectionUtil.isEmpty(matchedSegments) || index >= matchedSegments.size()
+                    ? null : matchedSegments.get(index);
+            boolean subtitleHidden = Objects.nonNull(segment) && Objects.nonNull(segment.getSubtitle())
+                    && Boolean.FALSE.equals(segment.getSubtitle().getShow());
+            if (Objects.nonNull(group) && Objects.nonNull(group.getStoryboardId()) && !subtitleHidden) {
+                storyboardIds.add(group.getStoryboardId());
+            }
+        }
+        if (CollectionUtil.isEmpty(storyboardIds)) {
+            return 0;
+        }
+
+        // 查询字段精简：导出字幕兜底只需要分镜主键与台词；新增消费字段时此处必须同步补充。
+        List<SakuraStoryboard> storyboards = sakuraStoryboardService.list(
+                Wrappers.<SakuraStoryboard>lambdaQuery()
+                        .select(SakuraStoryboard::getId, SakuraStoryboard::getDialogueText)
+                        .in(SakuraStoryboard::getId, storyboardIds)
+                        .eq(SakuraStoryboard::getProjectId, editor.getProjectId())
+                        .eq(SakuraStoryboard::getEpisodeId, editor.getEpisodeId())
+                        .eq(SakuraStoryboard::getUserId, userId)
+                        .eq(SakuraStoryboard::getDelFlag, DEL_FLAG_NORMAL));
+        Map<Long, String> subtitleByStoryboardId = new HashMap<>();
+        for (SakuraStoryboard storyboard : storyboards) {
+            // 与前端传入字幕的最终下发口径一致，统一处理换行、结构化角色及中英文冒号。
+            String subtitle = DialogueSubtitleFormatter.format(storyboard.getDialogueText());
+            if (StrUtil.isNotBlank(subtitle)) {
+                subtitleByStoryboardId.put(storyboard.getId(), subtitle);
+            }
+        }
+
+        int backfilledCount = 0;
+        for (int index = 0; index < groups.size(); index++) {
+            ComposeGroupDto group = groups.get(index);
+            if (Objects.isNull(group)) {
+                continue;
+            }
+            String subtitle = subtitleByStoryboardId.get(group.getStoryboardId());
+            if (StrUtil.isBlank(subtitle)) {
+                continue;
+            }
+            validateSubtitleLength(subtitle, index);
+            group.setSubtitle(subtitle);
+            TimelineSegment segment = CollectionUtil.isEmpty(matchedSegments) || index >= matchedSegments.size()
+                    ? null : matchedSegments.get(index);
+            TimelineSubtitleItem timelineSubtitle = Objects.isNull(segment) ? null : segment.getSubtitle();
+            if (Objects.nonNull(timelineSubtitle) && !Boolean.FALSE.equals(timelineSubtitle.getShow())) {
+                timelineSubtitle.setText(subtitle);
+            }
+            backfilledCount++;
+        }
+        if (backfilledCount > 0) {
+            log.info("接口2 服务端分镜字幕整批兜底完成, episodeEditorId={}, count={}",
+                    editor.getId(), backfilledCount);
+        }
+        return backfilledCount;
+    }
+
+    /** 判断前端分组或本次采用的工程中是否存在任一有效字幕，作为整批来源选择开关。 */
+    private boolean hasAnyClientSubtitle(List<ComposeGroupDto> groups, TimelineData timeline) {
+        if (hasAnyGroupSubtitle(groups)) {
+            return true;
+        }
+        if (Objects.isNull(timeline) || CollectionUtil.isEmpty(timeline.getSegments())) {
+            return false;
+        }
+        for (TimelineSegment segment : timeline.getSegments()) {
+            TimelineSubtitleItem subtitle = Objects.isNull(segment) ? null : segment.getSubtitle();
+            if (Objects.nonNull(subtitle)
+                    && (StrUtil.isNotBlank(DialogueSubtitleFormatter.format(subtitle.getText()))
+                    || hasValidSubtitleCues(subtitle.getCues()))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** 判断分组原始入参中是否存在任一有效字幕。 */
+    private boolean hasAnyGroupSubtitle(List<ComposeGroupDto> groups) {
+        if (CollectionUtil.isEmpty(groups)) {
+            return false;
+        }
+        for (ComposeGroupDto group : groups) {
+            if (Objects.nonNull(group) && (StrUtil.isNotBlank(DialogueSubtitleFormatter.format(group.getSubtitle()))
+                    || hasValidSubtitleCues(group.getSubtitleCues()))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** 判断时间戳字幕列表中是否至少存在一条可烧录内容。 */
+    private boolean hasValidSubtitleCues(List<TimedSubtitleCue> cues) {
+        if (CollectionUtil.isEmpty(cues)) {
+            return false;
+        }
+        for (TimedSubtitleCue cue : cues) {
+            if (Objects.nonNull(cue) && Objects.nonNull(cue.getStartSeconds())
+                    && Objects.nonNull(cue.getEndSeconds())
+                    && cue.getEndSeconds() > cue.getStartSeconds() && StrUtil.isNotBlank(cue.getText())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 复用 ASR 时间戳时按本次有效台词重新匹配人物。
+     * 前端传入文本与后端分镜兜底文本都在此处使用同一格式化器和匹配器；手工/TTS 时间戳保持原人物不改。
+     *
+     * @param groups          导出分组
+     * @param matchedSegments 与分组对应的工程分镜
+     * @return 完成人物重匹配的分组数
+     */
+    private int rematchExistingAsrCueSpeakers(List<ComposeGroupDto> groups,
+                                              List<TimelineSegment> matchedSegments) {
+        if (CollectionUtil.isEmpty(groups)) {
+            return 0;
+        }
+        int rematchedCount = 0;
+        for (int index = 0; index < groups.size(); index++) {
+            ComposeGroupDto group = groups.get(index);
+            if (Objects.isNull(group) || CollectionUtil.isEmpty(group.getSubtitleCues())) {
+                continue;
+            }
+            List<TimedSubtitleCue> nonNullCues = group.getSubtitleCues().stream()
+                    .filter(Objects::nonNull)
+                    .toList();
+            boolean onlyAsrCues = CollectionUtil.isNotEmpty(nonNullCues)
+                    && nonNullCues.stream().allMatch(cue ->
+                    "ASR".equalsIgnoreCase(StrUtil.blankToDefault(cue.getSource(), "")));
+            String formattedDialogue = DialogueSubtitleFormatter.format(group.getSubtitle());
+            if (!onlyAsrCues || StrUtil.isBlank(formattedDialogue)) {
+                continue;
+            }
+            double mediaDuration = SubtitleRecognitionMediaResolver.resolveDurations(group).stream()
+                    .filter(Objects::nonNull)
+                    .mapToDouble(Double::doubleValue)
+                    .sum();
+            List<TimedSubtitleCue> rematched = SubtitleSpeakerMatcher.match(
+                    nonNullCues, formattedDialogue, mediaDuration);
+            if (CollectionUtil.isEmpty(rematched)) {
+                continue;
+            }
+            group.setSubtitle(formattedDialogue);
+            group.setSubtitleCues(rematched);
+            TimelineSegment segment = CollectionUtil.isEmpty(matchedSegments)
+                    || index >= matchedSegments.size() ? null : matchedSegments.get(index);
+            TimelineSubtitleItem timelineSubtitle = Objects.isNull(segment) ? null : segment.getSubtitle();
+            if (Objects.nonNull(timelineSubtitle) && !Boolean.FALSE.equals(timelineSubtitle.getShow())) {
+                timelineSubtitle.setText(formattedDialogue);
+                timelineSubtitle.setCues(rematched);
+                if (StrUtil.isNotBlank(group.getSubtitleSourceMediaFingerprint())) {
+                    timelineSubtitle.setSourceMediaFingerprint(
+                            group.getSubtitleSourceMediaFingerprint());
+                }
+                timelineSubtitle.setSourceDialogueFingerprint(
+                        SubtitleDialogueFingerprint.of(formattedDialogue));
+            }
+            rematchedCount++;
+        }
+        return rematchedCount;
+    }
+
+    /**
+     * 把库内已完成且音源仍一致的 ASR 检查点合并进前端最新工程，避免失败重试时旧前端快照抹掉断点。
+     * 只合并后端生成字段，不覆盖本次工程的字幕文本、样式、显示开关和素材选择。
+     */
+    private void mergeStoredSubtitleCheckpoints(List<ComposeGroupDto> groups, TimelineData requestTimeline,
+                                                String storedTimelineJson,
+                                                Map<Long, SakuraGenRecord> selectedVideos,
+                                                Long episodeEditorId) {
+        TimelineData storedTimeline = parseTimelineData(storedTimelineJson, episodeEditorId);
+        if (Objects.isNull(storedTimeline) || CollectionUtil.isEmpty(storedTimeline.getSegments())) {
+            return;
+        }
+        List<TimelineSegment> requestSegments = TimelineSubtitleMatcher.match(
+                groups, requestTimeline.getSegments());
+        List<TimelineSegment> storedSegments = TimelineSubtitleMatcher.match(
+                groups, storedTimeline.getSegments());
+        for (int index = 0; index < groups.size(); index++) {
+            TimelineSegment requestSegment = requestSegments.get(index);
+            TimelineSegment storedSegment = storedSegments.get(index);
+            if (Objects.isNull(requestSegment) || Objects.isNull(storedSegment)
+                    || Objects.isNull(storedSegment.getSubtitle())) {
+                continue;
+            }
+            TimelineSubtitleItem requestSubtitle = requestSegment.getSubtitle();
+            TimelineSubtitleItem storedSubtitle = storedSegment.getSubtitle();
+            String effectiveDialogue = StrUtil.isNotBlank(groups.get(index).getSubtitle())
+                    ? groups.get(index).getSubtitle()
+                    : Objects.isNull(requestSubtitle) ? null : requestSubtitle.getText();
+            if (StrUtil.isBlank(DialogueSubtitleFormatter.format(effectiveDialogue))) {
+                continue;
+            }
+            SakuraGenRecord selectedVideo = selectedVideos.get(groups.get(index).getStoryboardId());
+            String currentFingerprint = SubtitleRecognitionMediaResolver.fingerprint(
+                    groups.get(index), selectedVideo);
+            if (!isReusableCheckpoint(storedSubtitle, currentFingerprint)
+                    || isReusableCheckpoint(requestSubtitle, currentFingerprint)) {
+                continue;
+            }
+            if (Objects.isNull(requestSubtitle)) {
+                requestSubtitle = new TimelineSubtitleItem();
+                requestSegment.setSubtitle(requestSubtitle);
+                requestSubtitle.setText(DialogueSubtitleFormatter.format(effectiveDialogue));
+                requestSubtitle.setFontSize(storedSubtitle.getFontSize());
+                requestSubtitle.setFontColor(storedSubtitle.getFontColor());
+                requestSubtitle.setFontFamily(storedSubtitle.getFontFamily());
+                requestSubtitle.setPosition(storedSubtitle.getPosition());
+                requestSubtitle.setShow(true);
+            }
+            requestSubtitle.setCues(storedSubtitle.getCues());
+            requestSubtitle.setSourceMediaFingerprint(storedSubtitle.getSourceMediaFingerprint());
+            requestSubtitle.setSourceDialogueFingerprint(storedSubtitle.getSourceDialogueFingerprint());
+            requestSubtitle.setRecognitionStatus(storedSubtitle.getRecognitionStatus());
+            requestSubtitle.setRecognitionProvider(storedSubtitle.getRecognitionProvider());
+            requestSubtitle.setRecognitionUpdatedAt(storedSubtitle.getRecognitionUpdatedAt());
+            requestSubtitle.setRecognitionError(null);
+        }
+    }
+
+    private boolean isReusableCheckpoint(TimelineSubtitleItem subtitle, String currentFingerprint) {
+        if (Objects.isNull(subtitle)
+                || Objects.equals(subtitle.getRecognitionStatus(), SubtitleRecognitionStatus.PROCESSING)
+                || Objects.equals(subtitle.getRecognitionStatus(), SubtitleRecognitionStatus.FAILED)) {
+            return false;
+        }
+        boolean stableTextFallback = Objects.equals(subtitle.getRecognitionStatus(),
+                SubtitleRecognitionStatus.TEXT_FALLBACK)
+                && StrUtil.isNotBlank(subtitle.getSourceDialogueFingerprint())
+                && StrUtil.isNotBlank(subtitle.getRecognitionProvider());
+        return (CollectionUtil.isNotEmpty(subtitle.getCues()) || stableTextFallback)
+                && StrUtil.isNotBlank(currentFingerprint)
+                && Objects.equals(currentFingerprint, subtitle.getSourceMediaFingerprint());
+    }
+
+    /**
+     * 将单视频分镜组重绑定到服务端当前选中素材，并同步失效不属于当前视频的时间戳字幕。
+     * 多视频手工编排组不自动覆盖，避免破坏剪辑器中用户明确组合的素材序列。
+     */
+    private Map<Long, SakuraGenRecord> synchronizeExportGroupVideos(List<ComposeGroupDto> groups,
+                                                                  SakuraEpisodeEditor editor, Long userId) {
+        Set<Long> storyboardIds = new LinkedHashSet<>();
+        for (ComposeGroupDto group : groups) {
+            if (Objects.nonNull(group) && Objects.nonNull(group.getStoryboardId())
+                    && group.getVideoUrls().size() == 1) {
+                storyboardIds.add(group.getStoryboardId());
+            }
+        }
+        Map<Long, SakuraGenRecord> selectedVideos = storyboardVideoSelectionResolver.resolve(
+                editor.getProjectId(), editor.getEpisodeId(), userId, storyboardIds);
+        for (ComposeGroupDto group : groups) {
+            if (Objects.isNull(group) || Objects.isNull(group.getStoryboardId())
+                    || group.getVideoUrls().size() != 1) {
+                continue;
+            }
+            SakuraGenRecord selected = selectedVideos.get(group.getStoryboardId());
+            if (Objects.isNull(selected)) {
+                continue;
+            }
+            if (Objects.isNull(selected.getVideoDuration()) || selected.getVideoDuration() <= 0) {
+                log.error("接口2 当前分镜视频时长无效, storyboardId={}, recordId={}",
+                        group.getStoryboardId(), selected.getId());
+                throw new ServiceException("视频时长有误");
+            }
+            String selectedUrl = mediaUrlResolver.toFullUrl(selected.getFileUrl());
+            boolean videoChanged = !Objects.equals(normalizeFingerprintUrl(group.getVideoUrls().get(0)),
+                    normalizeFingerprintUrl(selectedUrl));
+            group.setVideoUrls(List.of(selectedUrl));
+            group.setVideoDurations(List.of(selected.getVideoDuration().doubleValue()));
+
+            String selectedFingerprint = SubtitleRecognitionMediaResolver.fingerprint(group, selected);
+            boolean cueFingerprintMismatch = CollectionUtil.isNotEmpty(group.getSubtitleCues())
+                    && !Objects.equals(selectedFingerprint, group.getSubtitleSourceMediaFingerprint());
+            if (cueFingerprintMismatch) {
+                group.setSubtitleCues(null);
+                group.setSubtitleSourceMediaFingerprint(null);
+            }
+            if (videoChanged) {
+                log.info("接口2 分镜视频已刷新, episodeEditorId={}, storyboardId={}, recordId={}",
+                        editor.getId(), group.getStoryboardId(), selected.getId());
+            }
+        }
+        return selectedVideos;
+    }
+
+    /**
+     * 解析工程时间轴的分镜段列表（解析失败返回 null，由调用方跳过工程字幕回落）。
+     *
+     * @param timelineJson    工程报文
+     * @param episodeEditorId 剪辑记录ID（日志用）
+     * @return 分镜段列表或 null
+     */
+    private TimelineData parseTimelineData(String timelineJson, Long episodeEditorId) {
+        try {
+            return JSON.parseObject(timelineJson, TimelineData.class);
+        } catch (Exception ex) {
+            log.warn("接口2 工程时间轴解析失败,跳过工程字幕回落, episodeEditorId={}, err={}",
+                    episodeEditorId, ex.getMessage());
+            return null;
+        }
+    }
+
+    /** 本次导出解析出的工程时间轴及其与导出分组的安全匹配结果。 */
+    private record TimelineSubtitleContext(TimelineData timeline, List<TimelineSegment> matchedSegments) { }
+
+    /**
+     * 读取库内工程报文（受理主链路刻意不读该大字段，字幕回落时才按需单独查询）。
+     *
+     * @param episodeEditorId 剪辑记录ID
+     * @return 工程报文，无记录返回 null
+     */
+    private String loadTimelineJson(Long episodeEditorId) {
+        SakuraEpisodeEditor record = sakuraEpisodeEditorMapper.selectOne(
+                Wrappers.<SakuraEpisodeEditor>lambdaQuery()
+                        .select(SakuraEpisodeEditor::getId, SakuraEpisodeEditor::getTimelineJson)
+                        .eq(SakuraEpisodeEditor::getId, episodeEditorId)
+                        .last("LIMIT 1"));
+        return Objects.isNull(record) ? null : record.getTimelineJson();
+    }
+
+    /**
+     * 冗余配音归一化（接口2 受理前置）：段视频为本人「配音视频」（genType=compose，配音/对口型产物，
+     * 声音已合进画面）时，该组传入的配音 MP3 属于冗余素材（多为历史剪辑工程残留），
+     * 服务端自动忽略该组配音后继续受理——既避免成片同一段叠两层人声，也保证工程可随时重新导出。
+     * 比对不过滤删除标志：配音视频记录被删除不改变文件内已烧入人声的事实。
+     * 实现：一次索引查询（命中 idx_proj_ep_user_type）取本剧集全部配音视频相对路径，内存归一化比对。
+     *
+     * @param groups    合成分组列表（就地修改：冗余配音组的 audioUrls/audioDurations 被置空）
+     * @param userId    当前用户ID
+     * @param projectId 项目ID
+     * @param episodeId 剧集ID（电影为 0）
+     */
+    private void normalizeComposeGroupAudio(List<ComposeGroupDto> groups, Long userId,
+                                            Long projectId, Long episodeId) {
+        if (Objects.isNull(projectId) || Objects.isNull(episodeId) || !hasAnyGroupAudio(groups)) {
+            return;
+        }
+        // 查询字段精简：冗余配音比对仅需成片地址（新增使用字段时此处必须同步补充）
+        List<SakuraGenRecord> composeRecords = sakuraGenRecordMapper.selectList(
+                Wrappers.<SakuraGenRecord>lambdaQuery()
+                        .select(SakuraGenRecord::getId, SakuraGenRecord::getFileUrl)
+                        .eq(SakuraGenRecord::getProjectId, projectId)
+                        .eq(SakuraGenRecord::getEpisodeId, episodeId)
+                        .eq(SakuraGenRecord::getUserId, userId)
+                        .eq(SakuraGenRecord::getGenType, GenTypeEnum.COMPOSE.getValue())
+                        .isNotNull(SakuraGenRecord::getFileUrl));
+        if (CollectionUtil.isEmpty(composeRecords)) {
+            return;
+        }
+        // 归一化口径与成片复用指纹一致（normalizeFingerprintUrl），全 URL 与相对路径指向同一文件时可对上
+        Set<String> composePaths = new LinkedHashSet<>();
+        for (SakuraGenRecord record : composeRecords) {
+            String normalized = normalizeFingerprintUrl(record.getFileUrl());
+            if (StrUtil.isNotBlank(normalized)) {
+                composePaths.add(normalized);
+            }
+        }
+        if (CollectionUtil.isEmpty(composePaths)) {
+            return;
+        }
+        for (int i = 0; i < groups.size(); i++) {
+            ComposeGroupDto group = groups.get(i);
+            if (Objects.isNull(group) || CollectionUtil.isEmpty(group.getAudioUrls())
+                    || CollectionUtil.isEmpty(group.getVideoUrls())) {
+                continue;
+            }
+            for (String videoUrl : group.getVideoUrls()) {
+                String candidate = normalizeFingerprintUrl(videoUrl);
+                if (StrUtil.isNotBlank(candidate) && composePaths.contains(candidate)) {
+                    log.warn("接口2 配音视频段冗余配音已自动忽略, userId={}, projectId={}, episodeId={}, "
+                            + "groupIndex={}, videoUrl={}", userId, projectId, episodeId, i, videoUrl);
+                    group.setAudioUrls(null);
+                    group.setAudioDurations(null);
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * 判断分组列表中是否存在带配音的组（无配音时冗余配音归一化可零查询直接返回）。
+     *
+     * @param groups 合成分组列表
+     * @return true=至少一组带配音
+     */
+    private boolean hasAnyGroupAudio(List<ComposeGroupDto> groups) {
+        for (ComposeGroupDto group : groups) {
+            if (Objects.nonNull(group) && CollectionUtil.isNotEmpty(group.getAudioUrls())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 定位剪辑记录：
+     * 传 episodeEditorId → 按 ID 查并校验归属当前用户（防越权）；
+     * 未传 → 必须传 projectId+episodeId，校验项目归属后按「用户+项目+剧集」查最新记录，无则自动创建。
+     *
+     * @param request 接口2 入参
+     * @param userId  当前用户ID
+     * @return 剪辑记录（必不为 null）
+     */
+    private SakuraEpisodeEditor resolveEditor(EpisodeExportRequest request, Long userId) {
+        if (Objects.nonNull(request.getEpisodeEditorId())) {
+            SakuraEpisodeEditor editor = sakuraEpisodeEditorMapper.selectById(request.getEpisodeEditorId());
+            if (Objects.isNull(editor) || !Objects.equals(DEL_FLAG_NORMAL, editor.getDelFlag())) {
+                log.error("接口2 剧集剪辑记录缺失, episodeEditorId={}", request.getEpisodeEditorId());
+                throw new ServiceException("记录不存在");
+            }
+            // 归属校验：只能导出自己的剪辑记录
+            if (!Objects.equals(editor.getUserId(), userId)) {
+                log.error("接口2 剪辑记录越权, episodeEditorId={}, ownerId={}, userId={}",
+                        editor.getId(), editor.getUserId(), userId);
+                throw new ServiceException("无权操作");
+            }
+            return editor;
+        }
+        if (Objects.isNull(request.getProjectId()) || Objects.isNull(request.getEpisodeId())) {
+            log.error("接口2 未传 episodeEditorId 且 projectId/episodeId 不全, projectId={}, episodeId={}",
+                    request.getProjectId(), request.getEpisodeId());
+            throw new ServiceException("参数有误");
+        }
+        // 项目归属校验：防止给他人项目建档
+        SakuraComicProject project = sakuraComicProjectService.getById(request.getProjectId());
+        if (Objects.isNull(project) || !Objects.equals(project.getUserId(), userId)) {
+            log.error("接口2 项目缺失或越权, projectId={}, userId={}", request.getProjectId(), userId);
+            throw new ServiceException("项目不存在");
+        }
+        SakuraEpisodeEditor existed = selectLatestEditor(request.getProjectId(), request.getEpisodeId(), userId);
+        if (Objects.nonNull(existed)) {
+            return existed;
+        }
+        // 首次导出自动建档
+        SakuraEpisodeEditor created = new SakuraEpisodeEditor();
+        created.setUserId(userId);
+        created.setProjectId(request.getProjectId());
+        created.setEpisodeId(request.getEpisodeId());
+        created.setExportStatus(0);
+        created.setExportProgress(0);
+        created.setDelFlag(DEL_FLAG_NORMAL);
+        Date now = new Date();
+        created.setCreateTime(now);
+        created.setUpdateTime(now);
+        created.setCreateBy(String.valueOf(userId));
+        try {
+            sakuraEpisodeEditorMapper.insert(created);
+        } catch (DuplicateKeyException e) {
+            // 撞 uk_project_episode：并发请求已先建档，复用先插入的那条
+            SakuraEpisodeEditor concurrent = selectLatestEditor(request.getProjectId(), request.getEpisodeId(), userId);
+            if (Objects.nonNull(concurrent)) {
+                log.info("接口2 并发建档冲突复用已有记录, episodeEditorId={}, projectId={}, episodeId={}, userId={}",
+                        concurrent.getId(), request.getProjectId(), request.getEpisodeId(), userId);
+                return concurrent;
+            }
+            log.error("接口2 建档唯一键冲突且复查无记录, projectId={}, episodeId={}, userId={}",
+                    request.getProjectId(), request.getEpisodeId(), userId, e);
+            throw new ServiceException("剪辑记录创建失败，请重试");
+        }
+        log.info("接口2 自动创建剪辑记录, episodeEditorId={}, projectId={}, episodeId={}, userId={}",
+                created.getId(), request.getProjectId(), request.getEpisodeId(), userId);
+        return created;
+    }
+
+    /**
+     * 按「用户+项目+剧集」查最新一条剪辑记录。
+     * 查询字段精简：防重、更新与成片复用判定所需字段（新增使用字段时此处必须同步补充）；
+     * finalVideoUrl/pendingVideoUrl/exportFingerprint 缺失会导致按项目+剧集导出时指纹比对恒不等、复用永远不命中。
+     *
+     * @param projectId 项目ID
+     * @param episodeId 剧集ID
+     * @param userId    当前用户ID
+     * @return 最新剪辑记录，无则 null
+     */
+    private SakuraEpisodeEditor selectLatestEditor(Long projectId, Long episodeId, Long userId) {
+        return sakuraEpisodeEditorMapper.selectOne(
+                Wrappers.<SakuraEpisodeEditor>lambdaQuery()
+                        .select(SakuraEpisodeEditor::getId, SakuraEpisodeEditor::getUserId,
+                                SakuraEpisodeEditor::getProjectId, SakuraEpisodeEditor::getEpisodeId,
+                                SakuraEpisodeEditor::getExportStatus, SakuraEpisodeEditor::getExportTaskId,
+                                SakuraEpisodeEditor::getFinalVideoUrl, SakuraEpisodeEditor::getPendingVideoUrl,
+                                SakuraEpisodeEditor::getExportFingerprint, SakuraEpisodeEditor::getUpdateTime,
+                                SakuraEpisodeEditor::getDelFlag)
+                        .eq(SakuraEpisodeEditor::getUserId, userId)
+                        .eq(SakuraEpisodeEditor::getProjectId, projectId)
+                        .eq(SakuraEpisodeEditor::getEpisodeId, episodeId)
+                        .eq(SakuraEpisodeEditor::getDelFlag, DEL_FLAG_NORMAL)
+                        .orderByDesc(SakuraEpisodeEditor::getId)
+                        .last("LIMIT 1"));
+    }
+
+    /** 「合成中但无正式任务ID」的受理保护窗：窗内识别为运行中并拒绝，超窗允许卡单自愈。 */
+    private static final long EXPORT_ACCEPTING_GRACE_MS = 10L * 60L * 1000L;
+
+    /**
+     * 识别正在受理或尚未完成业务回写的导出，供调用方拒绝重复请求。
+     * <p>
+     * 同步字幕阶段使用临时受理令牌，保护窗内识别为运行中；正式媒体任务只要仍存在，
+     * 无论处于排队、上游处理还是刚进入终态但剪辑记录尚未回写，均视为运行中。
+     * 调用方统一提示先停止；终态遗漏由状态查询接口的自愈逻辑收口。
+     * 临时令牌超窗或正式任务不存在时视为状态残留，返回 {@code null} 放行重新受理。
+     *
+     * @param editor 剪辑记录
+     * @return 运行中标记；当前没有运行中任务时返回 null
+     */
+    private EpisodeExportResult resolveInFlightExport(SakuraEpisodeEditor editor) {
+        if (!Objects.equals(editor.getExportStatus(), ComposeConstants.EXPORT_STATUS_COMPOSING)) {
+            return null;
+        }
+        String taskIdStr = editor.getExportTaskId();
+        if (StrUtil.isBlank(taskIdStr) || !NumberUtil.isLong(taskIdStr)) {
+            // 「合成中但无任务ID」= 上一请求仍在受理窗口（素材探测/预冻结中，耗时可能超过受理锁 TTL）。
+            // 保护窗内识别为运行中并由调用方拒绝；超窗视为受理崩溃残留，放行重新导出。
+            Date updateTime = editor.getUpdateTime();
+            if (Objects.nonNull(updateTime)
+                    && System.currentTimeMillis() - updateTime.getTime() < EXPORT_ACCEPTING_GRACE_MS) {
+                log.info("接口2 命中字幕同步受理任务,幂等返回, episodeEditorId={}, updateTime={}",
+                        editor.getId(), updateTime);
+                return buildInFlightExportResult(editor, null);
+            }
+            return null;
+        }
+        // 查询字段精简：确认原任务仍存在并记录当前状态；新增使用字段时此处必须同步补充。
+        SakuraMediaTask task = sakuraMediaTaskMapper.selectOne(
+                Wrappers.<SakuraMediaTask>lambdaQuery()
+                        .select(SakuraMediaTask::getId, SakuraMediaTask::getStatus)
+                        .eq(SakuraMediaTask::getId, Long.parseLong(taskIdStr))
+                        .eq(SakuraMediaTask::getUserId, editor.getUserId())
+                        .eq(SakuraMediaTask::getProjectId, editor.getProjectId())
+                        .eq(SakuraMediaTask::getEpisodeId, editor.getEpisodeId())
+                        .eq(SakuraMediaTask::getMediaType, ComposeConstants.MEDIA_TYPE_COMPOSE)
+                        .eq(SakuraMediaTask::getCallbackCategory, ComposeConstants.CALLBACK_EPISODE_EDITOR)
+                        .eq(SakuraMediaTask::getCallbackRecordId, editor.getId())
+                        .last("LIMIT 1"));
+        if (Objects.isNull(task)) {
+            return null;
+        }
+        log.info("接口2 命中已有导出任务,幂等返回, episodeEditorId={}, taskId={}, status={}",
+                editor.getId(), task.getId(), task.getStatus());
+        return buildInFlightExportResult(editor, String.valueOf(task.getId()));
+    }
+
+    /** 组装内部运行中标记供调用方拒绝，临时受理令牌不向前端暴露。 */
+    private EpisodeExportResult buildInFlightExportResult(SakuraEpisodeEditor editor, String exportTaskId) {
+        EpisodeExportResult result = new EpisodeExportResult();
+        result.setEpisodeEditorId(editor.getId());
+        result.setExportTaskId(exportTaskId);
+        result.setExportStatus(ComposeConstants.EXPORT_STATUS_COMPOSING);
+        result.setReused(Boolean.FALSE);
+        return result;
+    }
+
+    /**
+     * 解析 TTS 模型配置。
+     *
+     * @param voiceModelId TTS 模型ID
+     * @return 模型配置
+     */
+    private AiModelConfigVo resolveVoiceModel(Long voiceModelId) {
+        if (Objects.isNull(voiceModelId)) {
+            log.error("接口1 配音模型ID为空");
+            throw new ServiceException("参数有误");
+        }
+        AiModelConfigVo modelConfig = aiModelConfigService.selectByModelId(voiceModelId, "audio");
+        if (Objects.isNull(modelConfig) || StrUtil.isBlank(modelConfig.getModelCode())) {
+            log.error("接口1 配音模型不存在, voiceModelId={}", voiceModelId);
+            throw new ServiceException("模型异常");
+        }
+        if (!"audio".equalsIgnoreCase(modelConfig.getModelType())) {
+            log.error("接口1 配音模型类型错误, voiceModelId={}, modelType={}",
+                    voiceModelId, modelConfig.getModelType());
+            throw new ServiceException("模型类型错误");
+        }
+        return modelConfig;
+    }
+
+    /** 一键配音文本上限校验，与单分镜正式配音保持同一口径并在创建业务记录前拒绝。 */
+    private void validateVoiceoverText(String ttsText, ResolvedSegmentVoice voice) {
+        int textLength = StrUtil.length(ttsText);
+        if (textLength > MAX_VOICEOVER_TEXT_LENGTH) {
+            log.info("接口1 配音文本过长, modelCode={}, textLen={}, max={}",
+                    voice.modelConfig.getModelCode(), textLength, MAX_VOICEOVER_TEXT_LENGTH);
+            throw TaskErrorPresentation.fromCode(TaskErrorCode.USER_INPUT_TOO_LONG, "文本过长，请精简");
+        }
+        if (minimaxProviderDetector.isMinimax(voice.modelConfig.getProviderCode(),
+                MinimaxProviderDetector.parseCapabilityProvider(voice.modelConfig.getCapabilityJson()),
+                voice.modelConfig.getModelCode())
+                && textLength > MinimaxTtsConstants.SYNC_TEXT_MAX_LENGTH) {
+            log.info("接口1 MiniMax配音文本过长, modelCode={}, textLen={}, max={}",
+                    voice.modelConfig.getModelCode(), textLength, MinimaxTtsConstants.SYNC_TEXT_MAX_LENGTH);
+            throw TaskErrorPresentation.fromCode(TaskErrorCode.USER_INPUT_TOO_LONG, "文本过长，请精简");
+        }
+    }
+
+    /**
+     * 接口1 合成进度查询（纯轮询）。见接口定义说明。
+     *
+     * @param request 入参（composeBatchId 必填）
+     * @return 合成进度结果
+     */
+    @Override
+    public ComposeStatusResult queryComposeStatus(ComposeStatusRequest request) {
+        if (Objects.isNull(request) || StrUtil.isBlank(request.getComposeBatchId())) {
+            log.error("合成进度查询入参非法: composeBatchId 为空");
+            throw new ServiceException("参数有误");
+        }
+        String batchId = request.getComposeBatchId().trim();
+        Long userId = SecurityUtils.getUserId();
+
+        List<SakuraAudioRecord> audioRecords = listComposeBatchAudioRecords(batchId, userId);
+        if (CollectionUtil.isEmpty(audioRecords)) {
+            log.info("合成进度查询: 批次不存在或不属于当前用户, batchId={}, userId={}", batchId, userId);
+            throw new ServiceException("批次不存在");
+        }
+        // 配音卡单自愈：配音记录停留 PROCESSING 但对应媒体任务已终态/已丢失时按任务态补偿回写，
+        // 自愈发生后重读记录，避免前端因事件丢失永远收到 VOICING
+        if (selfHealStuckVoiceover(audioRecords, userId)) {
+            audioRecords = listComposeBatchAudioRecords(batchId, userId);
+            composeBatchSlotCoordinator.releaseVoiceover(batchId);
+        }
+
+        int total = audioRecords.size();
+        int succeeded = 0;
+        int failed = 0;
+        boolean cancelled = false;
+        String firstAudioError = null;
+        for (SakuraAudioRecord ar : audioRecords) {
+            if (MediaTaskStatus.SUCCEEDED.name().equals(ar.getStatus())) {
+                succeeded++;
+            } else if (MediaTaskStatus.FAILED.name().equals(ar.getStatus())) {
+                failed++;
+                cancelled = cancelled || "用户取消".equals(ar.getErrorMessage());
+                if (StrUtil.isBlank(firstAudioError) && StrUtil.isNotBlank(ar.getErrorMessage())) {
+                    firstAudioError = ar.getErrorMessage();
+                }
+            }
+        }
+
+        ComposeStatusResult result = new ComposeStatusResult();
+        result.setComposeBatchId(batchId);
+        result.setAudioTotal(total);
+        result.setAudioSucceeded(succeeded);
+        result.setAudioFailed(failed);
+
+        SakuraMediaTask composeTask = sakuraMediaTaskMapper.selectOne(
+                Wrappers.<SakuraMediaTask>lambdaQuery()
+                        .select(SakuraMediaTask::getId, SakuraMediaTask::getStatus,
+                                SakuraMediaTask::getOssUrl, SakuraMediaTask::getOutputDurationSeconds)
+                        .eq(SakuraMediaTask::getComposeBatchId, batchId)
+                        .eq(SakuraMediaTask::getMediaType, ComposeConstants.MEDIA_TYPE_COMPOSE)
+                        .eq(SakuraMediaTask::getUserId, userId)
+                        .orderByDesc(SakuraMediaTask::getId)
+                        .last("LIMIT 1"));
+
+        if (cancelled) {
+            // sakura_audio_record 是取消真源；Redis marker 过期/重启后仍永久忽略迟到成功媒体结果。
+            result.setStatus(COMPOSE_STATUS_FAILED);
+            result.setErrorMessage("用户取消");
+            composeBatchSlotCoordinator.releaseVoiceover(batchId);
+        } else if (composeBatchStore.isFailed(batchId)) {
+            // 用户取消/配音失败优先于迟到的媒体任务状态，禁止已取消批次再次显示为合成中或成功。
+            result.setStatus(COMPOSE_STATUS_FAILED);
+            result.setErrorMessage(StrUtil.isNotBlank(firstAudioError) ? firstAudioError : "合成失败");
+        } else if (Objects.nonNull(composeTask)) {
+            if (MediaTaskStatus.SUCCEEDED.name().equals(composeTask.getStatus())
+                    && StrUtil.isNotBlank(composeTask.getOssUrl())) {
+                // 合成成功且成片地址就绪：回传成片地址（相对路径，出参 @MediaUrl 自动拼域名）与时长
+                result.setStatus(COMPOSE_STATUS_SUCCEEDED);
+                result.setVideoUrl(composeTask.getOssUrl());
+                result.setVideoDuration(composeTask.getOutputDurationSeconds());
+            } else if (MediaTaskStatus.FAILED.name().equals(composeTask.getStatus())) {
+                result.setStatus(COMPOSE_STATUS_FAILED);
+                result.setErrorMessage("合成失败");
+            } else {
+                // 合成中，或已置 SUCCEEDED 但成片 OSS 尚未回填的极短窗口，均按合成中处理
+                result.setStatus(COMPOSE_STATUS_COMPOSING);
+            }
+        } else if (failed > 0 || composeBatchStore.isFailed(batchId)) {
+            // 配音失败，或配音已齐但合成触发阶段异常被标记失败（此时不会再产生合成任务）
+            result.setStatus(COMPOSE_STATUS_FAILED);
+            result.setErrorMessage(StrUtil.isNotBlank(firstAudioError) ? firstAudioError : "合成失败");
+            composeBatchSlotCoordinator.releaseVoiceover(batchId);
+        } else if (succeeded == total) {
+            // 配音已齐、合成任务尚未落库：正常为事件链触发中的极短窗口；
+            // 若触发事件丢失（服务重启等）则重发判齐事件自愈，仍无法触发时按失败收口
+            selfHealComposeNotTriggered(batchId, audioRecords, userId);
+            if (composeBatchStore.isFailed(batchId)) {
+                result.setStatus(COMPOSE_STATUS_FAILED);
+                result.setErrorMessage("合成失败");
+            } else {
+                result.setStatus(COMPOSE_STATUS_COMPOSING);
+            }
+        } else {
+            // 仍有配音在跑
+            result.setStatus(COMPOSE_STATUS_VOICING);
+        }
+        return result;
+    }
+
+    /** 合成落任务和冻结前确认本次导出尚未被用户停止。 */
+    private void requireExportSubmissionActive(Long episodeEditorId, String runToken) {
+        LambdaUpdateWrapper<SakuraEpisodeEditor> checkpoint = Wrappers.lambdaUpdate();
+        checkpoint.eq(SakuraEpisodeEditor::getId, episodeEditorId);
+        checkpoint.eq(SakuraEpisodeEditor::getExportStatus, ComposeConstants.EXPORT_STATUS_COMPOSING);
+        checkpoint.eq(SakuraEpisodeEditor::getExportTaskId, runToken);
+        checkpoint.set(SakuraEpisodeEditor::getUpdateTime, new Date());
+        if (sakuraEpisodeEditorMapper.update(null, checkpoint) != 1) {
+            log.info("接口2 导出提交检查点失效, episodeEditorId={}, runToken={}", episodeEditorId, runToken);
+            throw new ServiceException("任务已停止");
+        }
+    }
+
+    private String voiceoverSubmissionScope(String batchId) {
+        return "voiceover:" + batchId;
+    }
+
+    private String exportSubmissionScope(Long episodeEditorId) {
+        return "export:" + episodeEditorId;
+    }
+
+    @Override
+    public void cancelVoiceover(ComposeStatusRequest request) {
+        if (Objects.isNull(request) || StrUtil.isBlank(request.getComposeBatchId())) {
+            throw new ServiceException("参数有误");
+        }
+        String batchId = request.getComposeBatchId().trim();
+        Long userId = SecurityUtils.getUserId();
+        List<SakuraAudioRecord> records = sakuraAudioRecordMapper.selectList(
+                Wrappers.<SakuraAudioRecord>lambdaQuery()
+                        .select(SakuraAudioRecord::getId, SakuraAudioRecord::getStatus)
+                        .eq(SakuraAudioRecord::getComposeBatchId, batchId)
+                        .eq(SakuraAudioRecord::getUserId, userId)
+                        .eq(SakuraAudioRecord::getDelFlag, DEL_FLAG_NORMAL));
+        if (CollectionUtil.isEmpty(records)) {
+            throw new ServiceException("批次不存在");
+        }
+        batchParentSubmissionGuard.execute(voiceoverSubmissionScope(batchId), () -> {
+            List<SakuraAudioRecord> lockedRecords = sakuraAudioRecordMapper.selectList(
+                    Wrappers.<SakuraAudioRecord>lambdaQuery()
+                            .select(SakuraAudioRecord::getId, SakuraAudioRecord::getStatus,
+                                    SakuraAudioRecord::getErrorMessage)
+                            .eq(SakuraAudioRecord::getComposeBatchId, batchId)
+                            .eq(SakuraAudioRecord::getUserId, userId)
+                            .eq(SakuraAudioRecord::getDelFlag, DEL_FLAG_NORMAL));
+            if (CollectionUtil.isEmpty(lockedRecords)) {
+                throw new ServiceException("批次不存在");
+            }
+            SakuraMediaTask composeTask = sakuraMediaTaskMapper.selectOne(
+                    Wrappers.<SakuraMediaTask>lambdaQuery()
+                            .select(SakuraMediaTask::getId, SakuraMediaTask::getStatus, SakuraMediaTask::getOssUrl)
+                            .eq(SakuraMediaTask::getComposeBatchId, batchId)
+                            .eq(SakuraMediaTask::getUserId, userId)
+                            .eq(SakuraMediaTask::getMediaType, ComposeConstants.MEDIA_TYPE_COMPOSE)
+                            .orderByDesc(SakuraMediaTask::getId)
+                            .last("LIMIT 1"));
+            boolean persistedFailed = lockedRecords.stream().anyMatch(record ->
+                    MediaTaskStatus.FAILED.name().equals(record.getStatus()));
+            if (persistedFailed
+                    || (Objects.nonNull(composeTask)
+                            && (MediaTaskStatus.FAILED.name().equals(composeTask.getStatus())
+                                    || (MediaTaskStatus.SUCCEEDED.name().equals(composeTask.getStatus())
+                                            && StrUtil.isNotBlank(composeTask.getOssUrl()))))) {
+                throw new ServiceException("任务已停止");
+            }
+
+            // 与合成触发共用批次锁：停止成功后监听器无法再创建或冻结合成媒体任务。
+            // 已经由供应商受理的 sakura_media_task 不伪造终态，仍由统一调度按真实结果结算。
+            LambdaUpdateWrapper<SakuraAudioRecord> cancelUpdate = Wrappers.lambdaUpdate();
+            cancelUpdate.eq(SakuraAudioRecord::getComposeBatchId, batchId);
+            cancelUpdate.eq(SakuraAudioRecord::getUserId, userId);
+            cancelUpdate.eq(SakuraAudioRecord::getDelFlag, DEL_FLAG_NORMAL);
+            cancelUpdate.and(wrapper -> wrapper.isNull(SakuraAudioRecord::getStatus)
+                    .or().ne(SakuraAudioRecord::getStatus, MediaTaskStatus.FAILED.name()));
+            cancelUpdate.set(SakuraAudioRecord::getStatus, MediaTaskStatus.FAILED.name());
+            cancelUpdate.set(SakuraAudioRecord::getErrorMessage, "用户取消");
+            cancelUpdate.set(SakuraAudioRecord::getUpdateTime, new Date());
+            cancelUpdate.set(SakuraAudioRecord::getUpdateBy, String.valueOf(userId));
+            sakuraAudioRecordMapper.update(null, cancelUpdate);
+            List<SakuraAudioRecord> cancelledRecords = sakuraAudioRecordMapper.selectList(
+                    Wrappers.<SakuraAudioRecord>lambdaQuery()
+                            .select(SakuraAudioRecord::getId)
+                            .eq(SakuraAudioRecord::getComposeBatchId, batchId)
+                            .eq(SakuraAudioRecord::getUserId, userId)
+                            .eq(SakuraAudioRecord::getStatus, MediaTaskStatus.FAILED.name())
+                            .eq(SakuraAudioRecord::getErrorMessage, "用户取消")
+                            .eq(SakuraAudioRecord::getDelFlag, DEL_FLAG_NORMAL)
+                            .last("LIMIT 1"));
+            if (CollectionUtil.isEmpty(cancelledRecords)) {
+                log.error("接口1 一键配音取消持久化失败, batchId={}, userId={}", batchId, userId);
+                throw new ServiceException("任务繁忙，请稍后");
+            }
+            try {
+                composeBatchStore.markFailed(batchId);
+                composeBatchStore.clearContext(batchId);
+            } catch (Exception markerEx) {
+                // sakura_audio_record 已是持久取消真源；Redis 只负责即时加速，失败不能伪报取消未成功。
+                log.warn("接口1 一键配音取消缓存清理异常, batchId={}, err={}",
+                        batchId, markerEx.getMessage());
+            }
+            composeBatchSlotCoordinator.releaseVoiceover(batchId);
+            log.info("接口1 一键配音已取消, batchId={}, userId={}", batchId, userId);
+            return Boolean.TRUE;
+        });
+    }
+
+    @Override
+    public void cancelExport(EpisodeExportStatusRequest request) {
+        if (Objects.isNull(request) || (Objects.isNull(request.getEpisodeEditorId())
+                && (Objects.isNull(request.getProjectId()) || Objects.isNull(request.getEpisodeId())))) {
+            throw new ServiceException("参数有误");
+        }
+        Long userId = SecurityUtils.getUserId();
+        LambdaQueryWrapper<SakuraEpisodeEditor> query = Wrappers.lambdaQuery();
+        query.select(SakuraEpisodeEditor::getId, SakuraEpisodeEditor::getExportStatus,
+                SakuraEpisodeEditor::getExportTaskId);
+        query.eq(SakuraEpisodeEditor::getUserId, userId);
+        query.eq(SakuraEpisodeEditor::getDelFlag, DEL_FLAG_NORMAL);
+        if (Objects.nonNull(request.getEpisodeEditorId())) {
+            query.eq(SakuraEpisodeEditor::getId, request.getEpisodeEditorId());
+        } else {
+            query.eq(SakuraEpisodeEditor::getProjectId, request.getProjectId());
+            query.eq(SakuraEpisodeEditor::getEpisodeId, request.getEpisodeId());
+        }
+        query.orderByDesc(SakuraEpisodeEditor::getId).last("LIMIT 1");
+        SakuraEpisodeEditor editor = sakuraEpisodeEditorMapper.selectOne(query);
+        if (Objects.isNull(editor)) {
+            throw new ServiceException("记录不存在");
+        }
+        batchParentSubmissionGuard.execute(exportSubmissionScope(editor.getId()), () -> {
+            SakuraEpisodeEditor lockedEditor = sakuraEpisodeEditorMapper.selectOne(
+                    Wrappers.<SakuraEpisodeEditor>lambdaQuery()
+                            .select(SakuraEpisodeEditor::getId, SakuraEpisodeEditor::getExportStatus,
+                                    SakuraEpisodeEditor::getExportTaskId)
+                            .eq(SakuraEpisodeEditor::getId, editor.getId())
+                            .eq(SakuraEpisodeEditor::getUserId, userId)
+                            .eq(SakuraEpisodeEditor::getDelFlag, DEL_FLAG_NORMAL)
+                            .last("LIMIT 1"));
+            if (Objects.isNull(lockedEditor)) {
+                throw new ServiceException("记录不存在");
+            }
+            LambdaUpdateWrapper<SakuraEpisodeEditor> cancel = Wrappers.lambdaUpdate();
+            cancel.eq(SakuraEpisodeEditor::getId, lockedEditor.getId());
+            cancel.eq(SakuraEpisodeEditor::getUserId, userId);
+            cancel.eq(SakuraEpisodeEditor::getExportStatus, ComposeConstants.EXPORT_STATUS_COMPOSING);
+            cancel.set(SakuraEpisodeEditor::getExportStatus, ComposeConstants.EXPORT_STATUS_FAILED);
+            // 保留 exportTaskId：已受理媒体任务继续真实终态，迟到回写因 exportStatus 非 COMPOSING 被幂等忽略。
+            cancel.set(SakuraEpisodeEditor::getErrorMsg, "用户取消");
+            cancel.set(SakuraEpisodeEditor::getUpdateTime, new Date());
+            cancel.set(SakuraEpisodeEditor::getUpdateBy, String.valueOf(userId));
+            if (sakuraEpisodeEditorMapper.update(null, cancel) != 1) {
+                throw new ServiceException("任务已停止");
+            }
+            composeBatchSlotCoordinator.releaseExport(
+                    lockedEditor.getId(), lockedEditor.getExportTaskId());
+            log.info("接口2 导出已取消, episodeEditorId={}, taskId={}",
+                    lockedEditor.getId(), lockedEditor.getExportTaskId());
+            return Boolean.TRUE;
+        });
+    }
+
+    /**
+     * 查询合成批次的配音记录。
+     * 查询字段精简：进度汇总 + 卡单自愈所需字段（新增使用字段时此处必须同步补充）。
+     *
+     * @param batchId 合成批次号
+     * @param userId  当前用户ID
+     * @return 配音记录列表
+     */
+    private List<SakuraAudioRecord> listComposeBatchAudioRecords(String batchId, Long userId) {
+        return sakuraAudioRecordMapper.selectList(
+                Wrappers.<SakuraAudioRecord>lambdaQuery()
+                        .select(SakuraAudioRecord::getId, SakuraAudioRecord::getStatus, SakuraAudioRecord::getErrorMessage,
+                                SakuraAudioRecord::getTtsMediaTaskId, SakuraAudioRecord::getCreateTime,
+                                SakuraAudioRecord::getUpdateTime)
+                        .eq(SakuraAudioRecord::getComposeBatchId, batchId)
+                        .eq(SakuraAudioRecord::getUserId, userId)
+                        .eq(SakuraAudioRecord::getDelFlag, DEL_FLAG_NORMAL));
+    }
+
+    /**
+     * 配音卡单自愈：配音记录停留 PROCESSING，但对应统一媒体任务其实已终态
+     * （事件在发布前进程重启等场景导致回填丢失），或派发任务丢失从未建成媒体任务。
+     * 任务成功 → 重发 OSS 持久化事件驱动 AudioRecordEventListener 回填 + ComposeAudioReadyListener 判齐（监听器幂等）；
+     * 任务失败 → 直接补写配音失败终态；
+     * 任务不存在 → 同批串行派发存在正常排队等待，以「派发活动锚点」（批内已建任务的最近更新时间，
+     * 无任务时为记录创建时间）静默超 {@value #VOICEOVER_STUCK_MS} 毫秒判定派发丢失，补写失败终态。
+     * 自愈属兜底增强，异常不阻断进度查询。
+     *
+     * @param audioRecords 本批配音记录
+     * @param userId       当前用户ID
+     * @return true=发生了自愈动作（调用方应重读记录）
+     */
+    private boolean selfHealStuckVoiceover(List<SakuraAudioRecord> audioRecords, Long userId) {
+        List<SakuraAudioRecord> processing = new ArrayList<>();
+        for (SakuraAudioRecord record : audioRecords) {
+            if (MediaTaskStatus.PROCESSING.name().equals(record.getStatus())) {
+                processing.add(record);
+            }
+        }
+        if (CollectionUtil.isEmpty(processing)) {
+            return false;
+        }
+        boolean healed = false;
+        try {
+            // 按整批记录反查媒体任务：既供逐条状态判定，也供计算派发线程最近活动锚点
+            Map<Long, SakuraMediaTask> taskByAudioRecordId = loadAudioMediaTasks(audioRecords);
+            // 派发活动锚点：批内已建任务的最大更新时间（同批串行派发，最近一次建任务/状态推进即线程活动证据）
+            long lastDispatchActivity = 0L;
+            for (SakuraMediaTask task : taskByAudioRecordId.values()) {
+                Date activity = Objects.nonNull(task.getUpdateTime()) ? task.getUpdateTime() : task.getCreateTime();
+                if (Objects.nonNull(activity)) {
+                    lastDispatchActivity = Math.max(lastDispatchActivity, activity.getTime());
+                }
+            }
+            long now = System.currentTimeMillis();
+            for (SakuraAudioRecord record : processing) {
+                SakuraMediaTask mediaTask = taskByAudioRecordId.get(record.getId());
+                if (Objects.nonNull(mediaTask)) {
+                    if (MediaTaskStatus.SUCCEEDED.name().equals(mediaTask.getStatus())
+                            && StrUtil.isNotBlank(mediaTask.getOssUrl())) {
+                        // 重发事件让 AudioRecordEventListener 回填、ComposeAudioReadyListener 判齐（均幂等）
+                        applicationEventPublisher.publishEvent(
+                                new MediaTaskOssPersistedEvent(this, mediaTask.getId(), mediaTask.getUserId()));
+                        healed = true;
+                        log.info("接口1 配音卡单自愈(任务已成功重发事件), audioRecordId={}, mediaTaskId={}",
+                                record.getId(), mediaTask.getId());
+                    } else if (MediaTaskStatus.FAILED.name().equals(mediaTask.getStatus())) {
+                        healed = writeVoiceoverFailed(record.getId()) || healed;
+                        log.info("接口1 配音卡单自愈为失败终态, audioRecordId={}, mediaTaskId={}",
+                                record.getId(), mediaTask.getId());
+                    }
+                    // 任务仍在跑：无需自愈
+                    continue;
+                }
+                // 无媒体任务：锚点取 max(记录创建时间, 派发活动锚点)——同批串行派发时后段正常排队不误杀，
+                // 锚点静默超阈值仍未建任务才判定派发丢失（进程重启/线程池丢弃），按失败收口
+                Date createTime = record.getCreateTime();
+                long anchor = Math.max(Objects.isNull(createTime) ? 0L : createTime.getTime(), lastDispatchActivity);
+                if (anchor > 0L && now - anchor > VOICEOVER_STUCK_MS) {
+                    healed = writeVoiceoverFailed(record.getId()) || healed;
+                    log.error("接口1 配音派发丢失自愈为失败终态, audioRecordId={}, createTime={}, userId={}",
+                            record.getId(), createTime, userId);
+                }
+            }
+        } catch (Exception ex) {
+            // 自愈属于兜底增强，异常不阻断进度查询
+            log.error("接口1 配音卡单自愈异常, userId={}", userId, ex);
+        }
+        return healed;
+    }
+
+    /**
+     * 批量反查配音记录对应的统一媒体任务（同记录多任务时保留最新一条）。
+     * 查询字段精简：自愈判定仅需终态、结果与活动时间字段（新增使用字段时此处必须同步补充）。
+     *
+     * @param records 待反查的配音记录
+     * @return 配音记录ID → 最新媒体任务
+     */
+    private Map<Long, SakuraMediaTask> loadAudioMediaTasks(List<SakuraAudioRecord> records) {
+        List<Long> recordIds = new ArrayList<>(records.size());
+        for (SakuraAudioRecord record : records) {
+            recordIds.add(record.getId());
+        }
+        List<SakuraMediaTask> tasks = sakuraMediaTaskMapper.selectList(
+                Wrappers.<SakuraMediaTask>lambdaQuery()
+                        .select(SakuraMediaTask::getId, SakuraMediaTask::getStatus, SakuraMediaTask::getOssUrl,
+                                SakuraMediaTask::getBizTaskId, SakuraMediaTask::getUserId,
+                                SakuraMediaTask::getCreateTime, SakuraMediaTask::getUpdateTime)
+                        .eq(SakuraMediaTask::getBizTaskType, ComposeConstants.BIZ_TASK_TYPE_AUDIO_RECORD)
+                        .in(SakuraMediaTask::getBizTaskId, recordIds)
+                        .orderByAsc(SakuraMediaTask::getId));
+        Map<Long, SakuraMediaTask> taskByAudioRecordId = new java.util.HashMap<>();
+        for (SakuraMediaTask task : tasks) {
+            // id 升序遍历、后写覆盖 → 每条配音记录保留最新任务
+            taskByAudioRecordId.put(task.getBizTaskId(), task);
+        }
+        return taskByAudioRecordId;
+    }
+
+    /**
+     * 配音失败终态补偿回写（条件更新：仅 PROCESSING 可置，避免覆盖并发回填的终态）。
+     *
+     * @param audioRecordId 配音记录ID
+     * @return true=本次写入生效
+     */
+    private boolean writeVoiceoverFailed(Long audioRecordId) {
+        LambdaUpdateWrapper<SakuraAudioRecord> update = new LambdaUpdateWrapper<>();
+        update.eq(SakuraAudioRecord::getId, audioRecordId);
+        update.eq(SakuraAudioRecord::getStatus, MediaTaskStatus.PROCESSING.name());
+        update.set(SakuraAudioRecord::getStatus, MediaTaskStatus.FAILED.name());
+        update.set(SakuraAudioRecord::getErrorMessage, "配音失败");
+        update.set(SakuraAudioRecord::getUpdateTime, new Date());
+        return sakuraAudioRecordMapper.update(null, update) > 0;
+    }
+
+    /**
+     * 合成未触发自愈：本批配音已全部成功但合成任务迟迟未落库。
+     * 静默超 {@value #VOICEOVER_STUCK_MS} 毫秒后重发最后一条成功配音的 OSS 持久化事件，
+     * 由监听器在 watchdog guard 内按持久化 COMPOSE 任务幂等触发。
+     * 自愈属兜底增强，异常不阻断进度查询。
+     *
+     * @param batchId      合成批次号
+     * @param audioRecords 本批配音记录（已全部成功）
+     * @param userId       当前用户ID
+     */
+    private void selfHealComposeNotTriggered(String batchId, List<SakuraAudioRecord> audioRecords, Long userId) {
+        try {
+            long lastUpdated = 0L;
+            SakuraAudioRecord lastRecord = null;
+            for (SakuraAudioRecord record : audioRecords) {
+                Date anchor = Objects.nonNull(record.getUpdateTime()) ? record.getUpdateTime() : record.getCreateTime();
+                if (Objects.nonNull(anchor) && anchor.getTime() >= lastUpdated) {
+                    lastUpdated = anchor.getTime();
+                    lastRecord = record;
+                }
+            }
+            if (Objects.isNull(lastRecord) || System.currentTimeMillis() - lastUpdated <= VOICEOVER_STUCK_MS) {
+                // 正常触发窗口内：等待事件链完成，不做自愈
+                return;
+            }
+            if (Objects.nonNull(lastRecord.getTtsMediaTaskId())) {
+                // Redis triggered 仅作加速；持久 COMPOSE 任务才是幂等真源，标记丢失或残留均重发事件自愈。
+                applicationEventPublisher.publishEvent(new MediaTaskOssPersistedEvent(
+                        this, lastRecord.getTtsMediaTaskId(), userId));
+                log.info("接口1 合成未触发自愈(重发判齐事件), batchId={}, mediaTaskId={}",
+                        batchId, lastRecord.getTtsMediaTaskId());
+                return;
+            }
+            // 无任务关联无法重发判齐事件（异常历史数据）：持久化失败后再写 Redis 加速标记。
+            persistVoiceoverBatchFailed(batchId, "合成失败");
+            composeBatchStore.markFailed(batchId);
+            composeBatchSlotCoordinator.releaseVoiceover(batchId);
+            log.error("接口1 合成未触发且无任务关联,自愈为失败, batchId={}", batchId);
+        } catch (Exception ex) {
+            log.error("接口1 合成未触发自愈异常, batchId={}", batchId, ex);
+        }
+    }
+
+    /**
+     * 解析默认音色：voiceLibraryId 优先反查音色库，其次 voiceModelId+timbreCode 老入参；双空返回 null。
+     *
+     * @param voiceover  配音参数
+     * @param voiceCache 音色库解析缓存（同批同音色只查一次）
+     * @return 默认音色；未配置返回 null（此时要求每个有台词段都带逐段音色）
+     */
+    private ResolvedSegmentVoice resolveDefaultVoice(VoiceoverParam voiceover,
+                                                     Map<Long, ResolvedSegmentVoice> voiceCache) {
+        if (Objects.nonNull(voiceover.getVoiceLibraryId())) {
+            return resolveVoiceLibrary(voiceover.getVoiceLibraryId(), voiceCache);
+        }
+        if (Objects.nonNull(voiceover.getVoiceModelId()) && StrUtil.isNotBlank(voiceover.getTimbreCode())) {
+            AiModelConfigVo modelConfig = resolveVoiceModel(voiceover.getVoiceModelId());
+            return new ResolvedSegmentVoice(modelConfig, voiceover.getTimbreCode(),
+                    null, voiceover.getVoiceModelId(), null, null, null, null);
+        }
+        return null;
+    }
+
+    /**
+     * 解析某段实际音色：voiceLibraryIds[index] 非空用指定音色，否则回落默认音色；双空返回 null。
+     *
+     * @param voiceover    配音参数
+     * @param index        段下标
+     * @param defaultVoice 默认音色（可为 null）
+     * @param voiceCache   音色库解析缓存
+     * @return 该段音色；解析不出返回 null
+     */
+    private ResolvedSegmentVoice resolveSegmentVoice(VoiceoverParam voiceover, int index,
+                                                     ResolvedSegmentVoice defaultVoice,
+                                                     Map<Long, ResolvedSegmentVoice> voiceCache) {
+        List<Long> voiceLibraryIds = voiceover.getVoiceLibraryIds();
+        if (Objects.nonNull(voiceLibraryIds) && index < voiceLibraryIds.size()
+                && Objects.nonNull(voiceLibraryIds.get(index))) {
+            return resolveVoiceLibrary(voiceLibraryIds.get(index), voiceCache);
+        }
+        return defaultVoice;
+    }
+
+    /**
+     * 反查音色库 → 段音色（带缓存）：校验音色启用未删未下架、所属模型可用。
+     *
+     * @param voiceLibraryId 音色库ID
+     * @param voiceCache     解析缓存
+     * @return 段音色
+     */
+    private ResolvedSegmentVoice resolveVoiceLibrary(Long voiceLibraryId,
+                                                     Map<Long, ResolvedSegmentVoice> voiceCache) {
+        ResolvedSegmentVoice cached = voiceCache.get(voiceLibraryId);
+        if (Objects.nonNull(cached)) {
+            return cached;
+        }
+        SakuraAiVoiceLibrary voice = sakuraAiVoiceLibraryService.getById(voiceLibraryId);
+        if (Objects.isNull(voice) || !Objects.equals(DEL_FLAG_NORMAL, voice.getDelFlag())
+                || !Objects.equals(VOICE_STATUS_NORMAL, voice.getStatus())) {
+            log.error("接口1 音色库记录不可用, voiceLibraryId={}", voiceLibraryId);
+            throw new ServiceException("音色不可用");
+        }
+        if (Objects.nonNull(voice.getOfflineTime())
+                && voice.getOfflineTime().getTime() <= System.currentTimeMillis()) {
+            log.error("接口1 音色已下架, voiceLibraryId={}, offlineTime={}", voiceLibraryId, voice.getOfflineTime());
+            throw new ServiceException("音色已下架");
+        }
+        if (StrUtil.isBlank(voice.getVoiceCode())) {
+            log.error("接口1 音色编码为空, voiceLibraryId={}", voiceLibraryId);
+            throw new ServiceException("音色不可用");
+        }
+        AiModelConfigVo modelConfig = resolveVoiceModel(voice.getModelId());
+        ResolvedSegmentVoice resolved = new ResolvedSegmentVoice(
+                modelConfig, voice.getVoiceCode(), voice.getId(), voice.getModelId(), voice.getLanguage(),
+                Objects.isNull(voice.getDefaultPitch()) ? null : voice.getDefaultPitch().intValue(),
+                voice.getAudioFormat(), voice.getSampleRate());
+        voiceCache.put(voiceLibraryId, resolved);
+        return resolved;
+    }
+
+    /**
+     * 构建配音业务记录（写 compose_batch_id，只存相对路径）。
+     *
+     * @param scope          经分镜视频校验后的项目/剧集归属
+     * @param genRecord      分镜视频记录
+     * @param segmentVoice   该段实际音色
+     * @param ttsText        配音文本
+     * @param userId         用户ID
+     * @param composeBatchId 合成批次号
+     * @return 配音记录
+     */
+    private SakuraAudioRecord buildAudioRecord(VoiceoverScope scope, SakuraGenRecord genRecord,
+                                            ResolvedSegmentVoice segmentVoice, String ttsText,
+                                            Long userId, String composeBatchId) {
+        SakuraAudioRecord record = new SakuraAudioRecord();
+        record.setUserId(userId);
+        record.setProjectId(scope.projectId());
+        record.setEpisodeId(scope.episodeId());
+        record.setStoryboardId(genRecord.getStoryboardId());
+        record.setAudioSource(AUDIO_SOURCE_AI);
+        record.setTtsText(ttsText);
+        record.setVoiceModelId(segmentVoice.voiceModelId);
+        record.setVoiceLibraryId(segmentVoice.voiceLibraryId);
+        record.setTimbreCode(segmentVoice.voiceCode);
+        record.setEnableLipSync(0);
+        record.setStatus(MediaTaskStatus.PROCESSING.name());
+        record.setComposeBatchId(composeBatchId);
+        record.setDelFlag(DEL_FLAG_NORMAL);
+        record.setCreateBy(String.valueOf(userId));
+        record.setCreateTime(new Date());
+        return record;
+    }
+
+    /**
+     * 发起单条配音（异步派发，自包含）。
+     *
+     * @param audioRecord 已入库的配音记录
+     * @param ttsText     配音文本
+     * @param voice       该段实际音色及默认音频参数
+     * @param userId      用户ID
+     */
+    private boolean dispatchVoiceover(SakuraAudioRecord audioRecord, String ttsText,
+                                      ResolvedSegmentVoice voice, Long userId) {
+        if (composeBatchStore.isFailed(audioRecord.getComposeBatchId())) {
+            return false;
+        }
+        MediaAudioGenerateRequest mediaReq = new MediaAudioGenerateRequest();
+        mediaReq.setUserId(userId);
+        mediaReq.setProjectId(audioRecord.getProjectId());
+        mediaReq.setEpisodeId(audioRecord.getEpisodeId());
+        mediaReq.setModelName(voice.modelConfig.getModelCode());
+        mediaReq.setCapabilityCode(voice.modelConfig.getCapabilityCode());
+        mediaReq.setTtsText(ttsText);
+        mediaReq.setVoiceCode(voice.voiceCode);
+        mediaReq.setLanguage(voice.language);
+        mediaReq.setPitch(voice.defaultPitch);
+        mediaReq.setAudioFormat(voice.audioFormat);
+        mediaReq.setSampleRate(voice.sampleRate);
+        mediaReq.setBizTaskId(audioRecord.getId());
+        mediaReq.setBizTaskType(ComposeConstants.BIZ_TASK_TYPE_AUDIO_RECORD);
+        try {
+            return Boolean.TRUE.equals(batchParentSubmissionGuard.execute(
+                    voiceoverSubmissionScope(audioRecord.getComposeBatchId()), () -> {
+                        if (!isVoiceoverSubmissionActive(audioRecord, userId)) {
+                            return Boolean.FALSE;
+                        }
+                        mediaGenerationService.generateAudio(mediaReq);
+                        return Boolean.TRUE;
+                    }));
+        } catch (Exception ex) {
+            // 异步派发失败：仅标记本条 FAILED（不抛异常，避免误伤同批其它段）；
+            // 冻结积分由 generateAudio 内部失败路径自行退回，无跨段泄漏
+            log.error("接口1 配音提交失败, audioRecordId={}", audioRecord.getId(), ex);
+            LambdaUpdateWrapper<SakuraAudioRecord> update = new LambdaUpdateWrapper<>();
+            update.eq(SakuraAudioRecord::getId, audioRecord.getId());
+            update.eq(SakuraAudioRecord::getStatus, MediaTaskStatus.PROCESSING.name());
+            update.set(SakuraAudioRecord::getStatus, MediaTaskStatus.FAILED.name());
+            update.set(SakuraAudioRecord::getErrorMessage, "配音失败");
+            update.set(SakuraAudioRecord::getUpdateBy, String.valueOf(userId));
+            update.set(SakuraAudioRecord::getUpdateTime, new Date());
+            sakuraAudioRecordMapper.update(null, update);
+            composeBatchStore.markFailed(audioRecord.getComposeBatchId());
+            composeBatchSlotCoordinator.releaseVoiceover(audioRecord.getComposeBatchId());
+            return false;
+        }
+    }
+
+    /** submission guard 内持久复核本条一键配音仍可提交。 */
+    private boolean isVoiceoverSubmissionActive(SakuraAudioRecord audioRecord, Long userId) {
+        if (Objects.isNull(audioRecord) || Objects.isNull(audioRecord.getId())
+                || StrUtil.isBlank(audioRecord.getComposeBatchId())
+                || composeBatchStore.isFailed(audioRecord.getComposeBatchId())) {
+            return false;
+        }
+        Long active = sakuraAudioRecordMapper.selectCount(
+                Wrappers.<SakuraAudioRecord>lambdaQuery()
+                        .eq(SakuraAudioRecord::getId, audioRecord.getId())
+                        .eq(SakuraAudioRecord::getComposeBatchId, audioRecord.getComposeBatchId())
+                        .eq(SakuraAudioRecord::getUserId, userId)
+                        .eq(SakuraAudioRecord::getStatus, MediaTaskStatus.PROCESSING.name())
+                        .eq(SakuraAudioRecord::getDelFlag, DEL_FLAG_NORMAL));
+        return Objects.nonNull(active) && active == 1L;
+    }
+
+    /**
+     * 事务提交后异步派发本批配音（每条携带各自的段级音色）。
+     * 同批串行派发（单后台线程逐条执行）是刻意设计：每条配音的预冻结要抢同一用户的账户锁
+     * （{@code account:lock:userId}，同用户强制串行、等待上限 10 秒），并发派发只会让 N 条同时
+     * 空耗锁等待——排在后面的段等满上限直接"系统繁忙"失败，且 N 个并发 REQUIRES_NEW 事务还会
+     * 争抢连接池放大持锁时长；串行后锁基本零竞争，单条冻结毫秒级完成，同时天然保护上游 TTS 提交频率。
+     *
+     * @param jobs   待派发配音任务
+     * @param userId 用户ID
+     */
+    private void registerVoiceoverDispatch(List<VoiceoverDispatchJob> jobs, Long userId) {
+        if (CollectionUtil.isEmpty(jobs)) {
+            return;
+        }
+        // 提交后统一派发的动作：整批提交一个后台任务、任务内逐条串行发起；
+        // 任一提交失败后整批已不再合成，仅收口尚未派发的业务记录，不伪造已受理媒体任务终态。
+        Runnable dispatchSequentially = () -> {
+            for (int index = 0; index < jobs.size(); index++) {
+                VoiceoverDispatchJob job = jobs.get(index);
+                if (composeBatchStore.isFailed(job.audioRecord.getComposeBatchId())) {
+                    closeUndispatchedVoiceovers(jobs.subList(index, jobs.size()), userId);
+                    break;
+                }
+                if (!dispatchVoiceover(job.audioRecord, job.ttsText, job.voice, userId)) {
+                    closeUndispatchedVoiceovers(jobs.subList(index + 1, jobs.size()), userId);
+                    break;
+                }
+            }
+        };
+        Runnable dispatchAll = () -> {
+            try {
+                threadPoolTaskExecutor.execute(dispatchSequentially);
+            } catch (Exception rejectEx) {
+                // 异步受理接口禁止在提交线程降级执行整批 TTS，否则会阻塞 HTTP 直至网关超时并诱发重复提交。
+                log.error("接口1 配音派发被线程池拒绝, jobs={}", jobs.size(), rejectEx);
+                markVoiceoverDispatchRejected(jobs, userId);
+            }
+        };
+        // 事务进行中：注册 afterCommit，提交成功后才派发；回滚则不触发
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    dispatchAll.run();
+                }
+            });
+        } else {
+            // 兜底：无事务上下文（理论上本方法始终在 @Transactional 内调用）
+            dispatchAll.run();
+        }
+    }
+
+    /**
+     * 线程池拒绝时把尚未派发的业务记录收口为失败。此时尚未创建统一媒体任务，也未发生预冻结，
+     * 进度查询可立即返回失败，用户可安全重试。
+     */
+    private void markVoiceoverDispatchRejected(List<VoiceoverDispatchJob> jobs, Long userId) {
+        List<Long> audioRecordIds = jobs.stream()
+                .map(job -> job.audioRecord.getId())
+                .filter(Objects::nonNull)
+                .toList();
+        if (CollectionUtil.isEmpty(audioRecordIds)) {
+            return;
+        }
+        try {
+            LambdaUpdateWrapper<SakuraAudioRecord> update = new LambdaUpdateWrapper<>();
+            update.in(SakuraAudioRecord::getId, audioRecordIds);
+            update.eq(SakuraAudioRecord::getStatus, MediaTaskStatus.PROCESSING.name());
+            update.set(SakuraAudioRecord::getStatus, MediaTaskStatus.FAILED.name());
+            update.set(SakuraAudioRecord::getErrorMessage, "提交失败");
+            update.set(SakuraAudioRecord::getUpdateBy, String.valueOf(userId));
+            update.set(SakuraAudioRecord::getUpdateTime, new Date());
+            sakuraAudioRecordMapper.update(null, update);
+            String batchId = jobs.get(0).audioRecord.getComposeBatchId();
+            composeBatchStore.markFailed(batchId);
+            composeBatchSlotCoordinator.releaseVoiceover(batchId);
+        } catch (Exception ex) {
+            log.error("接口1 配音派发拒绝收口失败, audioRecordIds={}", audioRecordIds, ex);
+        }
+    }
+
+    private void closeUndispatchedVoiceovers(List<VoiceoverDispatchJob> jobs, Long userId) {
+        List<Long> audioRecordIds = jobs.stream()
+                .map(job -> job.audioRecord.getId())
+                .filter(Objects::nonNull)
+                .toList();
+        if (CollectionUtil.isEmpty(audioRecordIds)) {
+            return;
+        }
+        LambdaUpdateWrapper<SakuraAudioRecord> update = Wrappers.lambdaUpdate();
+        update.in(SakuraAudioRecord::getId, audioRecordIds);
+        update.eq(SakuraAudioRecord::getStatus, MediaTaskStatus.PROCESSING.name());
+        update.set(SakuraAudioRecord::getStatus, MediaTaskStatus.FAILED.name());
+        update.set(SakuraAudioRecord::getErrorMessage, "提交失败");
+        update.set(SakuraAudioRecord::getUpdateBy, String.valueOf(userId));
+        update.set(SakuraAudioRecord::getUpdateTime, new Date());
+        sakuraAudioRecordMapper.update(null, update);
+    }
+
+    private void persistVoiceoverBatchFailed(String batchId, String errorMessage) {
+        LambdaUpdateWrapper<SakuraAudioRecord> update = Wrappers.lambdaUpdate();
+        update.eq(SakuraAudioRecord::getComposeBatchId, batchId);
+        update.set(SakuraAudioRecord::getStatus, MediaTaskStatus.FAILED.name());
+        update.set(SakuraAudioRecord::getErrorMessage, errorMessage);
+        update.set(SakuraAudioRecord::getUpdateTime, new Date());
+        sakuraAudioRecordMapper.update(null, update);
+    }
+
+    /**
+     * 组装接口2 的 ComposeCommand（前端分组 URL → 规范化前的全 URL）。
+     *
+     * @param request 接口2 入参
+     * @param editor  剧集剪辑记录
+     * @param userId  用户ID
+     * @return 合成指令
+     */
+    private ComposeCommand buildExportCommand(EpisodeExportRequest request, SakuraEpisodeEditor editor, Long userId) {
+        ComposeCommand command = new ComposeCommand();
+        command.setUserId(userId);
+        command.setProjectId(Objects.nonNull(request.getProjectId()) ? request.getProjectId() : editor.getProjectId());
+        command.setEpisodeId(Objects.nonNull(request.getEpisodeId()) ? request.getEpisodeId() : editor.getEpisodeId());
+        command.setResolution(request.getResolution());
+        // 与接口1 同口径按配音对齐：段长取视频/配音较长者，配音超长时本段画面按原速循环补齐，
+        // 否则配音长于画面的段会挤乱后续段（音画错位+片尾黑屏）；无配音段不受影响（段长=视频）
+        command.setAlignStrategy(ComposeConstants.ALIGN_STRATEGY_AUDIO);
+        command.setGlobalBgmUrl(StrUtil.isBlank(request.getGlobalBgmUrl())
+                ? null : mediaUrlResolver.toFullUrl(request.getGlobalBgmUrl()));
+        command.setCallbackCategory(ComposeConstants.CALLBACK_EPISODE_EDITOR);
+        command.setCallbackRecordId(editor.getId());
+
+        List<ComposeGroup> groups = new ArrayList<>();
+        for (ComposeGroupDto dto : request.getGroups()) {
+            ComposeGroup group = new ComposeGroup();
+            group.setVideoUrls(toFullUrls(dto.getVideoUrls()));
+            group.setVideoDurations(dto.getVideoDurations());
+            group.setAudioUrls(toFullUrls(dto.getAudioUrls()));
+            group.setAudioDurations(dto.getAudioDurations());
+            // 字幕统一格式化（幂等）：兜底剥掉 [角色_形象] 等结构标记，输出「人物：说的话」
+            group.setSubtitle(DialogueSubtitleFormatter.format(dto.getSubtitle()));
+            group.setSubtitleCues(dto.getSubtitleCues());
+            group.setBgmUrl(StrUtil.isBlank(dto.getBgmUrl()) ? null : mediaUrlResolver.toFullUrl(dto.getBgmUrl()));
+            groups.add(group);
+        }
+        command.setGroups(groups);
+        return command;
+    }
+
+    /**
+     * 批量 DB 相对路径 → 完整 URL。
+     *
+     * @param urls 原 URL 列表
+     * @return 完整 URL 列表
+     */
+    private List<String> toFullUrls(List<String> urls) {
+        if (CollectionUtil.isEmpty(urls)) {
+            return urls;
+        }
+        List<String> result = new ArrayList<>(urls.size());
+        for (String url : urls) {
+            result.add(mediaUrlResolver.toFullUrl(url));
+        }
+        return result;
+    }
+}

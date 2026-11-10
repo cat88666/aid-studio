@@ -1,0 +1,308 @@
+package com.sakura.sakura.controller;
+
+import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import cn.hutool.core.util.StrUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import com.sakura.common.annotation.Log;
+import com.sakura.common.constant.CacheConstants;
+import com.sakura.common.core.controller.BaseController;
+import com.sakura.common.core.domain.AjaxResult;
+import com.sakura.common.core.domain.entity.SysUser;
+import com.sakura.common.core.domain.model.LoginUser;
+import com.sakura.common.core.redis.RedisCache;
+import com.sakura.common.enums.BusinessType;
+import com.sakura.sakura.domain.SakuraUserProfile;
+import com.sakura.sakura.domain.dto.BalanceAdjustDto;
+import com.sakura.sakura.domain.vo.SakuraUserProfileVo;
+import com.sakura.sakura.service.ISakuraUserProfileService;
+import com.sakura.billing.service.IAccountUpdateService;
+import com.sakura.core.service.ISysUserService;
+import com.sakura.user.dto.AdminUserCreateRequest;
+import com.sakura.user.service.IAdminUserCreateService;
+import com.sakura.common.utils.poi.ExcelUtil;
+import com.sakura.common.core.page.TableDataInfo;
+
+/**
+ * 用户扩展信息Controller
+ *
+ * @author 视觉AID
+ */
+@Slf4j
+@RestController
+@RequestMapping("/sakura/extenduserprofile")
+public class SakuraUserProfileController extends BaseController
+{
+    @Autowired
+    private ISakuraUserProfileService sakuraUserProfileService;
+
+    /** 统一账户变更执行器：余额调整复用计费模块，自动写流水（不在本类直接改余额） */
+    @Autowired
+    private IAccountUpdateService accountUpdateService;
+
+    /** 系统用户服务：复用状态变更 / 逻辑删除能力（sys_user） */
+    @Autowired
+    private ISysUserService userService;
+
+    /** C 端用户创建服务：统一创建系统账号并初始化用户扩展信息 */
+    @Autowired
+    private IAdminUserCreateService adminUserCreateService;
+
+    /** Redis 缓存：用于扫描并清理在线会话 token，实现"踢下线" */
+    @Autowired
+    private RedisCache redisCache;
+
+    /**
+     * 查询用户扩展信息列表（联表 sys_user，返回昵称/手机号/状态等聚合信息）
+     */
+    @PreAuthorize("@ss.hasPermi('sakura:extenduserprofile:list')")
+    @GetMapping("/list")
+    public TableDataInfo list(SakuraUserProfileVo query)
+    {
+        startPage();
+        List<SakuraUserProfileVo> list = sakuraUserProfileService.selectUserProfileVoList(query);
+        return getDataTable(list);
+    }
+
+    /**
+     * 管理员调整用户余额（增加/扣减）。
+     * 统一走计费模块账户变更执行器：userId 级锁内执行，自动写入余额变动流水（changeType=admin_adjust）。
+     * 扣减时校验余额充足，不足返回"余额不足"。请求体使用对象接参，禁止使用 Map。
+     *
+     * @param dto 余额调整请求（userId/amount/adjustType/reason）
+     * @return 调整后结果提示
+     */
+    @PreAuthorize("@ss.hasPermi('sakura:extenduserprofile:edit')")
+    @Log(title = "用户余额调整", businessType = BusinessType.UPDATE)
+    @PostMapping("/adjustBalance")
+    public AjaxResult adjustBalance(@RequestBody BalanceAdjustDto dto)
+    {
+        // 入参校验：用户、金额、方向必填
+        if (Objects.isNull(dto) || Objects.isNull(dto.getUserId()))
+        {
+            log.info("余额调整缺少用户ID");
+            return AjaxResult.error("参数缺失");
+        }
+        if (Objects.isNull(dto.getAmount()) || dto.getAmount().signum() <= 0)
+        {
+            log.info("余额调整金额非法, userId={}, amount={}", dto.getUserId(), dto.getAmount());
+            return AjaxResult.error("金额有误");
+        }
+        if (StrUtil.isBlank(dto.getAdjustType()))
+        {
+            log.info("余额调整方向缺失, userId={}", dto.getUserId());
+            return AjaxResult.error("方向不能为空");
+        }
+        // 方向决定正负：add 增加 / deduct 扣减
+        boolean isAdd = Objects.equals("add", dto.getAdjustType());
+        boolean isDeduct = Objects.equals("deduct", dto.getAdjustType());
+        if (!isAdd && !isDeduct)
+        {
+            log.info("余额调整方向非法, userId={}, adjustType={}", dto.getUserId(), dto.getAdjustType());
+            return AjaxResult.error("方向不支持");
+        }
+        BigDecimal delta = isAdd ? dto.getAmount() : dto.getAmount().negate();
+        // 幂等追踪号：管理员操作流水号
+        String traceId = "admin_adjust_" + UUID.randomUUID().toString().replace("-", "");
+        // 业务描述：管理员 + 原因，写入流水便于审计
+        String bizName = "管理员调整" + (StrUtil.isBlank(dto.getReason()) ? "" : "：" + dto.getReason());
+        accountUpdateService.adminAdjust(dto.getUserId(), delta, traceId, bizName);
+        return AjaxResult.success("调整成功");
+    }
+
+    /**
+     * 封禁 / 解封用户（变更 sys_user 状态）。
+     * status="1"（停用=封禁）时，登录侧已校验状态会阻止其再次登录（见 C 端登录策略），
+     * 这里额外清理其在线会话 token，实现"立即踢下线"；status="0" 仅恢复状态。
+     *
+     * @param body 请求体（userId 必填，status 必填：0正常 1停用）
+     */
+    @PreAuthorize("@ss.hasPermi('sakura:extenduserprofile:edit')")
+    @Log(title = "用户封禁状态", businessType = BusinessType.UPDATE)
+    @PutMapping("/changeStatus")
+    public AjaxResult changeStatus(@RequestBody SysUser body)
+    {
+        if (Objects.isNull(body) || Objects.isNull(body.getUserId()))
+        {
+            return AjaxResult.error("参数缺失");
+        }
+        if (!Objects.equals("0", body.getStatus()) && !Objects.equals("1", body.getStatus()))
+        {
+            return AjaxResult.error("状态不支持");
+        }
+        SysUser update = new SysUser();
+        update.setUserId(body.getUserId());
+        update.setStatus(body.getStatus());
+        int rows = userService.updateUserStatus(update);
+        // 封禁时立即踢下线
+        if (rows > 0 && Objects.equals("1", body.getStatus()))
+        {
+            int kicked = kickOfflineByUserId(body.getUserId());
+            log.info("用户封禁并踢下线, userId={}, kickedSessions={}", body.getUserId(), kicked);
+        }
+        return toAjax(rows);
+    }
+
+    /**
+     * 删除用户（管理员）。
+     * 采用逻辑删除（sys_user.del_flag=2 + sakura_user_profile.del_flag=2），并立即踢下线。
+     * 逻辑删除后登录侧校验 delFlag 会阻止该账号再次登录，余额/订单等历史数据保留以备审计。
+     *
+     * @param userId 目标用户ID
+     */
+    @PreAuthorize("@ss.hasPermi('sakura:extenduserprofile:remove')")
+    @Log(title = "删除用户", businessType = BusinessType.DELETE)
+    @DeleteMapping("/user/{userId}")
+    public AjaxResult deleteUser(@PathVariable("userId") Long userId)
+    {
+        if (Objects.isNull(userId))
+        {
+            return AjaxResult.error("参数缺失");
+        }
+        // 先踢下线，再逻辑删除，避免删除后会话仍可短暂访问
+        int kicked = kickOfflineByUserId(userId);
+        // 逻辑删除扩展信息（del_flag=2）
+        SakuraUserProfile profile = sakuraUserProfileService.getByUserId(userId);
+        if (Objects.nonNull(profile))
+        {
+            SakuraUserProfile upd = new SakuraUserProfile();
+            upd.setId(profile.getId());
+            upd.setDelFlag("2");
+            sakuraUserProfileService.updateSakuraUserProfile(upd);
+        }
+        // 逻辑删除用户（del_flag=2）
+        int rows = userService.deleteUserById(userId);
+        log.info("管理员删除用户, userId={}, kickedSessions={}", userId, kicked);
+        return toAjax(rows);
+    }
+
+    /**
+     * 按用户ID清理其全部在线会话 token（踢下线）。
+     * 与管理端在线用户监控一致，扫描 {@code login_tokens:*}，反序列化为 LoginUser 后按 userId 匹配并删除。
+     *
+     * @param userId 目标用户ID
+     * @return 清理的会话数量
+     */
+    private int kickOfflineByUserId(Long userId)
+    {
+        if (Objects.isNull(userId))
+        {
+            return 0;
+        }
+        int count = 0;
+        try
+        {
+            Collection<String> keys = redisCache.keys(CacheConstants.LOGIN_TOKEN_KEY + "*");
+            if (Objects.isNull(keys) || keys.isEmpty())
+            {
+                return 0;
+            }
+            for (String key : keys)
+            {
+                LoginUser loginUser = redisCache.getCacheObject(key);
+                if (Objects.nonNull(loginUser)
+                        && Objects.nonNull(loginUser.getUserId())
+                        && Objects.equals(userId, loginUser.getUserId()))
+                {
+                    redisCache.deleteObject(key);
+                    count++;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            log.warn("踢下线清理 token 异常, userId={}, err={}", userId, e.getMessage());
+        }
+        return count;
+    }
+
+    /**
+     * 导出用户扩展信息列表
+     */
+    @PreAuthorize("@ss.hasPermi('sakura:extenduserprofile:export')")
+    @Log(title = "用户扩展信息", businessType = BusinessType.EXPORT)
+    @PostMapping("/export")
+    public void export(HttpServletResponse response, SakuraUserProfile sakuraUserProfile)
+    {
+        List<SakuraUserProfile> list = sakuraUserProfileService.selectSakuraUserProfileList(sakuraUserProfile);
+        ExcelUtil<SakuraUserProfile> util = new ExcelUtil<SakuraUserProfile>(SakuraUserProfile.class);
+        util.exportExcel(response, list, "用户扩展信息数据");
+    }
+
+    /**
+     * 获取用户扩展信息详细信息
+     */
+    @PreAuthorize("@ss.hasPermi('sakura:extenduserprofile:query')")
+    @GetMapping(value = "/{id}")
+    public AjaxResult getInfo(@PathVariable("id") Long id)
+    {
+        return success(sakuraUserProfileService.selectSakuraUserProfileById(id));
+    }
+
+    /**
+     * 新增 C 端用户。
+     * 邮箱和手机号必须二选一；系统自动生成初始密码，并通过 data 返回一次供管理员复制。
+     * 创建过程复用系统用户服务，事务内同步初始化用户扩展信息、余额和默认会员数据。
+     *
+     * @param request 用户联系方式
+     * @return 用户账号和一次性初始密码
+     */
+    @PreAuthorize("@ss.hasPermi('sakura:extenduserprofile:add')")
+    @Log(title = "新增 C 端用户", businessType = BusinessType.INSERT, isSaveResponseData = false)
+    @PostMapping
+    public AjaxResult add(@Valid @RequestBody AdminUserCreateRequest request)
+    {
+        return success(adminUserCreateService.createUser(request, getUsername()));
+    }
+
+    /**
+     * 修改用户扩展信息
+     * 敏感字段（余额/冻结/实名/会员等级/累计充值消耗）禁止 UI 篡改，
+     * 仅允许修改非敏感字段（如备注、性别等）。
+     */
+    @PreAuthorize("@ss.hasPermi('sakura:extenduserprofile:edit')")
+    @Log(title = "用户扩展信息", businessType = BusinessType.UPDATE)
+    @PutMapping
+    public AjaxResult edit(@RequestBody SakuraUserProfile sakuraUserProfile)
+    {
+        // 敏感字段置 null，防止被一并 update 写入（MP 默认策略不更新 null 字段）
+        sakuraUserProfile.setBalance(null);
+        sakuraUserProfile.setFrozenBalance(null);
+        sakuraUserProfile.setIsReal(null);
+        sakuraUserProfile.setRealName(null);
+        sakuraUserProfile.setIdCard(null);
+        sakuraUserProfile.setMemberLevel(null);
+        sakuraUserProfile.setMemberExpireTime(null);
+        sakuraUserProfile.setTotalRecharge(null);
+        sakuraUserProfile.setTotalConsumption(null);
+        sakuraUserProfile.setUserId(null);
+        return toAjax(sakuraUserProfileService.updateSakuraUserProfile(sakuraUserProfile));
+    }
+
+    /**
+     * 删除用户扩展信息
+     * 禁止物理删除用户扩展信息。
+     */
+    @PreAuthorize("@ss.hasPermi('sakura:extenduserprofile:remove')")
+    @Log(title = "用户扩展信息", businessType = BusinessType.DELETE)
+	@DeleteMapping("/{ids}")
+    public AjaxResult remove(@PathVariable Long[] ids)
+    {
+        return AjaxResult.error(403, "用户扩展信息禁止手动删除");
+    }
+}

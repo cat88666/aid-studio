@@ -1,0 +1,32 @@
+package com.sakura.rps.service.impl;
+
+import com.sakura.rps.queue.BatchTaskExecutionRejectedException;
+
+/**
+ * 表示文本任务执行周期已失去业务提交权。
+ *
+ * @author 视觉AID
+ */
+public final class TextTaskExecutionRejectedException extends BatchTaskExecutionRejectedException
+{
+    private static final long serialVersionUID = 1L;
+
+    public TextTaskExecutionRejectedException()
+    {
+        super();
+    }
+
+    static TextTaskExecutionRejectedException find(Throwable error)
+    {
+        Throwable current = error;
+        while (current != null)
+        {
+            if (current instanceof TextTaskExecutionRejectedException rejected)
+            {
+                return rejected;
+            }
+            current = current.getCause();
+        }
+        return null;
+    }
+}

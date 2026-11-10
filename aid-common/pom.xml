@@ -184,7 +184,7 @@
             <version>5.8.38</version>
         </dependency>
 
-        <!-- 行为验证码 tianai-captcha core 库（C 端人机校验工具，封装于 com.aid.common.captcha） -->
+        <!-- 行为验证码 tianai-captcha core 库（C 端人机校验工具，封装于 com.sakura.common.captcha） -->
         <dependency>
             <groupId>cloud.tianai.captcha</groupId>
             <artifactId>tianai-captcha</artifactId>

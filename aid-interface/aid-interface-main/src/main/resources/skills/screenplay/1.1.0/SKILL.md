@@ -1,6 +1,6 @@
 ---
 name: screenplay
-description: AID 电影与剧集剧本入口，负责动态澄清、上下文装配、写作与独立审核编排。
+description: SAKURA 电影与剧集剧本入口，负责动态澄清、上下文装配、写作与独立审核编排。
 ---
 
 # Screenplay
@@ -20,7 +20,7 @@ description: AID 电影与剧集剧本入口，负责动态澄清、上下文装
 - 根 Skill 只负责编排，不自行拼接第二份剧本。
 - `REVIEW_ONLY` 只交付报告，不改稿。
 - 审美分叉必须交还用户选择，不能伪装成客观错误自动修改。
-- 所有 LLM 调用继续复用 AID 现有媒体任务、并发、计费、取消与终态结算链路。
+- 所有 LLM 调用继续复用 SAKURA 现有媒体任务、并发、计费、取消与终态结算链路。
 - 对话状态、Web、API、CLI 和未来 Skill 广场共享同一份版本化执行契约。
 
 详细交互规则见 `references/interaction-policy.md`，运行边界见 `references/runtime-contract.md`。

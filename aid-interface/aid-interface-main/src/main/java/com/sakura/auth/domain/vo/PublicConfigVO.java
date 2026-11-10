@@ -1,0 +1,254 @@
+package com.sakura.auth.domain.vo;
+
+import java.math.BigDecimal;
+import java.util.Map;
+
+import com.sakura.sakura.domain.vo.AdminBrandConfigVO;
+import com.sakura.common.sakura.oss.vo.OssUploadLimitsVO;
+import com.sakura.notify.wechat.vo.WechatNotifyPublicVO;
+
+import lombok.Builder;
+import lombok.Data;
+
+/**
+ * C 端首屏公开配置聚合 VO。
+ * 将行为验证码状态、短信/邮箱验证码策略、登录渠道、密码规则、接口加密状态、基础配置、平台品牌图片、微信通知总开关、
+ * 支付渠道、上传限制和营销活动等平台级配置合并为一个 {@code POST /auth/public-config}。
+ * 未登录时只返回平台级配置；登录后在 {@code wechatNotify} 中追加当前用户通知状态。
+ * 服务端 Redis 缓存 30s，sakura_config 改动后最多 30s 内生效。
+ *
+ * @author 视觉AID
+ */
+@Data
+@Builder(toBuilder = true)
+public class PublicConfigVO
+{
+    /** 行为验证码块（来自 BehaviorCaptchaController#status 的等价口径） */
+    private CaptchaStatus captcha;
+
+    /** 短信验证码策略（sakura_config category=sms） */
+    private CodePolicy smsPolicy;
+
+    /** 邮箱验证码策略（sakura_config category=mail） */
+    private CodePolicy emailPolicy;
+
+    /** 登录渠道开关（来自短信、邮箱与微信公众号登录的当前生效配置） */
+    private LoginChannels login;
+
+    /** 密码长度规则，供登录、首次设置、修改和找回密码统一校验 */
+    private PasswordPolicyVO passwordPolicy;
+
+    /** 服务端时间戳（毫秒），便于前端排查时差与缓存命中调试 */
+    private Long serverTime;
+
+    /** 接口加密状态块（来自 sakura_config category=api_crypto） */
+    private CryptoStatus crypto;
+
+    /** 微信公众号模板消息推送配置；登录后追加当前用户绑定、开关及可推送状态 */
+    private WechatNotifyPublicVO wechatNotify;
+
+    /**
+     * 基础配置（来自 sakura_config category=basic）。
+     * App 上架合规 / 首屏展示所需的公开内容，以键值对动态下发，后台 sakura_config 可配置，例如：
+     * personal_information_collection_list（个人信息收集清单）、app_permissions_description（应用权限说明）、
+     * third_party_sdk_and_information_sharing_list（第三方SDK及信息共享清单）、terms_of_service（用户协议）、
+     * privacy_policy（隐私政策）、membership_agreement（会员协议）、site_name/site_description/site_keywords（SEO）、
+     * record_filing_number（备案号）、
+     * exchange_image_url（交流二维码图）等。后台新增同分类配置项即自动随接口下发。
+     */
+    private Map<String, String> basic;
+
+    /** 平台品牌图片（来自 sakura_config category=admin_brand），供 C 端统一展示平台 LOGO 和页签图标。 */
+    private AdminBrandConfigVO brand;
+
+    /**
+     * 支付渠道开关（来自 sakura_config alipay/wxpay 的 enabled，经"同步配置"后生效的内存口径）。
+     * 后台可分别开关支付宝 / 微信支付，C 端据此动态显示可用的支付方式，避免用户选到已关闭的渠道下单失败。
+     */
+    private PaymentChannels payment;
+
+    /**
+     * 上传大小限制（来自 sakura_config category=oss 的分类型上传配置）。
+     * 含各资源类型（图片/视频/音频/文档等）的单文件大小上限与允许扩展名，以及未配置分类型时的全局兜底上限。
+     * C 端据此在上传前按文件类型提示/校验单文件大小，与后台「文件存储 → 上传大小限制」配置保持一致。
+     */
+    private OssUploadLimitsVO upload;
+
+    /**
+     * 配音试听限制（来自 sakura_config category=voice）。
+     * 前端使用 estimatedMaxChars 展示字数上限并设置输入框 maxLength，与后端试听校验保持一致。
+     */
+    private VoicePreviewConfig voicePreview;
+
+    /**
+     * 营销活动公开配置（注册送积分 + 邀请激励）。
+     * 来自 sakura_config category=register_bonus / invite，供登录/注册页展示活动文案与开关。
+     */
+    private PromotionConfig promotion;
+
+    @Data
+    @Builder
+    public static class CaptchaStatus
+    {
+        /** 行为验证码是否开启；false 时前端跳过验证码直接调登录/发码 */
+        private boolean enabled;
+
+        /** 当前类型：SLIDER/ROTATE/WORD_IMAGE_CLICK/CONCAT；enabled=false 时为 null */
+        private String type;
+
+        /** 未开启原因（运维诊断；正常为 OK） */
+        private String reason;
+
+        /** 远程背景图配置数量 */
+        private int urlCount;
+
+        /** 本地兜底背景图数量 */
+        private int localCount;
+
+        /** tianai 应用是否构建成功 */
+        private boolean applicationOk;
+
+        /** 背景图是否加载就绪 */
+        private boolean imagesReady;
+    }
+
+    @Data
+    @Builder
+    public static class CodePolicy
+    {
+        /** 渠道：sms / email */
+        private String channel;
+
+        /** 验证码长度（位），驱动前端输入框 maxLength */
+        private int codeLength;
+
+        /** 验证码有效期（分钟） */
+        private int codeExpireMinutes;
+
+        /** 重发倒计时秒数 */
+        private int sendIntervalSeconds;
+
+        /** 同 target/IP 每日上限（≤0 表示不限） */
+        private int dailyLimit;
+    }
+
+    /**
+     * 登录渠道开关块。
+     */
+    @Data
+    @Builder
+    public static class LoginChannels
+    {
+        private boolean googleEnabled;
+        private String googleClientId;
+        /** 短信验证码登录是否可用 */
+        private boolean smsEnabled;
+
+        /** 邮箱验证码登录是否可用 */
+        private boolean emailEnabled;
+
+        /** 微信扫码登录是否可用 */
+        private boolean wechatEnabled;
+    }
+
+    /**
+     * 接口加密状态块。
+     * 前端据 {@link #enabled} 决定是否对后续业务接口做信封加密；开启时用 {@link #publicKey} 加密一次性 AES 密钥。
+     */
+    @Data
+    @Builder
+    public static class CryptoStatus
+    {
+        /** 接口加密是否开启；false 时前端走明文 */
+        private boolean enabled;
+
+        /** RSA 公钥（X509，Base64）；enabled=false 或未配置时为 null */
+        private String publicKey;
+
+        /** 算法标识，固定 RSA-OAEP-SHA256 + AES-GCM-256，供前端对齐 WebCrypto 参数 */
+        private String algorithm;
+    }
+
+    /**
+     * 支付渠道开关块。
+     * 前端据此决定收银台展示哪些支付方式；两个都为 false 时应隐藏支付入口或提示暂不可用。
+     */
+    @Data
+    @Builder
+    public static class PaymentChannels
+    {
+        /** 支付宝是否可用 */
+        private boolean alipayEnabled;
+
+        /** 微信支付是否可用 */
+        private boolean wxpayEnabled;
+    }
+
+    /**
+     * 配音试听限制块。
+     */
+    @Data
+    @Builder
+    public static class VoicePreviewConfig
+    {
+        /** 后台配置的最大试听秒数；配置缺失或非法时为 null */
+        private Integer maxSeconds;
+
+        /** 按正常语速预估且后端实际执行校验的最大字数 */
+        private int estimatedMaxChars;
+    }
+
+    /**
+     * 营销活动公开配置块。
+     */
+    @Data
+    @Builder
+    public static class PromotionConfig
+    {
+        /** 注册送积分配置 */
+        private RegisterBonusConfig registerBonus;
+
+        /** 邀请激励配置 */
+        private InviteConfig invite;
+    }
+
+    /**
+     * 注册送积分公开配置。
+     */
+    @Data
+    @Builder
+    public static class RegisterBonusConfig
+    {
+        /** 注册送积分总开关 */
+        private boolean enabled;
+
+        /** 注册赠送积分数量 */
+        private BigDecimal amount;
+
+        /** 手机号注册是否参与 */
+        private boolean smsEnabled;
+
+        /** 邮箱注册是否参与 */
+        private boolean emailEnabled;
+
+        /** 微信注册是否参与 */
+        private boolean wechatEnabled;
+    }
+
+    /**
+     * 邀请激励公开配置。
+     */
+    @Data
+    @Builder
+    public static class InviteConfig
+    {
+        /** 邀请激励总开关 */
+        private boolean enabled;
+
+        /** 充值返佣比例(%) */
+        private BigDecimal rebateRatio;
+
+        /** 单笔返佣积分上限（0 为不限） */
+        private BigDecimal rebateMaxPerOrder;
+    }
+}

@@ -1,0 +1,134 @@
+package com.sakura.upgrade.service;
+
+import com.sakura.upgrade.dto.DocLinksVo;
+import com.sakura.upgrade.dto.DeploymentConfigSaveDto;
+import com.sakura.upgrade.dto.DeploymentConfigTestDto;
+import com.sakura.upgrade.dto.DeploymentConfigVo;
+import com.sakura.upgrade.dto.HttpsCertificateUploadDto;
+import com.sakura.upgrade.dto.OfficialApiStatusVo;
+import com.sakura.upgrade.dto.OfficialGatewaySaveDto;
+import com.sakura.upgrade.dto.OfficialGatewaySettingVo;
+import com.sakura.upgrade.dto.RollbackRequestDto;
+import com.sakura.upgrade.dto.UpdaterLogVo;
+import com.sakura.upgrade.dto.UpgradeSourceSaveDto;
+import com.sakura.upgrade.dto.UpgradeSourceSettingVo;
+import com.sakura.upgrade.dto.UpgradeStatusVo;
+
+/**
+ * 系统升级Service接口
+ *
+ * @author 视觉AID
+ */
+public interface ISystemUpgradeService {
+
+    /**
+     * 查询系统版本与升级状态
+     *
+     * @param forceRefresh 是否强制回源更新清单
+     * @return 系统版本与升级状态
+     */
+    UpgradeStatusVo getStatus(boolean forceRefresh);
+
+    /**
+     * 查询官方教程文档地址（读缓存，不回源更新清单）
+     *
+     * @return 教程文档地址集合
+     */
+    DocLinksVo getDocLinks();
+
+    /**
+     * 查询升级器最近运行日志（页面排查安装与升级问题）
+     *
+     * @return 升级器日志
+     */
+    UpdaterLogVo getUpdaterLogs();
+
+    /** 查询升级器当前加载的脱敏部署配置。 */
+    DeploymentConfigVo getDeploymentConfig();
+
+    /** 提交部署配置校验任务。 */
+    String validateDeploymentConfig(DeploymentConfigSaveDto saveDto);
+
+    /** 提交部署配置应用与重启任务。 */
+    String applyDeploymentConfig(DeploymentConfigSaveDto saveDto);
+
+    /** 恢复上一份部署配置并重启。 */
+    String rollbackDeploymentConfig();
+
+    /** 提交部署配置分项诊断任务。 */
+    String testDeploymentConfig(DeploymentConfigTestDto testDto);
+
+    /** 安全上传并安装 HTTPS 证书对。 */
+    String installHttpsCertificate(HttpsCertificateUploadDto uploadDto);
+
+    /**
+     * 提交一键升级任务
+     *
+     * @return 提示信息
+     */
+    String startUpgrade();
+
+    /**
+     * 请求安全取消当前系统版本任务。
+     *
+     * @return 提示信息
+     */
+    String cancelUpgrade();
+
+    /**
+     * 提交升级器在线升级任务（升级器下载新版并自替换重启）
+     *
+     * @return 提示信息
+     */
+    String startUpdaterUpgrade();
+
+    /**
+     * 提交系统版本回退任务
+     *
+     * @param requestDto 回退参数
+     * @return 提示信息
+     */
+    String rollback(RollbackRequestDto requestDto);
+
+    /**
+     * 查询升级源配置
+     *
+     * @return 升级源配置
+     */
+    UpgradeSourceSettingVo getUpgradeSource();
+
+    /**
+     * 保存升级源配置（更新清单地址/升级器下载地址/升级器健康文件路径）
+     *
+     * @param saveDto 保存参数
+     */
+    void saveUpgradeSource(UpgradeSourceSaveDto saveDto);
+
+    /**
+     * 查询官方统一网关设置
+     *
+     * @return 官方统一网关设置
+     */
+    OfficialGatewaySettingVo getOfficialGatewaySetting();
+
+    /**
+     * 保存官方统一网关设置
+     *
+     * @param saveDto 保存参数
+     */
+    void saveOfficialGateway(OfficialGatewaySaveDto saveDto);
+
+    /**
+     * 手动获取更新清单中的官方API地址（只比对，不写入）
+     *
+     * @return 官方API地址同步状态
+     */
+    OfficialApiStatusVo fetchOfficialApi();
+
+    /**
+     * 将更新清单中的官方API地址应用到本地配置
+     *
+     * @return 应用后的官方API地址同步状态
+     */
+    OfficialApiStatusVo applyOfficialApi();
+}

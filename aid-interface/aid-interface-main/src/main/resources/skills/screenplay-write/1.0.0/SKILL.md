@@ -1,6 +1,6 @@
 ---
 name: screenplay-write
-description: AID 剧本写作子 Skill，支持 CREATE、REWRITE、CONTINUE、NORMALIZE 和 REPAIR。
+description: SAKURA 剧本写作子 Skill，支持 CREATE、REWRITE、CONTINUE、NORMALIZE 和 REPAIR。
 ---
 
 # Screenplay Write
@@ -11,4 +11,4 @@ description: AID 剧本写作子 Skill，支持 CREATE、REWRITE、CONTINUE、NO
 
 专项规则只在题面真实提供相应条件时启用。例如选择必须有真实备选项，证据必须先在正文建立，倒计时必须有明确时限；不得为了满足检查表凭空补造机关、线索或危机。
 
-`REPAIR` 只处理独立审核报告中可客观确认的硬伤，最多一次；不得替用户决定审美分叉。输出必须为 AID canonical narrative plaintext，不得输出 JSON 外壳、Markdown 围栏、审核报告、时长或版本元数据。
+`REPAIR` 只处理独立审核报告中可客观确认的硬伤，最多一次；不得替用户决定审美分叉。输出必须为 SAKURA canonical narrative plaintext，不得输出 JSON 外壳、Markdown 围栏、审核报告、时长或版本元数据。

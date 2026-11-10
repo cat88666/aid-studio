@@ -1,0 +1,602 @@
+package com.sakura.asset.service.impl;
+
+import com.sakura.common.error.TaskErrorCode;
+import com.sakura.common.error.TaskErrorPresentation;
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.springframework.transaction.annotation.Transactional;
+import com.sakura.sakura.domain.SakuraUserComicAsset;
+import com.sakura.sakura.domain.SakuraComicAsset;
+import com.sakura.sakura.service.ISakuraUserComicAssetService;
+import com.sakura.sakura.service.ISakuraComicAssetService;
+import com.sakura.sakura.util.HiddenStylePromptJsonUtils;
+import com.sakura.asset.constants.UserAssetTypeConstants;
+import com.sakura.asset.dto.MergedAssetPageRequest;
+import com.sakura.asset.dto.UserComicAssetCreateRequest;
+import com.sakura.asset.dto.UserComicAssetDeleteRequest;
+import com.sakura.asset.dto.UserComicAssetDetailRequest;
+import com.sakura.asset.dto.UserComicAssetListRequest;
+import com.sakura.asset.dto.UserComicAssetUpdateRequest;
+import com.sakura.asset.service.IUserComicAssetService;
+import com.sakura.asset.service.MergedAssetPagePlanner;
+import com.sakura.asset.vo.MergedAssetVO;
+import com.sakura.asset.vo.UserComicAssetTypeVO;
+import com.sakura.asset.vo.UserComicAssetVO;
+import com.sakura.common.exception.ServiceException;
+import com.sakura.common.utils.DateUtils;
+import com.sakura.common.sakura.oss.util.MediaUrlResolver;
+import com.sakura.media.cleanup.IMediaOssCleanupService;
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
+/**
+ * C端用户自定义参考资产业务Service实现
+ *
+ * @author 视觉AID
+ */
+@Slf4j
+@Service
+public class UserComicAssetServiceImpl implements IUserComicAssetService {
+
+    /** 删除标志：正常 */
+    private static final String DEL_FLAG_NORMAL = "0";
+    /** 状态：正常 */
+    private static final String STATUS_NORMAL = "0";
+    /** 来源类型：用户创建 */
+    private static final String SOURCE_TYPE_USER = "USER";
+    /** 资产类型：风格（该类型提示词必填） */
+    private static final String ASSET_TYPE_STYLE = "style";
+    /** 资产名称最大长度 */
+    private static final int ASSET_NAME_MAX_LENGTH = 100;
+
+    /** 图片URL最大长度（对齐 sakura_user_comic_asset.image_url VARCHAR(500)） */
+    private static final int IMAGE_URL_MAX_LENGTH = 500;
+    /** 备注最大长度（对齐 sakura_user_comic_asset.remark VARCHAR(500)） */
+    private static final int REMARK_MAX_LENGTH = 500;
+    /** 默认页码 */
+    private static final int DEFAULT_PAGE_NUM = 1;
+    /** 默认分页大小 */
+    private static final int DEFAULT_PAGE_SIZE = 20;
+    /** 最大分页大小（防止大分页拖垮查询） */
+    private static final int MAX_PAGE_SIZE = 100;
+
+    /** C端允许的资产类型白名单（引用共享常量） */
+    private static final Set<String> ALLOWED_ASSET_TYPES = UserAssetTypeConstants.ALLOWED_ASSET_TYPES;
+
+    /** C端允许的资产类型字典（有序） */
+    private static final List<UserComicAssetTypeVO> ALLOWED_TYPE_DICT;
+
+    static {
+        List<UserComicAssetTypeVO> list = new ArrayList<>();
+        list.add(new UserComicAssetTypeVO("reference_character", "人物参考图", "用户上传的人物参考图，不是真正角色"));
+        list.add(new UserComicAssetTypeVO("reference_scene", "场景参考图", "用户上传的场景参考图，不是真正场景"));
+        list.add(new UserComicAssetTypeVO("reference_prop", "道具参考图", "用户上传的道具参考图，不是真正道具"));
+        list.add(new UserComicAssetTypeVO("style", "风格", "用户自定义风格参考"));
+        list.add(new UserComicAssetTypeVO("pose", "姿势", "用户自定义姿势参考"));
+        list.add(new UserComicAssetTypeVO("expression", "表情", "用户自定义表情参考"));
+        list.add(new UserComicAssetTypeVO("effect", "特效", "用户自定义特效参考"));
+        list.add(new UserComicAssetTypeVO("file", "文件", "用户通用参考文件"));
+        list.add(new UserComicAssetTypeVO("mood", "情绪神态", "用户自定义情绪或神态参考"));
+        list.add(new UserComicAssetTypeVO("camera", "摄影参数", "用户自定义摄影参数"));
+        ALLOWED_TYPE_DICT = Collections.unmodifiableList(list);
+    }
+
+    @Resource
+    private ISakuraUserComicAssetService sakuraUserComicAssetService;
+
+    /** 官方素材服务（sakura_comic_asset），合并查询时只读取官方数据 */
+    @Resource
+    private ISakuraComicAssetService sakuraComicAssetService;
+
+    /** OSS 文件清理服务：硬删参考资产前先删其 OSS 图片 */
+    @Resource
+    private IMediaOssCleanupService mediaOssCleanupService;
+
+    /** 媒体URL统一解析器：本站校验 + 相对路径规范化 */
+    @Resource
+    private MediaUrlResolver mediaUrlResolver;
+
+    @Override
+    public Long createAsset(UserComicAssetCreateRequest request, Long userId) {
+        if (Objects.isNull(request)) {
+            log.error("C端参考资产创建失败-请求体为空: userId={}", userId);
+            throw new ServiceException("参数错误");
+        }
+        String assetType = Objects.isNull(request.getAssetType()) ? null : request.getAssetType().trim();
+        if (StrUtil.isBlank(assetType) || !ALLOWED_ASSET_TYPES.contains(assetType)) {
+            log.error("C端参考资产创建失败-类型非法: userId={}, assetType={}", userId, assetType);
+            throw new ServiceException("类型错误");
+        }
+        String assetName = Objects.isNull(request.getAssetName()) ? null : request.getAssetName().trim();
+        if (StrUtil.isBlank(assetName)) {
+            log.error("C端参考资产创建失败-名称为空: userId={}", userId);
+            throw new ServiceException("名称不能为空");
+        }
+        if (assetName.length() > ASSET_NAME_MAX_LENGTH) {
+            log.error("C端参考资产创建失败-名称过长: userId={}, length={}", userId, assetName.length());
+            throw new ServiceException("名称过长");
+        }
+        // 风格资产必须填写提示词。
+        if (Objects.equals(ASSET_TYPE_STYLE, assetType) && StrUtil.isBlank(request.getPromptText())) {
+            log.error("C端参考资产创建失败-风格提示词为空: userId={}", userId);
+            throw TaskErrorPresentation.fromCode(TaskErrorCode.USER_INPUT_EMPTY, "请填写提示词");
+        }
+        if (StrUtil.isBlank(request.getImageUrl())) {
+            log.error("C端参考资产创建失败-图片为空: userId={}", userId);
+            throw new ServiceException("请上传图片");
+        }
+        String imageUrl = normalizeImageUrl(request.getImageUrl());
+        if (!mediaUrlResolver.isSiteImageUrl(imageUrl)) {
+            log.error("C端参考资产创建失败-图片URL非本站资源: userId={}, imageUrl={}", userId, request.getImageUrl());
+            throw new ServiceException("图片格式有误");
+        }
+        // 统一剥域名入库，DB 只存相对路径
+        imageUrl = mediaUrlResolver.toRelativePath(imageUrl);
+        if (StrUtil.isNotBlank(imageUrl) && imageUrl.length() > IMAGE_URL_MAX_LENGTH) {
+            log.error("C端参考资产创建失败-图片URL过长: userId={}, length={}", userId, imageUrl.length());
+            throw new ServiceException("图片地址过长");
+        }
+        if (Objects.nonNull(request.getRemark()) && request.getRemark().length() > REMARK_MAX_LENGTH) {
+            log.error("C端参考资产创建失败-备注过长: userId={}, length={}", userId, request.getRemark().length());
+            throw new ServiceException("备注过长");
+        }
+
+        SakuraUserComicAsset entity = new SakuraUserComicAsset();
+        entity.setUserId(userId);
+        entity.setAssetType(assetType);
+        entity.setAssetName(assetName);
+        entity.setPersonalityDesc(request.getPersonalityDesc());
+        entity.setPromptText(request.getPromptText());
+        if (Objects.equals(ASSET_TYPE_STYLE, assetType)) {
+            // 用户公开提示词同时作为一期角色隐藏模板，项目选中后会复制为独立快照。
+            entity.setHiddenStylePromptJson(
+                    HiddenStylePromptJsonUtils.fromCharacterPrompt(request.getPromptText()));
+        }
+        entity.setImageUrl(StrUtil.isBlank(imageUrl) ? null : imageUrl);
+        entity.setSourceType(SOURCE_TYPE_USER);
+        entity.setStatus(STATUS_NORMAL);
+        entity.setDelFlag(DEL_FLAG_NORMAL);
+        entity.setRemark(request.getRemark());
+        Date now = DateUtils.getNowDate();
+        entity.setCreateTime(now);
+        entity.setCreateBy(String.valueOf(userId));
+
+        boolean ok = sakuraUserComicAssetService.save(entity);
+        if (!ok || Objects.isNull(entity.getId())) {
+            log.error("C端参考资产创建失败-入库异常: userId={}", userId);
+            throw new ServiceException("保存失败，请重试");
+        }
+        return entity.getId();
+    }
+
+    @Override
+    public Map<String, Object> listAsset(UserComicAssetListRequest request, Long userId) {
+        if (Objects.isNull(request)) {
+            request = new UserComicAssetListRequest();
+        }
+        String assetType = request.getAssetType();
+        if (StrUtil.isNotBlank(assetType) && !ALLOWED_ASSET_TYPES.contains(assetType)) {
+            log.error("C端参考资产列表-类型非法: userId={}, assetType={}", userId, assetType);
+            throw new ServiceException("类型错误");
+        }
+
+        int pageNum = Objects.isNull(request.getPageNum()) || request.getPageNum() <= 0
+                ? DEFAULT_PAGE_NUM : request.getPageNum();
+        int pageSize = Objects.isNull(request.getPageSize()) || request.getPageSize() <= 0
+                ? DEFAULT_PAGE_SIZE : request.getPageSize();
+        if (pageSize > MAX_PAGE_SIZE) {
+            pageSize = MAX_PAGE_SIZE;
+        }
+        Page<SakuraUserComicAsset> page = new Page<>(pageNum, pageSize);
+
+        // 注意：新增返回字段时请同步调整 .select(...)，避免列表字段缺失
+        LambdaQueryWrapper<SakuraUserComicAsset> wrapper = Wrappers.lambdaQuery();
+        wrapper.select(
+                SakuraUserComicAsset::getId,
+                SakuraUserComicAsset::getAssetType,
+                SakuraUserComicAsset::getAssetName,
+                SakuraUserComicAsset::getPersonalityDesc,
+                SakuraUserComicAsset::getPromptText,
+                SakuraUserComicAsset::getImageUrl,
+                SakuraUserComicAsset::getSourceType,
+                SakuraUserComicAsset::getSortOrder,
+                SakuraUserComicAsset::getRemark,
+                SakuraUserComicAsset::getCreateTime
+        );
+        wrapper.eq(SakuraUserComicAsset::getUserId, userId);
+        wrapper.eq(SakuraUserComicAsset::getDelFlag, DEL_FLAG_NORMAL);
+        wrapper.eq(SakuraUserComicAsset::getStatus, STATUS_NORMAL);
+        if (StrUtil.isNotBlank(assetType)) {
+            wrapper.eq(SakuraUserComicAsset::getAssetType, assetType);
+        } else {
+            // 仅允许C端白名单类型
+            wrapper.in(SakuraUserComicAsset::getAssetType, ALLOWED_ASSET_TYPES);
+        }
+        String keyword = Objects.isNull(request.getKeyword()) ? null : request.getKeyword().trim();
+        if (StrUtil.isNotBlank(keyword)) {
+            wrapper.like(SakuraUserComicAsset::getAssetName, keyword);
+        }
+        wrapper.orderByAsc(SakuraUserComicAsset::getSortOrder);
+        wrapper.orderByDesc(SakuraUserComicAsset::getCreateTime);
+
+        Page<SakuraUserComicAsset> result = sakuraUserComicAssetService.page(page, wrapper);
+
+        List<UserComicAssetVO> list;
+        if (CollectionUtil.isEmpty(result.getRecords())) {
+            list = new ArrayList<>();
+        } else {
+            list = result.getRecords().stream().map(this::toListVO).toList();
+        }
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("total", result.getTotal());
+        data.put("list", list);
+        return data;
+    }
+
+    @Override
+    public Map<String, Object> pageMergedAssets(MergedAssetPageRequest request, Long userId) {
+        if (Objects.isNull(request)) {
+            request = new MergedAssetPageRequest();
+        }
+        String assetType = Objects.isNull(request.getAssetType()) ? null : request.getAssetType().trim();
+        if (StrUtil.isNotBlank(assetType) && !ALLOWED_ASSET_TYPES.contains(assetType)) {
+            log.error("合并资产查询-类型非法: userId={}, assetType={}", userId, assetType);
+            throw new ServiceException("类型错误");
+        }
+        String keyword = Objects.isNull(request.getKeyword()) ? null : request.getKeyword().trim();
+        String categoryCode = sakuraComicAssetService.normalizeStyleCategoryFilter(request.getCategoryCode());
+        if (StrUtil.isNotBlank(categoryCode) && StrUtil.isNotBlank(assetType)
+                && !Objects.equals(ASSET_TYPE_STYLE, assetType)) {
+            log.error("合并资产查询-分类仅适用于风格: userId={}, assetType={}, categoryCode={}",
+                    userId, assetType, categoryCode);
+            throw new ServiceException("分类仅限风格");
+        }
+
+        int pageNum = Objects.isNull(request.getPageNum()) || request.getPageNum() <= 0
+                ? DEFAULT_PAGE_NUM : request.getPageNum();
+        int pageSize = Objects.isNull(request.getPageSize()) || request.getPageSize() <= 0
+                ? DEFAULT_PAGE_SIZE : Math.min(request.getPageSize(), MAX_PAGE_SIZE);
+        long from = (long) (pageNum - 1) * pageSize;
+
+        // 未登录请求与具体官方分类筛选均不进入个人素材查询，避免个人数据混入首页匿名响应。
+        long personalCount = Objects.nonNull(userId) && userId > 0 && StrUtil.isBlank(categoryCode)
+                ? sakuraUserComicAssetService.count(buildPersonalCountWrapper(userId, assetType, keyword)) : 0;
+        long recommendedCount = sakuraComicAssetService.count(
+                buildOfficialCountWrapper(assetType, keyword, categoryCode, true));
+        long normalCount = sakuraComicAssetService.count(
+                buildOfficialCountWrapper(assetType, keyword, categoryCode, false));
+        long total = personalCount + recommendedCount + normalCount;
+
+        List<MergedAssetVO> list = new ArrayList<>();
+        for (MergedAssetPagePlanner.Slice slice : MergedAssetPagePlanner.plan(
+                from, pageSize, recommendedCount, personalCount, normalCount)) {
+            if (Objects.equals(MergedAssetPagePlanner.Segment.CUSTOM, slice.getSegment())) {
+                list.addAll(fetchPersonalSlice(userId, assetType, keyword,
+                        slice.getOffset(), slice.getLimit()));
+            } else {
+                boolean recommended = Objects.equals(
+                        MergedAssetPagePlanner.Segment.OFFICIAL_RECOMMENDED, slice.getSegment());
+                list.addAll(fetchOfficialSlice(assetType, keyword, categoryCode, recommended,
+                        slice.getOffset(), slice.getLimit()));
+            }
+        }
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("total", total);
+        data.put("pageNum", pageNum);
+        data.put("pageSize", pageSize);
+        data.put("list", list);
+        return data;
+    }
+
+    /**
+     * 个人资产统计条件（sakura_user_comic_asset）。
+     */
+    private LambdaQueryWrapper<SakuraUserComicAsset> buildPersonalCountWrapper(Long userId, String assetType, String keyword) {
+        LambdaQueryWrapper<SakuraUserComicAsset> w = Wrappers.lambdaQuery();
+        w.eq(SakuraUserComicAsset::getUserId, userId);
+        w.eq(SakuraUserComicAsset::getDelFlag, DEL_FLAG_NORMAL);
+        w.eq(SakuraUserComicAsset::getStatus, STATUS_NORMAL);
+        if (StrUtil.isNotBlank(assetType)) {
+            w.eq(SakuraUserComicAsset::getAssetType, assetType);
+        } else {
+            w.in(SakuraUserComicAsset::getAssetType, ALLOWED_ASSET_TYPES);
+        }
+        if (StrUtil.isNotBlank(keyword)) {
+            w.like(SakuraUserComicAsset::getAssetName, keyword);
+        }
+        return w;
+    }
+
+    /**
+     * 官方素材统计条件（sakura_comic_asset）。
+     */
+    private LambdaQueryWrapper<SakuraComicAsset> buildOfficialCountWrapper(String assetType, String keyword,
+                                                                          String categoryCode,
+                                                                          boolean recommended) {
+        LambdaQueryWrapper<SakuraComicAsset> w = Wrappers.lambdaQuery();
+        w.eq(SakuraComicAsset::getDelFlag, DEL_FLAG_NORMAL);
+        if (StrUtil.isNotBlank(assetType)) {
+            w.eq(SakuraComicAsset::getAssetType, assetType);
+        } else {
+            w.in(SakuraComicAsset::getAssetType, ALLOWED_ASSET_TYPES);
+        }
+        if (StrUtil.isNotBlank(keyword)) {
+            w.like(SakuraComicAsset::getAssetName, keyword);
+        }
+        w.eq(SakuraComicAsset::getIsRecommended, recommended);
+        sakuraComicAssetService.applyStyleCategoryFilter(w, categoryCode);
+        return w;
+    }
+
+    /**
+     * 取个人资产切片（sourceFlag=custom）。
+     */
+    private List<MergedAssetVO> fetchPersonalSlice(Long userId, String assetType, String keyword, long offset, int limit) {
+        LambdaQueryWrapper<SakuraUserComicAsset> w = buildPersonalCountWrapper(userId, assetType, keyword);
+        w.select(SakuraUserComicAsset::getId, SakuraUserComicAsset::getAssetType, SakuraUserComicAsset::getAssetName,
+                SakuraUserComicAsset::getPromptText, SakuraUserComicAsset::getImageUrl,
+                SakuraUserComicAsset::getSortOrder);
+        w.orderByAsc(SakuraUserComicAsset::getSortOrder).orderByDesc(SakuraUserComicAsset::getCreateTime).orderByDesc(SakuraUserComicAsset::getId);
+        w.last("LIMIT " + limit + " OFFSET " + offset);
+        List<MergedAssetVO> result = new ArrayList<>();
+        for (SakuraUserComicAsset a : sakuraUserComicAssetService.list(w)) {
+            result.add(MergedAssetVO.builder()
+                    .id(a.getId())
+                    .sourceFlag("custom")
+                    .assetType(a.getAssetType())
+                    .assetName(a.getAssetName())
+                    .promptText(a.getPromptText())
+                    .imageUrl(a.getImageUrl())
+                    .categories(Collections.emptyList())
+                    .isRecommended(false)
+                    .sortOrder(Objects.isNull(a.getSortOrder()) ? null : a.getSortOrder().longValue())
+                    .build());
+        }
+        return result;
+    }
+
+    /**
+     * 取官方素材切片（sourceFlag=official）。
+     */
+    private List<MergedAssetVO> fetchOfficialSlice(String assetType, String keyword, String categoryCode,
+                                                    boolean recommended, long offset, int limit) {
+        LambdaQueryWrapper<SakuraComicAsset> w = buildOfficialCountWrapper(
+                assetType, keyword, categoryCode, recommended);
+        w.select(SakuraComicAsset::getId, SakuraComicAsset::getAssetType, SakuraComicAsset::getAssetName,
+                SakuraComicAsset::getPromptText, SakuraComicAsset::getImageUrl,
+                SakuraComicAsset::getIsRecommended, SakuraComicAsset::getSortOrder);
+        w.orderByAsc(SakuraComicAsset::getSortOrder).orderByAsc(SakuraComicAsset::getId);
+        w.last("LIMIT " + limit + " OFFSET " + offset);
+        List<SakuraComicAsset> officialAssets = sakuraComicAssetService.list(w);
+        sakuraComicAssetService.attachStyleCategories(officialAssets);
+        List<MergedAssetVO> result = new ArrayList<>();
+        for (SakuraComicAsset a : officialAssets) {
+            result.add(MergedAssetVO.builder()
+                    .id(a.getId())
+                    .sourceFlag("official")
+                    .assetType(a.getAssetType())
+                    .assetName(a.getAssetName())
+                    .promptText(a.getPromptText())
+                    .imageUrl(a.getImageUrl())
+                    .categories(a.getCategories())
+                    .isRecommended(Boolean.TRUE.equals(a.getIsRecommended()))
+                    .sortOrder(Objects.isNull(a.getSortOrder()) ? null : a.getSortOrder().longValue())
+                    .build());
+        }
+        return result;
+    }
+
+    @Override
+    public UserComicAssetVO detailAsset(UserComicAssetDetailRequest request, Long userId) {
+        if (Objects.isNull(request) || Objects.isNull(request.getId())) {
+            log.error("C端参考资产详情-ID为空: userId={}", userId);
+            throw new ServiceException("数据不存在");
+        }
+        // 注意：新增返回字段时请同步调整 .select(...)
+        LambdaQueryWrapper<SakuraUserComicAsset> wrapper = Wrappers.lambdaQuery();
+        wrapper.select(
+                SakuraUserComicAsset::getId,
+                SakuraUserComicAsset::getUserId,
+                SakuraUserComicAsset::getAssetType,
+                SakuraUserComicAsset::getAssetName,
+                SakuraUserComicAsset::getPersonalityDesc,
+                SakuraUserComicAsset::getPromptText,
+                SakuraUserComicAsset::getImageUrl,
+                SakuraUserComicAsset::getSourceType,
+                SakuraUserComicAsset::getSortOrder,
+                SakuraUserComicAsset::getStatus,
+                SakuraUserComicAsset::getRemark,
+                SakuraUserComicAsset::getCreateTime
+        );
+        wrapper.eq(SakuraUserComicAsset::getId, request.getId());
+        wrapper.eq(SakuraUserComicAsset::getUserId, userId);
+        wrapper.eq(SakuraUserComicAsset::getDelFlag, DEL_FLAG_NORMAL);
+        // 仅允许查看正常状态资产（后台停用后对C端不可见）
+        wrapper.eq(SakuraUserComicAsset::getStatus, STATUS_NORMAL);
+        wrapper.last("LIMIT 1");
+        SakuraUserComicAsset entity = sakuraUserComicAssetService.getOne(wrapper);
+        if (Objects.isNull(entity)) {
+            log.error("C端参考资产详情-不存在: userId={}, id={}", userId, request.getId());
+            throw new ServiceException("数据不存在");
+        }
+        UserComicAssetVO vo = new UserComicAssetVO();
+        BeanUtils.copyProperties(entity, vo);
+        return vo;
+    }
+
+    @Override
+    public void updateAsset(UserComicAssetUpdateRequest request, Long userId) {
+        if (Objects.isNull(request) || Objects.isNull(request.getId())) {
+            log.error("C端参考资产修改-ID为空: userId={}", userId);
+            throw new ServiceException("数据不存在");
+        }
+
+        LambdaQueryWrapper<SakuraUserComicAsset> queryWrapper = Wrappers.lambdaQuery();
+        // 查询字段精简：同步角色模板需知道资产类型与当前隐藏模板。
+        queryWrapper.select(SakuraUserComicAsset::getId, SakuraUserComicAsset::getAssetType,
+                SakuraUserComicAsset::getHiddenStylePromptJson);
+        queryWrapper.eq(SakuraUserComicAsset::getId, request.getId());
+        queryWrapper.eq(SakuraUserComicAsset::getUserId, userId);
+        queryWrapper.eq(SakuraUserComicAsset::getDelFlag, DEL_FLAG_NORMAL);
+        queryWrapper.eq(SakuraUserComicAsset::getStatus, STATUS_NORMAL);
+        queryWrapper.last("LIMIT 1");
+        SakuraUserComicAsset existed = sakuraUserComicAssetService.getOne(queryWrapper);
+        if (Objects.isNull(existed)) {
+            log.error("C端参考资产修改-不存在: userId={}, id={}", userId, request.getId());
+            throw new ServiceException("数据不存在");
+        }
+        if (Objects.equals(ASSET_TYPE_STYLE, existed.getAssetType())
+                && Objects.nonNull(request.getPromptText()) && StrUtil.isBlank(request.getPromptText())) {
+            log.error("C端参考资产修改-风格提示词为空: userId={}, id={}", userId, request.getId());
+            throw TaskErrorPresentation.fromCode(TaskErrorCode.USER_INPUT_EMPTY, "请填写提示词");
+        }
+
+        String trimmedName = null;
+        if (Objects.nonNull(request.getAssetName())) {
+            trimmedName = request.getAssetName().trim();
+            if (StrUtil.isBlank(trimmedName)) {
+                log.error("C端参考资产修改-名称为空: userId={}, id={}", userId, request.getId());
+                throw new ServiceException("名称不能为空");
+            }
+            if (trimmedName.length() > ASSET_NAME_MAX_LENGTH) {
+                log.error("C端参考资产修改-名称过长: userId={}, id={}", userId, request.getId());
+                throw new ServiceException("名称过长");
+            }
+        }
+        String normalizedImageUrl = null;
+        if (Objects.nonNull(request.getImageUrl()) && StrUtil.isNotBlank(request.getImageUrl())) {
+            normalizedImageUrl = normalizeImageUrl(request.getImageUrl());
+            if (!mediaUrlResolver.isSiteImageUrl(normalizedImageUrl)) {
+                log.error("C端参考资产修改-图片URL非本站资源: userId={}, imageUrl={}", userId, request.getImageUrl());
+                throw new ServiceException("图片格式有误");
+            }
+            // 统一剥域名入库，DB 只存相对路径
+            normalizedImageUrl = mediaUrlResolver.toRelativePath(normalizedImageUrl);
+            if (normalizedImageUrl.length() > IMAGE_URL_MAX_LENGTH) {
+                log.error("C端参考资产修改-图片URL过长: userId={}, length={}", userId, normalizedImageUrl.length());
+                throw new ServiceException("图片地址过长");
+            }
+        }
+        if (Objects.nonNull(request.getRemark()) && request.getRemark().length() > REMARK_MAX_LENGTH) {
+            log.error("C端参考资产修改-备注过长: userId={}, length={}", userId, request.getRemark().length());
+            throw new ServiceException("备注过长");
+        }
+
+        LambdaUpdateWrapper<SakuraUserComicAsset> update = Wrappers.lambdaUpdate();
+        update.eq(SakuraUserComicAsset::getId, request.getId());
+        update.eq(SakuraUserComicAsset::getUserId, userId);
+        update.eq(SakuraUserComicAsset::getDelFlag, DEL_FLAG_NORMAL);
+        update.eq(SakuraUserComicAsset::getStatus, STATUS_NORMAL);
+        if (Objects.nonNull(request.getAssetName())) {
+            update.set(SakuraUserComicAsset::getAssetName, trimmedName);
+        }
+        if (Objects.nonNull(request.getPersonalityDesc())) {
+            update.set(SakuraUserComicAsset::getPersonalityDesc, request.getPersonalityDesc());
+        }
+        if (Objects.nonNull(request.getPromptText())) {
+            update.set(SakuraUserComicAsset::getPromptText, request.getPromptText());
+            if (Objects.equals(ASSET_TYPE_STYLE, existed.getAssetType())) {
+                update.set(SakuraUserComicAsset::getHiddenStylePromptJson,
+                        HiddenStylePromptJsonUtils.withCharacterPrompt(
+                                existed.getHiddenStylePromptJson(), request.getPromptText()));
+            }
+        }
+        // 图片URL：仅在非空白时更新，避免传 "   " 时意外清空
+        if (StrUtil.isNotBlank(normalizedImageUrl)) {
+            update.set(SakuraUserComicAsset::getImageUrl, normalizedImageUrl);
+        }
+        if (Objects.nonNull(request.getRemark())) {
+            update.set(SakuraUserComicAsset::getRemark, request.getRemark());
+        }
+        update.set(SakuraUserComicAsset::getUpdateTime, DateUtils.getNowDate());
+        update.set(SakuraUserComicAsset::getUpdateBy, String.valueOf(userId));
+
+        boolean ok = sakuraUserComicAssetService.update(update);
+        if (!ok) {
+            log.error("C端参考资产修改-更新失败: userId={}, id={}", userId, request.getId());
+            throw new ServiceException("保存失败，请重试");
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteAsset(UserComicAssetDeleteRequest request, Long userId) {
+        if (Objects.isNull(request) || Objects.isNull(request.getId())) {
+            log.error("C端参考资产删除-ID为空: userId={}", userId);
+            throw new ServiceException("数据不存在");
+        }
+
+        LambdaQueryWrapper<SakuraUserComicAsset> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.select(SakuraUserComicAsset::getId, SakuraUserComicAsset::getImageUrl);
+        queryWrapper.eq(SakuraUserComicAsset::getId, request.getId());
+        queryWrapper.eq(SakuraUserComicAsset::getUserId, userId);
+        queryWrapper.eq(SakuraUserComicAsset::getDelFlag, DEL_FLAG_NORMAL);
+        queryWrapper.eq(SakuraUserComicAsset::getStatus, STATUS_NORMAL);
+        queryWrapper.last("LIMIT 1");
+        SakuraUserComicAsset existed = sakuraUserComicAssetService.getOne(queryWrapper);
+        if (Objects.isNull(existed)) {
+            log.error("C端参考资产删除-不存在: userId={}, id={}", userId, request.getId());
+            throw new ServiceException("数据不存在");
+        }
+
+        boolean ok = sakuraUserComicAssetService.getBaseMapper().delete(Wrappers.<SakuraUserComicAsset>lambdaQuery()
+                .eq(SakuraUserComicAsset::getId, request.getId())
+                .eq(SakuraUserComicAsset::getUserId, userId)) > 0;
+        if (!ok) {
+            log.error("C端参考资产删除-删除失败: userId={}, id={}", userId, request.getId());
+            throw new ServiceException("删除失败，请重试");
+        }
+
+        mediaOssCleanupService.cleanupFiles(Collections.singletonList(existed.getImageUrl()));
+    }
+
+    @Override
+    public List<UserComicAssetTypeVO> listAllowedTypes() {
+        return ALLOWED_TYPE_DICT;
+    }
+
+    /**
+     * 规范化图片URL：去除前后空白
+     */
+    private String normalizeImageUrl(String url) {
+        if (Objects.isNull(url)) {
+            return null;
+        }
+        return url.trim();
+    }
+
+    /**
+     * 列表项VO转换（不包含 userId / status）
+     */
+    private UserComicAssetVO toListVO(SakuraUserComicAsset entity) {
+        UserComicAssetVO vo = new UserComicAssetVO();
+        vo.setId(entity.getId());
+        vo.setAssetType(entity.getAssetType());
+        vo.setAssetName(entity.getAssetName());
+        vo.setPersonalityDesc(entity.getPersonalityDesc());
+        vo.setPromptText(entity.getPromptText());
+        vo.setImageUrl(entity.getImageUrl());
+        vo.setSourceType(entity.getSourceType());
+        vo.setSortOrder(entity.getSortOrder());
+        vo.setRemark(entity.getRemark());
+        vo.setCreateTime(entity.getCreateTime());
+        return vo;
+    }
+}

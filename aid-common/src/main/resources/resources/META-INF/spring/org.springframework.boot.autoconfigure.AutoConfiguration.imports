@@ -1,6 +1,6 @@
-com.aid.common.aid.core.service.ConfigService
-com.aid.common.aid.encrypt.config.EncryptorAutoConfiguration
-com.aid.common.aid.json.config.JacksonConfig
-com.aid.common.aid.mail.config.MailConfig
-com.aid.common.aid.redis.config.RedisConfig
-com.aid.common.aid.sms.config.SmsConfig
+com.sakura.common.sakura.core.service.ConfigService
+com.sakura.common.sakura.encrypt.config.EncryptorAutoConfiguration
+com.sakura.common.sakura.json.config.JacksonConfig
+com.sakura.common.sakura.mail.config.MailConfig
+com.sakura.common.sakura.redis.config.RedisConfig
+com.sakura.common.sakura.sms.config.SmsConfig

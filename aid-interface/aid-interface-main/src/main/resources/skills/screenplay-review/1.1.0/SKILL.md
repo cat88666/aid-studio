@@ -1,6 +1,6 @@
 ---
 name: screenplay-review
-description: AID 只读剧本审核子 Skill，以正文证据审查格式、故事、可拍性、连续性与模板痕迹。
+description: SAKURA 只读剧本审核子 Skill，以正文证据审查格式、故事、可拍性、连续性与模板痕迹。
 ---
 
 # Screenplay Review

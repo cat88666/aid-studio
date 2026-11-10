@@ -1,0 +1,21 @@
+{
+  "formatVersion": "1",
+  "code": "screenplay",
+  "name": "Screenplay",
+  "version": "1.0.0",
+  "invocationScope": "ENTRYPOINT",
+  "executorType": "ORCHESTRATOR",
+  "systemPrompt": "根Skill只做确定性校验、规划、提问和子Skill编排。",
+  "children": [
+    "screenplay-write@1.0.0",
+    "screenplay-review@1.0.0"
+  ],
+  "resources": [
+    {
+      "key": "runtime-contract",
+      "path": "references/runtime-contract.md",
+      "digest": "197371902b87684eb8d93fbfa35503e01b16d6ee17ef09d5773c2538156d2b48",
+      "always": true
+    }
+  ]
+}
