@@ -11,10 +11,6 @@
 
 统一约定：**AID 主要数据目录默认是 `/data/aid`**——程序产物（`app/`）、受管安装器和 Docker 配置（`installer/`）、上传文件（`uploadPath/` 与私有归档 `uploadPath-private/`）、日志（`logs/`）、内置 MySQL/Redis/RocketMQ 数据、备份（`backups/`）、本地源码构建包（`packages/`）、依赖缓存（`build-cache/`）与手动部署配置（`aid-deploy.conf`）都在这里。完整备份或迁移还需检查升级器的 `/etc/aid-updater/` 和 `/var/lib/aid-updater/`（见下文），以及自行配置的外部中间件或对象存储；仅复制 `/data/aid` 不一定完整。
 
-## 当前 ai-hk 服务器的日常发布
-
-从本机仓库根目录执行 `./deploy/ai-hk.sh`，将当前 Git 提交发布到 `thdrhdf.site` 的核心 C 端，以及 `thdrhdf.fun/admin/` 和 `thdrhdf.fun/web/`。仅验证构建和现役站点时执行 `./deploy/ai-hk.sh --check`。运行环境、回滚和数据库迁移约束见[项目记忆](../MEMORY.md#下次发布)。
-
 ## 目录说明
 
 ```text
