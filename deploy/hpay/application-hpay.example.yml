@@ -1,0 +1,12 @@
+# External server config; never put real credentials in Git.
+extensions:
+  hpay:
+    enabled: false
+    base-url: ${HPAY_BASE_URL:}
+    merchant-id: ${HPAY_MERCHANT_ID:}
+    secret: ${HPAY_SECRET:}
+    notify-url: https://thdrhdf.site/aid/pay/notify/hpay
+    checkout-hosts: [] # Exact HTTPS cashier hostname(s) supplied by the provider
+    pricing-divisor: 7 # Local retail pricing rule, not a live exchange rate
+    prices: {} # Optional package-id -> exact USDT price, e.g. 1: 2.00
+    reconcile-delay-ms: 60000
