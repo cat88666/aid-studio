@@ -1,165 +1,58 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { PlayCircleOutlined, SoundOutlined, PauseCircleOutlined, CloseOutlined } from '@ant-design/icons'
-import { useHomeShellCreateModal } from '~/composables/useHomeShellCreateModal'
-import { useUserStore } from '~/stores/user'
-import { withAppBasePath } from '~/utils/appBasePath'
-import { requireLogin } from '~/utils/authLoginNavigation'
-import { homeCopy } from '~/config/home-locales'
-import { creatorLanguage } from '~/config/creatorLanguages'
+import Link from 'next/link'
 import { useCreatorLocale } from '~/hooks/useCreatorLocale'
-import { landingSamples } from '~/utils/landingSamples'
 import { creatorBrandName } from '~/config/creatorBrand'
-import dynamic from 'next/dynamic'
-import { LandingHeroMedia } from '~/components/home/LandingHeroMedia'
-import { LandingPricing } from '~/components/home/LandingPricing'
-import { LandingDisclosure } from '~/components/home/LandingDisclosure'
 import '../creator-home.css'
 
-const LandingGallery = dynamic(() => import('~/components/home/LandingGallery').then(module => module.LandingGallery))
-const LandingHelp = dynamic(() => import('~/components/home/LandingHelp').then(module => module.LandingHelp))
-
-const voices = [
-  { avatar: 'Vivi 2.0', file: '5e4fb1b33f494a9d8dfdd86dd07abbd8' },
-  { avatar: '小天 2.0', file: '8a02c38a64244725a363b1067cb45604' },
-  { avatar: '甜美桃子 2.0', file: '5324a8e760334d43b6db544ae15e7703' },
-  { avatar: '反卷青年 2.0', file: '3c16ec808a234053a14dbe3500e41ae3' }
-]
-
-export default function CreatorHomePage() {
+export default function CreatorGuidePage() {
   const { locale } = useCreatorLocale()
-  const t = homeCopy[locale]
-  const language = creatorLanguage(locale)
-  const token = useUserStore((state) => state.token)
-  const createModal = useHomeShellCreateModal()
-  const [sampleIndex, setSampleIndex] = useState<number | null>(null)
-  const sample = sampleIndex === null ? null : landingSamples[sampleIndex]
-  const sampleText = sampleIndex === null ? null : t.films[sampleIndex]
-  const [voice, setVoice] = useState('')
-  const [mediaError, setMediaError] = useState<'audioError' | 'videoError' | ''>('')
-  const player = useRef<HTMLDialogElement>(null)
-  const audio = useRef<HTMLAudioElement>(null)
-
-  useEffect(() => {
-    if (sample) player.current?.showModal()
-  }, [sample])
-
-  function startCreating() {
-    if (!token) return requireLogin({ redirect: '/works' })
-    createModal.openCreateModal()
-  }
-
-  function playVoice(file: string) {
-    const element = audio.current
-    if (!element) return
-    if (voice === file) {
-      element.pause()
-      setVoice('')
-      return
-    }
-    element.src = withAppBasePath('/profile/sakura/voice/sample/2026/05/17/' + file + '.mp3')
-    setMediaError('')
-    setVoice(file)
-    void element.play().catch(() => {
-      setVoice('')
-      setMediaError('audioError')
-    })
-  }
+  const chinese = locale === 'zh' || locale === 'zh-hant'
+  const t = (zh: string, en: string) => chinese ? zh : en
+  const steps = [
+    [t('选择创作方式', 'Choose how to create'), t('打开创作台，使用 AI 对话整理选题、文案和剧本；需要分镜等完整流程时，进入项目创作。', 'Open the studio to brainstorm topics, copy and scripts with AI Chat. Use project creation for the storyboard workflow.')],
+    [t('选择模型并开始对话', 'Choose a model and start chatting'), t('在 AI 对话的模型选择器中选择模型，再输入需求并发送。免费模型是可选项，原有默认模型仍然保留。', 'Choose a model in AI Chat before sending your prompt. Free models are optional; the existing default remains available.')],
+    [t('创建或继续项目', 'Create or resume a project'), t('从项目列表打开已有作品，或新建项目并填写名称、作品类型、画面比例和模型配置，然后编写或导入剧本。', 'Open an existing work from the project list, or create a project with a name, type, aspect ratio and model settings. Then write or import your script.')],
+    [t('按步骤制作与检查', 'Create and review step by step'), t('在项目中依次整理角色、场景、道具和分镜。生成前检查所选模型、参数及费用提示；完成后预览结果，再继续下一步。', 'Organize characters, scenes, props and storyboards in the project. Check the selected model, settings and cost notice before generating. Review each result before continuing.')]
+  ]
 
   return (
-    <div className="creator-landing" lang={language.tag} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
-
-
+    <div className="creator-landing" lang={chinese ? 'zh' : 'en'}>
       <main className="creator-container creator-content">
-        <section className="creator-hero">
-          <LandingHeroMedia playLabel={t.watch} pauseLabel={t.pause} />
-          <div className="creator-hero-copy">
-            <p className="creator-kicker">{t.kicker}</p>
-            <h1>{t.headline}</h1>
-            <p className="creator-hero-description">{t.intro}</p>
-            <div className="creator-hero-actions">
-              <button type="button" onClick={startCreating}>{t.create}</button>
-              <a href="#samples">{t.watch}</a>
-            </div>
-            <span className="creator-hero-tag">{t.formats}</span>
-            <p className="creator-hero-note">{t.note}</p>
+        <section className="creator-section" aria-labelledby="guide-title">
+          <p className="creator-label">{creatorBrandName(locale)}</p>
+          <h1 id="guide-title">{t('创作指南', 'Creator guide')}</h1>
+          <p className="creator-lead">{t('从第一段文案到项目创作，在这里了解创作台的使用方法。', 'Learn how to use the studio, from your first prompt to a creative project.')}</p>
+          <div className="creator-hero-actions">
+            <Link href="/start/">{t('进入创作台', 'Open studio')}</Link>
+            <Link href="/works/">{t('查看我的项目', 'View my projects')}</Link>
           </div>
         </section>
-
-        <div className="creator-models" aria-label={t.models}>
-          <span>{t.models}</span>
-          {['MiniMax', 'Seedance', 'DeepSeek', 'Vidu', 'Qwen', 'Seedream'].map(name => <b key={name}>{name}</b>)}
-        </div>
-
-        <section className="creator-section" id="samples">
-          <p className="creator-label">{t.samples}</p>
-          <h2>{t.sampleTitle}</h2>
-          <p className="creator-lead">{t.sampleLead}</p>
-          <div className="creator-films">
-            {landingSamples.map((item, index) => (
-              <button type="button" className="creator-film" key={item.video} onClick={() => {
-                audio.current?.pause()
-                setVoice('')
-                setMediaError('')
-                setSampleIndex(index)
-              }}>
-                <img loading="lazy" src={withAppBasePath(item.poster)} alt="" />
-                <span className="creator-film-caption"><strong>{t.films[index][0]}</strong><small>{t.films[index][1]}</small></span>
-                <PlayCircleOutlined className="creator-play" />
-              </button>
+        <section className="creator-section" aria-label={t('操作步骤', 'Getting started')}>
+          <div className="creator-stages">
+            {steps.map(([title, description], index) => (
+              <article key={title}><small>0{index + 1}</small><h2>{title}</h2><p>{description}</p></article>
             ))}
           </div>
-          <LandingDisclosure title={t.gallery}><LandingGallery locale={locale} /></LandingDisclosure>
         </section>
-
-        <section className="creator-section" id="guide">
-          <p className="creator-label">{t.workflow}</p>
-          <h2>{t.workflowTitle}</h2>
-          <div className="creator-stages">
-            {t.stages.map(([step, title, description]) => <article key={step}><small>{step}</small><h3>{title}</h3><p>{description}</p></article>)}
+        <section className="creator-section" aria-labelledby="guide-help">
+          <h2 id="guide-help">{t('使用说明', 'Usage notes')}</h2>
+          <div className="creator-faq">
+            <details open>
+              <summary>{t('免费模型与额度', 'Free models and limits')}</summary>
+              <p>{t('免费模型受上游额度、限流和可用性影响，不保证长期无限使用。若提示额度耗尽或请求失败，可稍后重试或切换其他模型；切换前请确认费用提示。', 'Free models have provider quotas, rate limits and availability constraints. Unlimited ongoing use is not guaranteed. If a request fails or the quota is exhausted, retry later or choose another model after checking its cost.')}</p>
+            </details>
+            <details open>
+              <summary>{t('图片、视频与视频复刻', 'Images, video and video remix')}</summary>
+              <p>{t('创作台独立图片、视频和视频复刻入口目前显示“尚未接入”时，暂不能直接提交生成。模型可选择不代表该入口已开放生成；请以页面状态为准。', 'Standalone image, video and video remix generation cannot be submitted while the studio shows “Not connected”. A model selector does not mean generation is available; follow the status shown on the page.')}</p>
+            </details>
+            <details>
+              <summary>{t('项目与资产在哪里？', 'Where are projects and assets?')}</summary>
+              <p>{t('登录后通过“项目”查看已有作品，通过“资产库”管理素材。请使用创建作品时的同一账号；如果没有项目，可新建项目开始创作。', 'Sign in to view existing works under Projects and manage materials in Assets. Use the same account that created the work. If the list is empty, create a new project to begin.')}</p>
+            </details>
           </div>
-        </section>
-
-        <section className="creator-section" id="voices">
-          <p className="creator-label">{t.dialogue}</p>
-          <h2>{t.voiceTitle}</h2>
-          <p className="creator-lead">{t.voiceLead}</p>
-          <div className="creator-voices">
-            {voices.map(({ avatar, file }, index) => <button type="button" key={file} aria-label={(voice === file ? t.pause : t.audition) + ' ' + t.voiceNames[index]} onClick={() => playVoice(file)}>
-              <img loading="lazy" src={withAppBasePath('/profile/sakura/voice/avatar/2026/05/22/' + avatar + '.jpg')} alt="" />
-              <span><b>{t.voiceNames[index]}</b><small>{voice === file ? t.playing : t.voiceLanguage}</small></span>
-              {voice === file ? <PauseCircleOutlined /> : <SoundOutlined />}
-            </button>)}
-          </div>
-          <audio ref={audio} onEnded={() => setVoice('')} />
-          {!sample && mediaError && <p role="alert">{t[mediaError]}</p>}
-        </section>
-
-        <LandingPricing locale={locale} onCreate={startCreating} />
-
-        <section className="creator-section" id="faq">
-          <p className="creator-label">{t.help}</p><h2>{t.faq}</h2>
-          <div className="creator-faq">{t.questions.map(([title, answer]) => <details key={title}><summary>{title}</summary><p>{answer}</p></details>)}</div>
-          <LandingDisclosure title={t.helpCenter}><LandingHelp locale={locale} /></LandingDisclosure>
-        </section>
-        <section className="creator-final-cta">
-          <h2>{t.headline}</h2>
-          <p>{t.note}</p>
-          <button type="button" onClick={startCreating}>{t.create}</button>
         </section>
       </main>
-      <footer className="creator-footer"><div className="creator-container"><b>{creatorBrandName(locale)}</b><a href={withAppBasePath('/gallery/')}>{t.examples}</a><a href="#guide">{t.guide}</a><a href={withAppBasePath('/faq/')}>{t.faq}</a></div></footer>
-
-      <dialog className="creator-player" ref={player} aria-label={sampleText?.[0] || t.player} onClose={() => { setSampleIndex(null); setMediaError('') }} onClick={event => {
-        if (event.target === event.currentTarget) player.current?.close()
-      }}>
-        {sample && sampleText && <div>
-          <header><strong>{sampleText[0]}</strong><button type="button" aria-label={t.close} onClick={() => player.current?.close()}><CloseOutlined /></button></header>
-          <video key={sample.video} src={withAppBasePath(sample.video)} poster={withAppBasePath(sample.poster)} controls autoPlay playsInline onError={() => setMediaError('videoError')} />
-          <p>{mediaError ? t[mediaError] : sampleText[1]}</p>
-        </div>}
-      </dialog>
     </div>
   )
 }

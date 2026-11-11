@@ -1,6 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
+import { homeCopy } from '~/config/home-locales'
+import { withAppBasePath } from '~/utils/appBasePath'
+import { landingSamples } from '~/utils/landingSamples'
 import dashboardNav from '~/config/dashboardNav.json'
 import { useCreatorLocale } from '~/hooks/useCreatorLocale'
 import { useOpenLibraryProject } from '~/hooks/useOpenLibraryProject'
@@ -13,6 +17,7 @@ import './DashboardProjects.css'
 export default function DashboardProjects({ onClose }: { onClose: () => void }) {
   const { locale } = useCreatorLocale()
   const text = copy[locale]
+  const t = homeCopy[locale]
   const token = useUserStore(state => state.token)
   const openProject = useOpenLibraryProject()
   const dialog = useRef<HTMLDialogElement>(null)
@@ -46,14 +51,14 @@ export default function DashboardProjects({ onClose }: { onClose: () => void }) 
       <div className="dashboard-projects__sheet">
         <header>
           <h2 id="dashboard-projects-title">{dashboardNav[locale][1]}</h2>
-          {(!token || current) && <span>{current?.total || 0}</span>}
+          {(!token || current) && <span>{landingSamples.length + (current?.total || 0)}</span>}
           <button type="button" autoFocus onClick={onClose} aria-label={text.close}>×</button>
         </header>
         <div className="dashboard-projects__body">
           {token && !current && !error && <p role="status">{text.loading}</p>}
           {token && error && <p role="alert">{text.failure} <button type="button" onClick={() => setAttempt(x => x + 1)}>{text.retry}</button></p>}
           {!token && <p>{locale === 'zh' || locale === 'zh-hant' ? '登录后查看项目' : 'Sign in to view your projects'}</p>}
-          {current?.total === 0 && <p>{locale === 'zh' || locale === 'zh-hant' ? '暂无项目' : 'No projects yet'}</p>}
+          {current?.total === 0 && <p>{locale === 'zh' || locale === 'zh-hant' ? '暂无个人项目，可先浏览下方示例' : 'No personal projects yet. Explore the samples below.'}</p>}
           <div className="dashboard-projects__grid">
             {current?.rows.map(project => (
               <button type="button" key={project.id} className="dashboard-projects__card"
@@ -65,7 +70,16 @@ export default function DashboardProjects({ onClose }: { onClose: () => void }) 
                 <small>{[project.aspectRatio, (project.updateTime || project.createTime)?.slice(0, 10)].filter(Boolean).join(' · ')}</small>
               </button>
             ))}
-
+            {page === 1 && landingSamples.map((sample, index) => (
+              <Link key={sample.id} className="dashboard-projects__card" href={`/case?sample=${sample.id}`}>
+                <span className="dashboard-projects__cover">
+                  <img src={withAppBasePath(sample.poster)} alt="" loading="lazy" />
+                  <b>{t.samples}</b>
+                </span>
+                <strong>{t.films[index][0]}</strong>
+                <small>{t.films[index][1]}</small>
+              </Link>
+            ))}
           </div>
           {current && current.total > 24 && (
             <div className="dashboard-projects__paging">
