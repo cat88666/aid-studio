@@ -1,5 +1,7 @@
 'use client'
 
+import { withAppBasePath } from '~/utils/appBasePath'
+
 import { message } from 'antd'
 import {
 userAssetRpsFormCreate,
@@ -49,7 +51,7 @@ export function createScpPropPrimaryImageOps(ctx: ScpCtx) {
       imageUrl =
         fileOrAsset.url ||
         fileOrAsset.thumbnail ||
-        'https://picsum.photos/800/450?random=' + Date.now()
+        withAppBasePath('/placeholders/image.svg')
       imageTitle =
         fileOrAsset.name?.replace(/\.[^/.]+$/, '') ||
         `道具图${ctx.propImages.get()[targetIndex].length + 1}`

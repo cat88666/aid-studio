@@ -1,3 +1,4 @@
+import { creatorPublicConfig, CREATOR_POLICY_LINKS } from '~/config/creatorPublicConfig'
 import { CREATOR_BRAND_NAME, CREATOR_BRAND_DESCRIPTION, CREATOR_BRAND_KEYWORDS, CREATOR_BRAND_ICON } from '~/config/creatorBrand'
 import { create } from 'zustand'
 import type { AuthPublicConfigData } from '~/types/business-api'
@@ -26,7 +27,7 @@ function readCachedConfig(): CachedAuthPublicConfigData | null {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY)
     if (!raw) return null
-    return JSON.parse(raw) as CachedAuthPublicConfigData
+    return creatorPublicConfig(JSON.parse(raw) as CachedAuthPublicConfigData)
   } catch {
     return null
   }
@@ -71,7 +72,8 @@ function hydrateSharedFromCache() {
 }
 
 /** 启动引导 / 其它入口写入公开配置（同步内存 + sessionStorage + crypto） */
-export function setAuthPublicConfigData(data: AuthPublicConfigData) {
+export function setAuthPublicConfigData(rawData: AuthPublicConfigData) {
+  const data = creatorPublicConfig(rawData)
   const clientTimeAtSync = Date.now()
   syncCryptoFromConfig(data, clientTimeAtSync)
   usePublicConfigStore.setState({ config: data, loaded: true })
@@ -92,7 +94,7 @@ export async function loadPublicConfig(force = false): Promise<AuthPublicConfigD
   try {
     const data = await authPublicConfig()
     setAuthPublicConfigData(data)
-    return data
+    return creatorPublicConfig(data)
   } catch {
     return usePublicConfigStore.getState().config
   } finally {
@@ -168,9 +170,9 @@ export function useAuthPublicConfig() {
     faviconUrl: CREATOR_BRAND_ICON,
     platformLogoUrl: '',
     recordFilingNumber: trimConfigText(config?.basic?.record_filing_number),
-    termsOfServiceUrl: trimConfigText(config?.basic?.terms_of_service),
+    termsOfServiceUrl: CREATOR_POLICY_LINKS.terms,
     membershipAgreementUrl: trimConfigText(config?.basic?.membership_agreement),
-    privacyPolicyUrl: trimConfigText(config?.basic?.privacy_policy),
+    privacyPolicyUrl: CREATOR_POLICY_LINKS.privacy,
     exchangeImageUrl: trimConfigText(config?.basic?.exchange_image_url),
     serviceEmail: trimConfigText(config?.basic?.service_email),
     businessEmail: trimConfigText(config?.basic?.business_email),

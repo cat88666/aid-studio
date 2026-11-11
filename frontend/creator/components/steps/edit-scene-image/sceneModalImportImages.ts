@@ -1,3 +1,4 @@
+import { withAppBasePath } from '~/utils/appBasePath'
 import { message } from 'antd'
 import { userAssetRpsFormImageList } from '~/utils/businessApi'
 import { uploadImageToOssWithToast } from '~/utils/ossUpload'
@@ -160,7 +161,7 @@ export function handleUploadLocalImageImpl(ctx: EditSceneImageModalCtx) {
 // 处理资源库导入
 export async function handleAssetLibraryImportImpl(ctx: EditSceneImageModalCtx, asset: any) {
   // 不直接添加到列表，只存储到待添加状态，不更新场景列表
-  const imageUrl = asset.url || asset.thumbnail || 'https://picsum.photos/800/450?random=' + Date.now()
+  const imageUrl = asset.url || asset.thumbnail || withAppBasePath('/placeholders/image.svg')
   // 同步继承当前选中项的 rpsFormId，避免新增项 formId 推断越界。
   const selectedImg = ctx.localSceneImages.get()[ctx.currentImageIndex.get()] as any
   const selectedFormId = Number(selectedImg?.rpsFormId)

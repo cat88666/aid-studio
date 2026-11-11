@@ -1,5 +1,7 @@
 'use client'
 
+import { withAppBasePath } from '~/utils/appBasePath'
+
 import { Spin } from 'antd'
 import { useEffect,useState } from 'react'
 import iconStartRaw from '~/assets/img/icon/icon_start.svg'
@@ -53,7 +55,7 @@ export function SelectAssetVoiceTab({ open, selectedIds, onSelect }: SelectAsset
           name: item.voiceName || '未命名',
           gender: GENDER_MAP[item.gender] || item.gender || '未知',
           ageLabel: AGE_MAP[item.ageRange] || item.ageRange || '未知',
-          avatar: item.avatarUrl || `https://api.dicebear.com/7.x/avataaars/png?seed=${item.id}`,
+          avatar: item.avatarUrl || withAppBasePath('/placeholders/avatar.svg'),
           previewUrl: item.sampleUrl || '',
           voiceLibraryId: Number(item.id) > 0 ? Number(item.id) : undefined
         }))

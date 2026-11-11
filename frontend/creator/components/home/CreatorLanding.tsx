@@ -79,6 +79,8 @@ export default function CreatorLanding() {
         <a href="#samples">{t.examples}</a><a href="#pricing">{t.pricing}</a>
         <Link href="/guide/" onClick={() => rememberCreatorLocale(locale)}>{t.guide}</Link>
         <Link href="/faq/" onClick={() => rememberCreatorLocale(locale)}>{t.helpCenter}</Link>
+        <Link href="/policies/terms/">{locale === 'zh' ? '用户协议' : locale === 'zh-hant' ? '使用者條款' : 'Terms'}</Link>
+        <Link href="/policies/privacy/">{locale === 'zh' ? '隐私说明' : locale === 'zh-hant' ? '隱私說明' : 'Privacy'}</Link>
       </nav><span>© {new Date().getFullYear()} {creatorBrandName(locale)}</span>
     </div></footer>
 

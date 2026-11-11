@@ -1,3 +1,4 @@
+import { withAppBasePath } from '~/utils/appBasePath'
 import { message } from 'antd'
 import {
   userAssetRpsFormCreate,
@@ -47,7 +48,7 @@ export function createScpSceneImageCrudOps(ctx: ScpCtx) {
       imageUrl =
         fileOrAsset.url ||
         fileOrAsset.thumbnail ||
-        `https://picsum.photos/800/450?random=${Date.now()}`
+        withAppBasePath('/placeholders/image.svg')
       imageTitle =
         fileOrAsset.name?.replace(/\.[^/.]+$/, '') ||
         `场景图${ctx.sceneImages.get()[targetIndex].length + 1}`

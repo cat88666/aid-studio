@@ -45,7 +45,7 @@ export function isPrivateSeoPath(pathname: string): boolean {
   return /^\/(?:admin|assets|billing|create|forgot-password|login|user|works|invite|mobile|index-legacy|case)(?:\/|$)/.test(pathname)
 }
 
-/** 品牌与头图由定制端维护；页面级内容、索引策略与规范地址沿用登记配置。 */
+/** 官网品牌与描述独立维护；仅沿用登记的索引策略，规范地址由当前站点生成。 */
 export function resolveSiteSeo(pathname: string, registered?: PublicSeoMeta | null, locale: CreatorLocale = 'en') {
   const route = normalizeSeoPath(pathname)
   const name = creatorBrandName(locale)
@@ -57,10 +57,10 @@ export function resolveSiteSeo(pathname: string, registered?: PublicSeoMeta | nu
   const description = text.description
   return {
     title: pageTitle ? pageTitle + ' - ' + name : name,
-    description: (locale === 'zh' && publicMeta?.description?.replace(/视觉·AID|AID Studio|镜序/gi, name)) || description,
-    keywords: (locale === 'zh' && publicMeta?.keywords?.replace(/视觉·AID|AID Studio|镜序/gi, name)) || CREATOR_BRAND_KEYWORDS,
+    description,
+    keywords: CREATOR_BRAND_KEYWORDS,
     robots: isPrivate ? 'noindex,nofollow' : publicMeta?.robots || 'index,follow',
-    canonicalUrl: publicMeta?.canonicalUrl
+    canonicalUrl: undefined
   }
 }
 

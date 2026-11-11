@@ -1,5 +1,7 @@
 'use client'
 
+import { withAppBasePath } from '~/utils/appBasePath'
+
 import { useEffect, useRef, useState } from 'react'
 import { Modal, Select, message } from 'antd'
 import { CloseOutlined } from '@ant-design/icons'
@@ -107,7 +109,7 @@ export function VoiceTimbrePickerModal({
               : item.language === 'ja-JP'
                 ? '日语'
                 : item.language || '普通话',
-        avatar: item.avatarUrl || `https://api.dicebear.com/7.x/avataaars/png?seed=${item.id}`,
+        avatar: item.avatarUrl || withAppBasePath('/placeholders/avatar.svg'),
         previewUrl: item.sampleUrl || '',
         voiceLibraryId: Number(item.id),
         voiceModelId: Number(item.modelId) > 0 ? Number(item.modelId) : undefined,
