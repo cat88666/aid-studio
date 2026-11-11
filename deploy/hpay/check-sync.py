@@ -9,8 +9,8 @@ backend = 'aid-business/aid-business-main/src/main/java/com/sakura/extensions/hp
 tests = 'aid-business/aid-business-main/src/test/java/com/sakura/extensions/hpay/'
 files = [backend + name + '.java' for name in ['HPayClient', 'HPayController', 'HPayOrderStore', 'HPayProperties', 'HPayProtocol', 'HPayScheduling', 'HPayService']]
 files += [tests + name + '.java' for name in ['HPayClientTest', 'HPayProtocolTest', 'HPayServiceTest']]
-files += ['frontend/creator/extensions/hpay/' + name for name in ['api.ts', 'HPayPanel.tsx', 'HPayPanel.test.tsx', 'hpay.css']]
-files += ['deploy/hpay/schema.sql', 'deploy/hpay/application-hpay.example.yml', 'deploy/hpay/check-sync.py']
+files += ['frontend/creator/extensions/hpay/' + name for name in ['api.ts', 'HPayPanel.tsx', 'HPayPanel.test.tsx', 'HPayDemoPanel.tsx', 'HPayDemoPanel.test.tsx', 'hpay.css']]
+files += ['deploy/hpay/schema.sql', 'deploy/hpay/application-hpay.example.yml', 'deploy/hpay/check-sync.py', 'deploy/hpay/frontend-demo.env.example']
 errors = [f'Missing extension file: {name}' for name in files if not (root / name).is_file()]
 page = root / 'frontend/creator/app/(home)/billing/page.tsx'
 if not page.exists() or "~/extensions/hpay/HPayPanel" not in page.read_text() or '<HPayPanel ' not in page.read_text():

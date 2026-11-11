@@ -4,7 +4,10 @@ import { useEffect, useRef, useState } from 'react'
 import type { CreatorLocale } from '~/config/creatorLanguages'
 import { useUserStore } from '~/stores/user'
 import { hpay, safeCheckoutUrl, type HPayCatalog, type HPayOrder } from './api'
+import HPayDemoPanel from './HPayDemoPanel'
 import './hpay.css'
+
+export const HPAY_DEMO_MODE = process.env.NEXT_PUBLIC_HPAY_DEMO === 'true'
 
 const texts = {
   en: { title: 'Pay with USDT', loading: 'Loading…', unavailable: 'USDT payments are not available yet.', error: 'Unable to confirm payment. Retry shortly; do not pay twice.', retry: 'Retry', buy: 'Buy', credits: 'credits', checkout: 'Open secure checkout', refresh: 'Check payment', pending: 'Awaiting payment confirmation', paid: 'Paid · credits added', orders: 'Recent USDT orders (up to 20)', info: 'Prices are in USDT. Use only the network and exact amount shown at checkout. Credits are added after payment is confirmed.', unknown: 'Order submitted; checkout is not yet available. Check the order before trying again.', empty: 'No USDT credit packs available.', processing: 'Processing…' },
@@ -12,6 +15,10 @@ const texts = {
 }
 
 export default function HPayPanel({ locale }: { locale: CreatorLocale }) {
+  return HPAY_DEMO_MODE ? <HPayDemoPanel locale={locale} /> : <HPayLivePanel locale={locale} />
+}
+
+function HPayLivePanel({ locale }: { locale: CreatorLocale }) {
   const t = texts[locale === 'zh' || locale === 'zh-hant' ? 'zh' : 'en']
   const [catalog, setCatalog] = useState<HPayCatalog | null>(null)
   const [orders, setOrders] = useState<HPayOrder[]>([])

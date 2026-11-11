@@ -10,7 +10,7 @@ import { useUserStore } from '~/stores/user'
 import type { RechargeOrderRow, RechargePackageItem } from '~/types/business-api'
 import { requireLogin } from '~/utils/authLoginNavigation'
 import { rechargeOrderList, rechargePackageList } from '~/utils/business/recharge'
-import HPayPanel from '~/extensions/hpay/HPayPanel'
+import HPayPanel, { HPAY_DEMO_MODE } from '~/extensions/hpay/HPayPanel'
 import './billing.css'
 
 const copy = {
@@ -107,8 +107,8 @@ export default function BillingPage() {
       </div>
         {!token && <button type="button" onClick={() => requireLogin({ redirect: '/billing/' })}>{t.signIn}</button>}
       </header>
+      {(token || HPAY_DEMO_MODE) && <HPayPanel key={`hpay:${token}`} locale={locale} />}
       {token && <>
-        <HPayPanel key={`hpay:${token}`} locale={locale} />
         <CreditPacks key={token} locale={locale} />
         <LandingBilling key={`${token}:${profile?.balance ?? ''}`} locale={locale} />
         <OrderHistory key={token} locale={locale} />

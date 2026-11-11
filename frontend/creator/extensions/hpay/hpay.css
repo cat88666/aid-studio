@@ -8,3 +8,11 @@
 .hpay-orders { list-style: none; padding: 0; }
 .hpay-orders li { padding-block: 1rem; border-bottom: 1px solid var(--border-color, #d9d9d9); }
 .hpay-orders small { display: block; overflow-wrap: anywhere; opacity: .7; margin-top: .4rem; }
+.hpay-demo-badge { display: inline-block; font-size: .78rem; font-weight: 600; padding: .3rem .6rem; border: 1px solid #b98526; border-radius: 6px; background: #fff4d6; color: #70500c; vertical-align: middle; }
+.hpay-demo-dialog { width: min(520px, calc(100vw - 32px)); max-height: calc(100dvh - 40px); padding: 0; border: 1px solid #ddd; border-radius: 20px; background: #fff; color: #181818; margin: auto; box-shadow: 0 20px 80px #0003; }
+.hpay-demo-dialog::backdrop { background: #0008; backdrop-filter: blur(3px); }
+.hpay-demo-checkout { padding: clamp(20px, 5vw, 32px); }
+.hpay-demo-checkout h2 { margin-top: 1rem; font-size: 1.5rem; }
+.hpay-demo-amount { display: block; margin-block: 1.25rem; font-size: 2rem; }
+.hpay-demo-actions { display: flex; flex-wrap: wrap; margin-top: 1.25rem; }
+.hpay-demo-actions button:first-child { background: #181818; color: white; }
