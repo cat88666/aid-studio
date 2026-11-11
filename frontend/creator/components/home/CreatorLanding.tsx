@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Modal } from 'antd'
-import { ArrowDownOutlined, ArrowRightOutlined, CaretRightFilled } from '@ant-design/icons'
+import { ArrowRightOutlined, CaretRightFilled } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { creatorLanguage } from '~/config/creatorLanguages'
@@ -41,7 +41,7 @@ export default function CreatorLanding() {
           <button type="button" onClick={startCreating}>{t.create}<ArrowRightOutlined /></button>
           <a href="#samples"><CaretRightFilled />{t.watch}</a>
         </div>
-        <a href="#workflow" className="showcase-hero-guide"><span>{t.formats}</span><span>{t.guide}<ArrowDownOutlined /></span></a>
+        <Link href="/guide/" className="showcase-hero-guide" onClick={() => rememberCreatorLocale(locale)}><span>{t.formats}</span><span>{t.guide}<ArrowRightOutlined /></span></Link>
       </div>
     </section>
 
