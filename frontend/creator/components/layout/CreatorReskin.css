@@ -13,8 +13,6 @@ html.creator-public-shell {
 .creator-public-info .creator-nav-account { background: #18191d; border-color: #18191d; color: #fff; border-radius: 8px; }
 .creator-public-info :is(.assets-page, .invite-page) { background: var(--creator-surface); }
 .creator-public-info :is(.assets-page, .invite-page) h1 { font-weight: 650; letter-spacing: -.04em; }
-.creator-public-info .dashboard-projects { border: 1px solid var(--creator-border); border-radius: 16px; background: #fff; }
-.creator-public-info .dashboard-projects__sheet > header { background: #fff; border-bottom: 1px solid var(--creator-border); }
 .creator-public-info .dashboard-projects__card { border-radius: 10px; box-shadow: none; }
 .creator-public-info .dashboard-projects__card:focus-visible,
 .creator-public-info .creator-links a:focus-visible { outline: 2px solid #6953d4; outline-offset: 3px; }

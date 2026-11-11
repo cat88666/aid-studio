@@ -50,11 +50,7 @@ export function useCreateFlowSidebarChrome() {
   }, [router])
 
   const openWorksPanel = useCallback(() => {
-    if (!isLoggedInRef.current) {
-      requireLogin({ redirect: '/works' })
-      return
-    }
-    router.push('/works')
+    router.push('/projects/')
   }, [router])
 
   const openAssetsPanel = useCallback(() => {

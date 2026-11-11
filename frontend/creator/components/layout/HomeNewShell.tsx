@@ -45,7 +45,7 @@ export function HomeNewShell({ children }: { children: ReactNode }) {
   const isLandingRoute = Boolean(languageFromPath(pathname))
   const isGalleryRoute = pathname.replace(/\/$/, '') === '/gallery'
   const isPublicInfo = isGalleryRoute || pathname.replace(/\/$/, '') === '/faq'
-  const dashboardRoutes = ['/assets', '/billing', '/membership', '/referral', '/invite', '/works', '/guide', '/start']
+  const dashboardRoutes = ['/assets', '/billing', '/membership', '/referral', '/invite', '/works', '/guide', '/start', '/projects']
   const publicShell = isLandingRoute || isPublicInfo || dashboardRoutes.includes(pathname.replace(/\/$/, ''))
   const isWorksRoute = pathname.startsWith('/works')
   const isAssetsRoute = pathname.startsWith('/assets')

@@ -6,21 +6,22 @@ import DashboardProjects from './DashboardProjects'
 import { landingSamples } from '~/utils/landingSamples'
 import { sampleLibrary } from '~/utils/sampleLibrary'
 
-const mocks = vi.hoisted(() => ({ user: { token: '' }, list: vi.fn(), open: vi.fn() }))
+const mocks = vi.hoisted(() => ({ user: { token: '' }, list: vi.fn(), open: vi.fn(), login: vi.fn() }))
+vi.mock('next/link', () => ({ default: ({ href, children, ...props }: React.ComponentProps<'a'>) => <a href={href} {...props}>{children}</a> }))
 vi.mock('~/hooks/useCreatorLocale', () => ({ useCreatorLocale: () => ({ locale: 'zh' }) }))
 vi.mock('~/stores/user', () => ({ useUserStore: (selector: (state: typeof mocks.user) => unknown) => selector(mocks.user) }))
 vi.mock('~/hooks/useOpenLibraryProject', () => ({ useOpenLibraryProject: () => mocks.open }))
 vi.mock('~/utils/business/project', () => ({ userProjectList: mocks.list }))
+vi.mock('~/utils/authLoginNavigation', () => ({ requireLogin: mocks.login }))
 let root: ReturnType<typeof createRoot>
 let node: HTMLDivElement
 beforeEach(() => {
   vi.stubGlobal('React', React)
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
-  HTMLDialogElement.prototype.showModal = vi.fn()
-  HTMLDialogElement.prototype.close = vi.fn()
   mocks.user.token = ''
   mocks.list.mockReset().mockResolvedValue({ total: 0, rows: [] })
   mocks.open.mockReset()
+  mocks.login.mockReset()
   node = document.createElement('div')
   document.body.append(node)
   root = createRoot(node)
@@ -31,10 +32,10 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 async function mount() {
-  await act(async () => root.render(<DashboardProjects onClose={() => {}} />))
+  await act(async () => root.render(<DashboardProjects />))
 }
 function expectSamples() {
-  const links = [...node.querySelectorAll('a')]
+  const links = [...node.querySelectorAll('a[href^="/case?sample="]')]
   expect(links).toHaveLength(6)
   for (const sample of landingSamples) {
     expect(links.some(link => link.getAttribute('href') === `/case?sample=${sample.id}`)).toBe(true)
@@ -45,7 +46,15 @@ describe('project browser default samples', () => {
   it('shows the six existing sample links without requiring login or querying private projects', async () => {
     await mount()
     expectSamples()
+    expect(node.querySelector('dialog')).toBeNull()
+    expect(node.querySelector('main')).toBeTruthy()
+    expect(node.querySelector('h1')?.textContent).toBe('项目')
+    expect(node.querySelector('a[href="/start/"]')).toBeTruthy()
+    expect(node.querySelector('a[href="/works/"]')).toBeTruthy()
     expect(mocks.list).not.toHaveBeenCalled()
+    const login = [...node.querySelectorAll('button')].find(button => button.textContent === '登录查看')
+    await act(async () => login?.click())
+    expect(mocks.login).toHaveBeenCalledWith({ redirect: '/projects/', leaveAuthRoute: false })
   })
   it('keeps samples visible for an empty personal library', async () => {
     mocks.user.token = 'test-token'

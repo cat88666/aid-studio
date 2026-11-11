@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import navLabels from '~/config/dashboardNav.json'
 import { useEffect, useRef, useState } from 'react'
 import { GlobalOutlined, MenuOutlined } from '@ant-design/icons'
@@ -23,11 +23,10 @@ export default function CreatorPublicHeader({ onAccount }: { onAccount: () => vo
   const token = useUserStore(state => state.token)
   const pathname = usePathname()?.replace(/\/$/, '') || '/'
   const home = language.path
-  const projectsOpen = useSearchParams().get('projects') === '1'
   const studioLabel = locale === 'zh' ? '创作台' : locale === 'zh-hant' ? '創作台' : 'Studio'
-  const destinations = [home, '/start/', home + '?projects=1', '/assets/', '/billing/', '/referral/']
+  const destinations = [home, '/start/', '/projects/', '/assets/', '/billing/', '/referral/']
   const labels = [navLabels[locale][0], studioLabel, navLabels[locale][1], navLabels[locale][2], navLabels[locale][4], navLabels[locale][5]]
-  const current = projectsOpen ? 2 : pathname === '/start' ? 1 : pathname === '/assets' ? 3 : pathname === '/billing' || pathname === '/membership' ? 4 : pathname === '/referral' || pathname === '/invite' ? 5 : pathname === '/' || pathname === home.replace(/\/$/, '') ? 0 : -1
+  const current = pathname === '/projects' ? 2 : pathname === '/start' ? 1 : pathname === '/assets' ? 3 : pathname === '/billing' || pathname === '/membership' ? 4 : pathname === '/referral' || pathname === '/invite' ? 5 : pathname === '/' || pathname === home.replace(/\/$/, '') ? 0 : -1
 
   useEffect(() => {
     const dismissOutside = (event: PointerEvent) => {
